@@ -8695,7 +8695,17 @@ function camOnLayerChange() {
       camera.updateProjectionMatrix();
       _camTrans.active = false;
     } else {
-      animateCamera(pos, look);
+      // Preserve current zoom level: keep the camera at its current distance
+      // from the look-at point, only move it in the canonical direction for the mode.
+      const currDist = camera.position.distanceTo(_camLookAt);
+      const defaultDist = pos.distanceTo(look);
+      if (currDist > 0.5 && defaultDist > 0.1) {
+        const dir = new THREE.Vector3().subVectors(pos, look).normalize();
+        const preservedPos = look.clone().addScaledVector(dir, currDist);
+        animateCamera(preservedPos, look);
+      } else {
+        animateCamera(pos, look);
+      }
     }
   }
   update();
