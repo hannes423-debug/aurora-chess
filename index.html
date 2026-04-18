@@ -6874,7 +6874,7 @@ const GLB_MODELS = {};
 let _glbLoadDone = false;
 // On mobile, default to procedural pieces — GLBs can be enabled manually in settings.
 // This avoids a large base64 decode + GPU upload spike at startup.
-let _glbUseModels = !IS_MOBILE;
+let _glbUseModels = true;
 
 function _loadAllGLBs() {
   const statusEl = document.getElementById('apGlbStatus');
@@ -7016,7 +7016,7 @@ function _rebuildAllPiecesGeometry() {
 
 // Kick off GLB loading after a short delay (lets the page paint first).
 // On mobile, skip auto-load — user can enable GLB in settings.
-if (!IS_MOBILE) setTimeout(_loadAllGLBs, 150);
+setTimeout(_loadAllGLBs, 150);
 
 /* ================================================================
    PIECE COLOR / APPEARANCE  (applyPieceColors kept for compat)
@@ -7962,7 +7962,7 @@ function executeCastle(move,kingPiece){const row=kingPiece.userData.y,layer=king
 ====================================================== */
 function promotePawn(p){if(p.userData.type!=="pawn")return false;const pw=p.userData.color==="white"&&p.userData.y===7;const pb=p.userData.color==="black"&&p.userData.y===0;if(!pw&&!pb)return false;
   // Bot auto-promotes to queen — no UI needed
-  if(p.userData.color===botColor){promotionActive=true;promotionGroup.userData.pawn=p;setTimeout(function(){if(promotionActive)resolvePromotion('queen');},50);return true;}
+  if(p.userData.color===botColor||(typeof ONLINE!=="undefined"&&ONLINE&&ONLINE._receivingRemoteMove)){promotionActive=true;promotionGroup.userData.pawn=p;setTimeout(function(){if(promotionActive)resolvePromotion('queen');},50);return true;}
   promotionActive=true;const overlay=new THREE.Mesh(new THREE.PlaneGeometry(40,40),new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:0.7,depthTest:false}));overlay.rotation.x=-Math.PI/2;overlay.position.set(0,camera.position.y-1,0);overlay.renderOrder=1;promotionGroup.add(overlay);["queen","rook","bishop","knight"].forEach((type,i)=>{let piece=buildPiece(type,p.userData.color);piece.userData.promotionChoice=type;piece.position.set(-3+i*2,0,0);piece.scale.set(2.5,2.5,2.5);piece.renderOrder=2;promotionGroup.add(piece);});promotionGroup.userData.pawn=p;return true;}
 function resolvePromotion(type){const pawn=promotionGroup.userData.pawn;const newPiece=buildPiece(type,pawn.userData.color);newPiece.userData.type=type;layers[pawn.userData.z].add(newPiece);
 
@@ -7970,7 +7970,7 @@ newPiece.position.set(
   -half + (pawn.userData.x + 0.5) * SPACING,
   0,
   -half + (pawn.userData.y + 0.5) * SPACING
-);newPiece.userData.x=pawn.userData.x;newPiece.userData.y=pawn.userData.y;newPiece.userData.z=pawn.userData.z;newPiece.userData.moved=true;pieces.splice(pieces.indexOf(pawn),1);pawn.parent.remove(pawn);pieces.push(newPiece);boardMap[key(newPiece.userData.x,newPiece.userData.y,newPiece.userData.z)]=newPiece;promotionGroup.clear();promotionActive=false;turn=turn==="white"?"black":"white";document.getElementById("hud").textContent=turn.charAt(0).toUpperCase()+turn.slice(1)+" to move";if(!hasLegalMoves(turn)){if(isInCheck(turn)){boardText("CHECKMATE",0xff4444);SND.end(turn!==playerColor);setTimeout(()=>endGame(turn==="white"?"Black wins by checkmate":"White wins by checkmate"),1200);}else{boardText("STALEMATE",0xaaaaaa);SND.end(false);setTimeout(()=>endGame("Draw by stalemate"),1200);}}else{if(isInCheck(turn)){boardText("CHECK",0xff4444);showThreatLines(turn);SND.check();HAP.vib('check');}if(!reviewing&&turn===botColor){setTimeout(botMove,900);}}}
+);newPiece.userData.x=pawn.userData.x;newPiece.userData.y=pawn.userData.y;newPiece.userData.z=pawn.userData.z;newPiece.userData.moved=true;pieces.splice(pieces.indexOf(pawn),1);pawn.parent.remove(pawn);pieces.push(newPiece);boardMap[key(newPiece.userData.x,newPiece.userData.y,newPiece.userData.z)]=newPiece;promotionGroup.clear();promotionActive=false;if(typeof ONLINE!=="undefined"&&ONLINE&&ONLINE.inMatch&&!ONLINE._syncing&&pawn.userData.color===playerColor){onlineDCSend('promotion',{pieceType:type,x:pawn.userData.x,y:pawn.userData.y,z:pawn.userData.z});}turn=turn==="white"?"black":"white";document.getElementById("hud").textContent=turn.charAt(0).toUpperCase()+turn.slice(1)+" to move";if(!hasLegalMoves(turn)){if(isInCheck(turn)){boardText("CHECKMATE",0xff4444);SND.end(turn!==playerColor);setTimeout(()=>endGame(turn==="white"?"Black wins by checkmate":"White wins by checkmate"),1200);}else{boardText("STALEMATE",0xaaaaaa);SND.end(false);setTimeout(()=>endGame("Draw by stalemate"),1200);}}else{if(isInCheck(turn)){boardText("CHECK",0xff4444);showThreatLines(turn);SND.check();HAP.vib('check');}if(!reviewing&&turn===botColor){setTimeout(botMove,900);}}}
 
 /* ======================================================
    BOARD RESET
@@ -16348,7 +16348,7 @@ function onlineWireDataChannel(dc, matchInfo) {
     var msg; try { msg = JSON.parse(ev.data); } catch { return; }
     if (msg.type === 'move') {
       var p = pieces.find(function(p) { return p.userData.x===msg.from.x && p.userData.y===msg.from.y && p.userData.z===msg.from.z; });
-      if (p) { executeMove(p, msg.to); document.getElementById('hud').textContent = turn.charAt(0).toUpperCase()+turn.slice(1)+' to move'; }
+      if (p) { ONLINE._receivingRemoteMove=true; executeMove(p, msg.to); ONLINE._receivingRemoteMove=false; document.getElementById('hud').textContent = turn.charAt(0).toUpperCase()+turn.slice(1)+' to move'; }
     } else if (msg.type === 'resign') {
       onlineShowToast(ONLINE.opponent.username + ' resigned - you win!', 0x00ff88);
       onlineRecordResult(ONLINE.myColor === 'white' ? 'white_wins' : 'black_wins');
@@ -16381,6 +16381,18 @@ function onlineWireDataChannel(dc, matchInfo) {
       ONLINE._syncing = false;
       onlineUpdateThinking();
       onlineShowToast('Reconnected! Game resumed.', 0x00ff88);
+    } else if (msg.type === 'promotion') {
+      var promoted = pieces.find(function(q) { return q.userData.x===msg.x && q.userData.y===msg.y && q.userData.z===msg.z; });
+      if (promoted && promoted.userData.type !== msg.pieceType) {
+        var pc=promoted.userData.color,px=promoted.userData.x,py=promoted.userData.y,pz=promoted.userData.z;
+        var np=buildPiece(msg.pieceType,pc);
+        np.userData.type=msg.pieceType; np.userData.x=px; np.userData.y=py; np.userData.z=pz; np.userData.moved=true;
+        layers[pz].add(np);
+        np.position.set(-half+(px+0.5)*SPACING,0,-half+(py+0.5)*SPACING);
+        var idx=pieces.indexOf(promoted); if(idx!==-1)pieces.splice(idx,1);
+        if(promoted.parent)promoted.parent.remove(promoted);
+        pieces.push(np); boardMap[key(px,py,pz)]=np;
+      }
     } else if (msg.type === 'clock_sync') {
       // Snap local clock to sender's authoritative remaining times
       if (timeEnabled && typeof timers !== 'undefined') {
