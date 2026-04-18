@@ -101,6 +101,8 @@ body { min-height: -webkit-fill-available; -webkit-touch-callout: none; -webkit-
   }
   #menuBtn  { top: 8px; left: 8px; padding: 4px 10px; font-size: 13px; }
   #hud      { top: 52px; font-size: 11px; }
+  #onlineColorIndicator { top: 6px !important; font-size: 8px !important; }
+  #chessClock { bottom: auto !important; top: 36px !important; }
   #moveToggle { top: 8px; right: 8px; padding: 4px 10px; font-size: 13px; }
   #tutorialOverlay .tut-panel,
   #puzzleOverlay .puz-panel { max-width: 92vw; max-height: 80vh; }
@@ -11909,16 +11911,27 @@ let timerRunning = false;
 const clockEl = document.createElement('div');
 clockEl.id = 'chessClock';
 clockEl.style.cssText = [
-  'position:fixed','bottom:80px','left:50%','transform:translateX(-50%)',
+  'position:fixed','bottom:104px','left:50%','transform:translateX(-50%)',
   'display:none','gap:8px','z-index:21','font-family:monospace','font-size:12px',
   'align-items:center'
 ].join(';');
 clockEl.innerHTML = `
   <div id="clockW" style="padding:4px 10px;border:1px solid #333;background:#0a0a0a;color:#fff;min-width:56px;text-align:center;">10:00</div>
+  <div id="clockHud" style="font-size:9px;letter-spacing:2px;color:#aaa;white-space:nowrap;padding:0 8px;min-width:90px;text-align:center;">White to move</div>
   <div id="clockB" style="padding:4px 10px;border:1px solid #333;background:#0a0a0a;color:#888;min-width:56px;text-align:center;">10:00</div>
   <button id="clockToggleBtn" style="background:#111;border:1px solid #333;color:#555;padding:3px 8px;font-family:monospace;font-size:10px;cursor:pointer;letter-spacing:1px;">⏱ OFF</button>
 `;
 document.body.appendChild(clockEl);
+(function(){
+  var hudEl=document.getElementById('hud');
+  var chEl=document.getElementById('clockHud');
+  if(!hudEl||!chEl)return;
+  new MutationObserver(function(){chEl.textContent=hudEl.textContent;}).observe(hudEl,{characterData:true,subtree:true,childList:true});
+  // hide standalone hud when clock bar is showing; restore when hidden
+  new MutationObserver(function(){
+    hudEl.style.visibility=(clockEl.style.display==='none'?'visible':'hidden');
+  }).observe(clockEl,{attributes:true,attributeFilter:['style']});
+})();
 
 function formatTime(s) {
   const m = Math.floor(s / 60), sec = s % 60;
@@ -17318,7 +17331,7 @@ function onlineShowMatchInvite(payload) {
   var el = document.createElement('div');
   el.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);'
     + 'background:rgba(0,0,0,0.95);border:1px solid #00ccff;font-family:monospace;color:#fff;'
-    + 'padding:24px 32px;z-index:55;text-align:center;letter-spacing:2px;min-width:220px;';
+    + 'padding:24px 32px;z-index:9999;text-align:center;letter-spacing:2px;min-width:220px;';
   el.innerHTML = '<div style="color:#00ccff;margin-bottom:6px;font-size:12px;">MATCH INVITE</div>'
     + '<div style="font-size:11px;color:#aaa;margin-bottom:4px;">'+(payload.avatar||'♟')+' '+payload.from+'</div>'
     + '<div style="font-size:9px;color:#555;margin-bottom:14px;">ELO '+payload.elo+'</div>'
@@ -17342,7 +17355,7 @@ function onlineLog(msg) { console.log('[online]', msg); }
 
 // Auto-connect on page load if we have a stored server URL
 (function() {
-  var url = localStorage.getItem('cc_server_url');
+  var url = localStorage.getItem('cc_server_url') || CC_DEFAULT_SERVER;
   if (url) setTimeout(function() { onlineConnect(url); }, 800);
 })();
 
