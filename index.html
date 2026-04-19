@@ -8097,7 +8097,7 @@ renderer.domElement.addEventListener("touchstart",function(e){
 
 let px,py,pd;
 // 1-finger gesture state
-let camSwipeStartY=null, camSwipeStartZ=null, camSwipeLocked=false;
+let camSwipeStartY=null, camSwipeStartZ=null;
 let _1fAxis=null, _1fStartX=null, _1fStartY=null;
 // 2-finger gesture state
 let _2fPrevX=null, _2fPrevY=null, _2fAxis=null, _2fStartX=null, _2fStartY=null, _2fStartDist=null;
@@ -8112,19 +8112,15 @@ renderer.domElement.addEventListener("touchmove",function(e){
       if(Math.max(adx,ady)>8) _1fAxis=(adx>ady)?'h':'v';
     }
     if(_1fAxis==='v' && UI_PREFS.swipeLayer){
-      // 1-finger vertical: layer change (works in all camera modes)
-      if(camSwipeStartY!==null && !camSwipeLocked){
+      // 1-finger vertical: proportional layer change (~50px per layer step)
+      if(camSwipeStartY!==null){
         const delta=camSwipeStartY-ty;
-        if(Math.abs(delta)>30){
-          const dir=delta>0?1:-1;
-          const newZ=Math.max(0,Math.min(LAYERS-1,camSwipeStartZ+dir));
-          if(newZ!==activeZ){
-            activeZ=newZ; update(); coords();
-            document.getElementById("zSlider").value=activeZ;
-            SND.layer(activeZ); HAP.vib('layer'); flashLayerIndicator(activeZ);
-            camOnLayerChange();
-          }
-          camSwipeLocked=true;
+        const newZ=Math.max(0,Math.min(LAYERS-1,camSwipeStartZ+Math.round(delta/50)));
+        if(newZ!==activeZ){
+          activeZ=newZ; update(); coords();
+          document.getElementById("zSlider").value=activeZ;
+          SND.layer(activeZ); HAP.vib('layer'); flashLayerIndicator(activeZ);
+          camOnLayerChange();
         }
       }
     } else if(_1fAxis==='h' && window._panModeActive && typeof window._doBoardPanTouch==='function'){
@@ -8173,7 +8169,7 @@ renderer.domElement.addEventListener("touchmove",function(e){
 renderer.domElement.addEventListener("touchstart",function(e2){
   // Initialise gesture state for the new touch
   if(e2.touches.length===1){
-    camSwipeStartY=e2.touches[0].clientY; camSwipeStartZ=activeZ; camSwipeLocked=false;
+    camSwipeStartY=e2.touches[0].clientY; camSwipeStartZ=activeZ;
     _1fAxis=null; _1fStartX=e2.touches[0].clientX; _1fStartY=e2.touches[0].clientY;
     px=e2.touches[0].clientX; py=e2.touches[0].clientY;
   }
@@ -8189,7 +8185,7 @@ renderer.domElement.addEventListener("touchstart",function(e2){
 },{passive:true, capture:false});
 renderer.domElement.addEventListener("touchend",()=>{
   px=py=pd=null;
-  camSwipeStartY=null; camSwipeStartZ=null; camSwipeLocked=false;
+  camSwipeStartY=null; camSwipeStartZ=null;
   _1fAxis=null; _1fStartX=null; _1fStartY=null;
   _2fPrevX=null; _2fPrevY=null; _2fAxis=null; _2fStartX=null; _2fStartY=null; _2fStartDist=null;
 });
