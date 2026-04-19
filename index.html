@@ -1499,6 +1499,7 @@ body.ui-hidden #offlineBanner { display:none !important; }
   <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:0;">
   <!-- PRIMARY PLAY ACTIONS -->
   <button class="menuBtn modeBtn" data-mode="classic" style="margin-bottom:4px;">Play</button>
+  <button class="modeBtn" id="openOnlineBtn" style="margin-bottom:4px;">Play Online</button>
   <button class="modeBtn" id="gameModesBtn" style="margin-bottom:4px;">Game Modes</button>
 
   <!-- DIVIDER -->
@@ -1507,16 +1508,16 @@ body.ui-hidden #offlineBanner { display:none !important; }
   <!-- SECONDARY MODES -->
   <button class="modeBtn" id="openPuzzleSelectBtn" style="margin-bottom:4px;">Puzzle Mode</button>
   <button class="modeBtn" id="openTutorialBtn"     style="margin-bottom:4px;">Tutorial</button>
-  <button class="modeBtn" id="openOnlineBtn"        style="margin-bottom:4px;">- Play Online</button>
 
   <!-- DIVIDER -->
   <div style="width:120px;border-top:1px solid #1a1a1a;margin:10px 0;"></div>
 
-  <!-- SETTINGS + PROFILE side by side -->
-  <div style="display:flex;gap:8px;">
+  <!-- SETTINGS + PROFILE + SUPPORT -->
+  <div style="display:flex;gap:8px;margin-bottom:6px;">
     <button id="mainSettingsBtn" style="background:#1e0535;border:1px solid #3d1055;color:#9b8fa8;padding:6px 14px;font-family:monospace;font-size:11px;cursor:pointer;letter-spacing:1px;transition:border-color 0.15s,color 0.15s;">⚙ Settings</button>
     <button id="mainProfileBtn"  style="background:#1e0535;border:1px solid #3d1055;color:#9b8fa8;padding:6px 14px;font-family:monospace;font-size:11px;cursor:pointer;letter-spacing:1px;transition:border-color 0.15s,color 0.15s;">👤 Profile</button>
   </div>
+  <button id="mainSupportBtn" style="background:#1e0535;border:1px solid #3d1055;color:#9b8fa8;padding:6px 14px;font-family:monospace;font-size:11px;cursor:pointer;letter-spacing:1px;transition:border-color 0.15s,color 0.15s;">? Support</button>
   <div id="serverStatusLine" style="margin-top:14px;font-size:9px;color:#4a2060;letter-spacing:1px;cursor:pointer;user-select:none;" title="Click to toggle server connection">⬤ OFFLINE MODE</div>
   </div><!-- end z-index wrapper -->
 </div>
@@ -16603,6 +16604,61 @@ document.getElementById('openOnlineBtn').onclick = function() {
   showOfflineBannerIfStub();
   onlineOpenLobby();
 };
+
+/* -- Support overlay ------------------------------------------- */
+(function() {
+  var overlay = document.createElement('div');
+  overlay.id = 'supportOverlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.88);display:none;'
+    + 'flex-direction:column;justify-content:center;align-items:center;z-index:44;font-family:monospace;color:#f0e6ff;';
+  overlay.innerHTML = `
+    <div style="width:280px;background:#0d0020;border:1px solid #3d1055;border-radius:6px;padding:22px 20px;position:relative;">
+      <div style="font-size:15px;letter-spacing:4px;color:#ce93d8;margin-bottom:4px;">SUPPORT</div>
+      <div style="font-size:9px;color:#5e2750;letter-spacing:2px;margin-bottom:20px;">AURORA CHESS</div>
+
+      <button id="supBugBtn" style="width:100%;background:#1a0030;border:1px solid #e95420;color:#e95420;padding:11px;font-family:monospace;font-size:11px;cursor:pointer;letter-spacing:2px;border-radius:3px;margin-bottom:10px;">
+        🐛  REPORT A BUG
+      </button>
+      <button id="supFeatureBtn" style="width:100%;background:#001a10;border:1px solid #00cc66;color:#00cc66;padding:11px;font-family:monospace;font-size:11px;cursor:pointer;letter-spacing:2px;border-radius:3px;margin-bottom:18px;">
+        ✨  SUGGEST A FEATURE
+      </button>
+
+      <div style="font-size:9px;color:#5e2750;letter-spacing:2px;margin-bottom:6px;">CONTACT</div>
+      <a href="mailto:AuroraChess3d@gmail.com" style="display:block;font-size:11px;color:#ce93d8;letter-spacing:1px;text-decoration:none;margin-bottom:18px;">AuroraChess3d@gmail.com</a>
+
+      <div style="font-size:9px;color:#333;line-height:1.8;">
+        Aurora Chess &copy; 2025<br>
+        <a href="http://100.94.74.5:3000/privacy" target="_blank" rel="noopener" style="color:#333;text-decoration:none;">Privacy Policy</a>
+      </div>
+
+      <button id="supCloseBtn" style="position:absolute;top:10px;right:12px;background:none;border:none;color:#5e2750;font-size:16px;cursor:pointer;font-family:monospace;line-height:1;">✕</button>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  function closeSupport() {
+    if (typeof SND !== 'undefined') SND.ui();
+    overlay.style.display = 'none';
+    document.getElementById('mainMenu').style.display = 'flex';
+  }
+
+  document.getElementById('mainSupportBtn').onclick = function() {
+    if (typeof SND !== 'undefined') SND.ui();
+    overlay.style.display = 'flex';
+  };
+  overlay.querySelector('#supCloseBtn').onclick = closeSupport;
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) closeSupport(); });
+
+  overlay.querySelector('#supBugBtn').onclick = function() {
+    var s = encodeURIComponent('Aurora Chess \u2014 Bug Report');
+    var b = encodeURIComponent('Describe the bug:\n\n\nSteps to reproduce:\n1.\n2.\n\nExpected:\n\nActual:\n\nDevice / Browser:\n');
+    window.open('mailto:AuroraChess3d@gmail.com?subject=' + s + '&body=' + b, '_blank');
+  };
+  overlay.querySelector('#supFeatureBtn').onclick = function() {
+    var s = encodeURIComponent('Aurora Chess \u2014 Feature Request');
+    var b = encodeURIComponent('Feature idea:\n\n\nWhy it would be useful:\n');
+    window.open('mailto:AuroraChess3d@gmail.com?subject=' + s + '&body=' + b, '_blank');
+  };
+})();
 
 /* -- Lobby overlay --------------------------------------------- */
 var _onlineLobby = (function() {
