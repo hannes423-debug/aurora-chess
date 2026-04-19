@@ -8181,7 +8181,28 @@ document.getElementById("restartBtn").onclick=()=>{
   SND.confirm(); document.getElementById("pauseMenu").style.display="none";
   if(PUZZLE_MODE){const puzData=PUZZLE_TUT_KEY>=0?TUT_PUZZLES[PUZZLE_TUT_KEY]:PUZZLES[PUZZLE_ACTIVE];if(puzData){PUZZLE_MOVES_MADE=0;loadPuzzlePieces(puzData);document.getElementById('puzzleBarName').textContent=puzData.name.toUpperCase();document.getElementById('puzzleBarStatus').textContent=puzData.objective;}}else{startLocalGame();}
 };
-document.getElementById("exitBtn").onclick=()=>{SND.confirm();document.getElementById("pauseMenu").style.display="none";document.getElementById("endMenu").style.display="none";setReviewing(false);onlineHideColorIndicator();localStorage.removeItem('cc_pending_match');botColor=null;exitPuzzleMode();resetBoard();turn="white";document.getElementById("hud").textContent="White to move";renderer.domElement.style.pointerEvents="none";var _rbtn=document.getElementById("rotateBoardBtn");if(_rbtn)_rbtn.style.display="none";var _pbn=document.getElementById("panBoardBtn");if(_pbn)_pbn.style.display="none";document.getElementById("mainMenu").style.display="flex";};
+function _doExit() {
+  SND.confirm();
+  document.getElementById("pauseMenu").style.display="none";
+  document.getElementById("endMenu").style.display="none";
+  setReviewing(false); onlineHideColorIndicator();
+  localStorage.removeItem('cc_pending_match');
+  if (ONLINE.inMatch) { onlineDCSend('resign'); onlineRecordResult(ONLINE.myColor==='white'?'black_wins':'white_wins'); }
+  ONLINE.inMatch = false; ONLINE._drawOfferSent = false;
+  botColor=null; exitPuzzleMode(); resetBoard(); turn="white";
+  document.getElementById("hud").textContent="White to move";
+  renderer.domElement.style.pointerEvents="none";
+  var _rbtn=document.getElementById("rotateBoardBtn"); if(_rbtn)_rbtn.style.display="none";
+  var _pbn=document.getElementById("panBoardBtn"); if(_pbn)_pbn.style.display="none";
+  document.getElementById("mainMenu").style.display="flex";
+}
+document.getElementById("exitBtn").onclick=()=>{
+  if (ONLINE.inMatch) {
+    _onlineConfirm('Resign and exit? Your opponent wins.', _doExit);
+  } else {
+    _doExit();
+  }
+};
 let _settingsOrigin = 'pauseMenu';
 document.getElementById("settingsBtn").onclick=()=>{SND.ui();_settingsOrigin="pauseMenu";document.getElementById("pauseMenu").style.display="none";document.getElementById("settingsOverlay").style.display="flex";};
 document.getElementById("closeSettings").onclick=()=>{
@@ -16097,6 +16118,28 @@ var ONLINE_SERVER = (function() {
   return localStorage.getItem('cc_server_url') || CC_DEFAULT_SERVER;
 })();
 
+function _esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function _onlineConfirm(message, onConfirm) {
+  var ex = document.getElementById('_onlineConfirmModal'); if (ex) ex.remove();
+  var el = document.createElement('div');
+  el.id = '_onlineConfirmModal';
+  el.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);'
+    + 'background:rgba(0,0,0,0.97);border:1px solid #3d1055;font-family:monospace;color:#f0e6ff;'
+    + 'padding:24px 28px;z-index:9999;text-align:center;letter-spacing:1px;min-width:220px;border-radius:4px;';
+  el.innerHTML = '<div style="font-size:11px;color:#9b8fa8;margin-bottom:16px;">'+_esc(message)+'</div>'
+    + '<div style="display:flex;gap:8px;justify-content:center;">'
+    + '<button id="_ocYes" style="background:#1a0030;border:1px solid #e95420;color:#e95420;font-family:monospace;font-size:10px;padding:7px 18px;cursor:pointer;letter-spacing:1px;">YES</button>'
+    + '<button id="_ocNo" style="background:#1e0535;border:1px solid #3d1055;color:#5e2750;font-family:monospace;font-size:10px;padding:7px 16px;cursor:pointer;letter-spacing:1px;">CANCEL</button>'
+    + '</div>';
+  document.body.appendChild(el);
+  el.querySelector('#_ocYes').onclick = function() { el.remove(); onConfirm(); };
+  el.querySelector('#_ocNo').onclick  = function() { el.remove(); };
+}
+
 var ONLINE = {
   ws: null, pc: null, dc: null,
   connected: false, loggedIn: false, inMatch: false,
@@ -16115,6 +16158,7 @@ function onlineConnect(serverUrl) {
     ONLINE.ws = ws;
     ws.onopen = function() {
       ONLINE.connected = true; ONLINE.setStatus('idle');
+      ws._reconnectAttempt = 0; // reset on successful open
       localStorage.setItem('cc_server_url', serverUrl);
       onlineLog('Connected');
       onlineUpdateUI();
@@ -16126,17 +16170,18 @@ function onlineConnect(serverUrl) {
       try { onlineHandle(msg); } catch(e) { onlineLog('Handler error: ' + e.message); }
     };
     ws.onclose = function() {
-      ONLINE.connected = false; ONLINE.loggedIn = false; ONLINE.inMatch = false;
-      onlineHideColorIndicator();
+      ONLINE.connected = false; ONLINE.loggedIn = false;
+      // Don't clear inMatch — server gives 60s reconnect window
       ONLINE.setStatus('offline'); onlineLog('Disconnected'); onlineUpdateUI();
       if (localStorage.getItem('cc_online_enabled') !== '1') return;
       var attempt = (ws._reconnectAttempt || 0) + 1;
-      if (attempt > 5) return;
-      var delay = Math.min(5000 * Math.pow(2, attempt - 1), 60000);
+      // Exponential backoff: 5s, 10s, 20s, 40s, then every 60s — no cap on attempts
+      var delay = attempt <= 5 ? Math.min(5000 * Math.pow(2, attempt - 1), 60000) : 60000;
+      onlineLog('Reconnecting in ' + Math.round(delay/1000) + 's (attempt ' + attempt + ')…');
       setTimeout(function() {
         var url = localStorage.getItem('cc_server_url');
         if (url && localStorage.getItem('cc_online_enabled') === '1') {
-          var nw = onlineConnect(url);
+          onlineConnect(url);
           if (ONLINE.ws) ONLINE.ws._reconnectAttempt = attempt;
         }
       }, delay);
@@ -16463,16 +16508,44 @@ function onlineShowColorIndicator(myColor, opponent) {
   el.id = 'onlineColorIndicator';
   var youCol  = myColor === 'white' ? '#ffffff' : '#888888';
   var oppCol  = myColor === 'white' ? '#888888' : '#ffffff';
-  var oppName = opponent ? (opponent.avatar||'-') + ' ' + opponent.username : '?';
+  var oppName = opponent ? _esc(opponent.avatar||'♟') + ' ' + _esc(opponent.username) : '?';
+  var btnStyle = 'background:rgba(0,0,0,0.6);border:1px solid #333;color:#666;'
+    + 'font-family:monospace;font-size:8px;padding:2px 7px;cursor:pointer;letter-spacing:1px;'
+    + 'transition:border-color 0.15s,color 0.15s;white-space:nowrap;';
   el.style.cssText = 'position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:22;'
     + 'background:rgba(0,0,0,0.72);border:1px solid #222;border-radius:2px;'
-    + 'font-family:monospace;font-size:9px;letter-spacing:2px;padding:4px 14px;'
-    + 'pointer-events:none;white-space:nowrap;display:flex;align-items:center;gap:8px;';
+    + 'font-family:monospace;font-size:9px;letter-spacing:2px;padding:4px 10px;'
+    + 'pointer-events:auto;white-space:nowrap;display:flex;align-items:center;gap:8px;';
   el.innerHTML = '<span style="color:' + youCol + '">YOU (' + myColor.toUpperCase() + ')</span>'
     + '<span style="color:#444">VS</span>'
-    + '<span style="color:' + oppCol + '">' + oppName + '</span>';
+    + '<span style="color:' + oppCol + '">' + oppName + '</span>'
+    + '<span style="color:#222;margin:0 2px;">|</span>'
+    + '<button id="_onlineDrawBtn" style="'+btnStyle+'">DRAW</button>'
+    + '<button id="_onlineResignBtn" style="'+btnStyle+'color:#7a2a2a;border-color:#3a1010;">RESIGN</button>';
   document.body.appendChild(el);
   _onlineColorIndicator = el;
+
+  el.querySelector('#_onlineDrawBtn').onmouseenter = function() { this.style.color='#ffaa00'; this.style.borderColor='#ffaa00'; };
+  el.querySelector('#_onlineDrawBtn').onmouseleave = function() { this.style.color='#666'; this.style.borderColor='#333'; };
+  el.querySelector('#_onlineResignBtn').onmouseenter = function() { this.style.color='#ff4444'; this.style.borderColor='#ff4444'; };
+  el.querySelector('#_onlineResignBtn').onmouseleave = function() { this.style.color='#7a2a2a'; this.style.borderColor='#3a1010'; };
+
+  el.querySelector('#_onlineDrawBtn').onclick = function() {
+    if (!ONLINE.inMatch) return;
+    if (ONLINE._drawOfferSent) { onlineShowToast('Draw offer already pending.', 0xffaa00); return; }
+    ONLINE._drawOfferSent = true;
+    onlineDCSend('draw_offer');
+    onlineShowToast('Draw offered — waiting for opponent.', 0xffaa00);
+  };
+  el.querySelector('#_onlineResignBtn').onclick = function() {
+    if (!ONLINE.inMatch) return;
+    _onlineConfirm('Resign this game?', function() {
+      SND.confirm();
+      onlineDCSend('resign');
+      onlineRecordResult(ONLINE.myColor==='white'?'black_wins':'white_wins');
+      endGame('You resigned.');
+    });
+  };
 }
 function onlineHideColorIndicator() {
   if (_onlineColorIndicator) { _onlineColorIndicator.remove(); _onlineColorIndicator = null; }
@@ -17291,10 +17364,10 @@ function onlineUpdateFriends() {
       reqHtml += '<div style="font-size:9px;color:#444;letter-spacing:1px;margin-bottom:6px;">REQUESTS</div>'
         + ONLINE.requests.map(function(r) {
             return '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">'
-              + '<span style="color:#aaa;font-size:9px;">'+(r.avatar||'♟')+' '+r.from+'</span>'
+              + '<span style="color:#aaa;font-size:9px;">'+_esc(r.avatar||'♟')+' '+_esc(r.from)+'</span>'
               + '<div style="display:flex;gap:4px;">'
-              + '<button onclick="onlineSend(\'friend_accept\',{from:\''+r.from+'\'})" style="background:#1a1a1a;border:1px solid #00ff88;color:#00ff88;font-family:monospace;font-size:8px;padding:3px 8px;cursor:pointer;">✓</button>'
-              + '<button onclick="onlineSend(\'friend_decline\',{from:\''+r.from+'\'})" style="background:#1a1a1a;border:1px solid #333;color:#555;font-family:monospace;font-size:8px;padding:3px 8px;cursor:pointer;">✕</button>'
+              + '<button onclick="onlineSend(\'friend_accept\',{from:\''+_esc(r.from)+'\'})" style="background:#1a1a1a;border:1px solid #00ff88;color:#00ff88;font-family:monospace;font-size:8px;padding:3px 8px;cursor:pointer;">✓</button>'
+              + '<button onclick="onlineSend(\'friend_decline\',{from:\''+_esc(r.from)+'\'})" style="background:#1a1a1a;border:1px solid #333;color:#555;font-family:monospace;font-size:8px;padding:3px 8px;cursor:pointer;">✕</button>'
               + '</div></div>';
           }).join('');
     }
@@ -17302,8 +17375,8 @@ function onlineUpdateFriends() {
       reqHtml += '<div style="font-size:9px;color:#444;letter-spacing:1px;margin-bottom:6px;margin-top:8px;">SENT</div>'
         + ONLINE.pendingOut.map(function(u) {
             return '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">'
-              + '<span style="color:#555;font-size:9px;">♟ '+u+'</span>'
-              + '<button onclick="onlineCancelFriendRequest(\''+u.replace(/'/g,"\\'")+'\''+')" style="background:#1a1a1a;border:1px solid #333;color:#555;font-family:monospace;font-size:8px;padding:3px 8px;cursor:pointer;">CANCEL</button>'
+              + '<span style="color:#555;font-size:9px;">♟ '+_esc(u)+'</span>'
+              + '<button onclick="onlineCancelFriendRequest(\''+_esc(u).replace(/'/g,"\\'")+'\''+')" style="background:#1a1a1a;border:1px solid #333;color:#555;font-family:monospace;font-size:8px;padding:3px 8px;cursor:pointer;">CANCEL</button>'
               + '</div>';
           }).join('');
     }
@@ -17317,12 +17390,13 @@ function onlineUpdateFriends() {
     var col   = f.status==='offline'?'#333':f.status==='playing'?'#ffaa00':f.status==='queued'?'#ffff00':'#00ff88';
     var label = f.status==='playing'?'playing':f.status==='queued'?'searching':f.status==='offline'?'offline':'online';
     var canInvite = (f.status==='idle') && !ONLINE.inMatch;
+    var safeU = _esc(f.username); var safeAv = _esc(f.avatar||'♟');
     return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #111;">'
-      + '<div><span style="color:#aaa;font-size:9px;cursor:pointer;" onclick="onlineOpenProfile(\''+f.username.replace(/'/g,"\\'")+'\')">'+( f.avatar||'♟')+' '+f.username+'</span>'
+      + '<div><span style="color:#aaa;font-size:9px;cursor:pointer;" onclick="onlineOpenProfile(\''+safeU.replace(/'/g,"\\'")+'\')">'+safeAv+' '+safeU+'</span>'
       + '<span style="color:'+col+';font-size:8px;margin-left:6px;">'+label+'</span></div>'
       + '<div style="display:flex;gap:4px;">'
-      + (canInvite?'<button onclick="onlineSendInvite(\''+f.username.replace(/'/g,"\\'")+'\''+')" style="background:#1a1a1a;border:1px solid #00ccff;color:#00ccff;font-family:monospace;font-size:8px;padding:3px 8px;cursor:pointer;">INVITE</button>':'')
-      + '<button onclick="onlineRemoveFriend(\''+f.username.replace(/'/g,"\\'")+'\''+')" style="background:#1a1a1a;border:1px solid #1a1a1a;color:#333;font-family:monospace;font-size:8px;padding:3px 6px;cursor:pointer;" title="Remove">✕</button>'
+      + (canInvite?'<button onclick="onlineSendInvite(\''+safeU.replace(/'/g,"\\'")+'\''+')" style="background:#1a1a1a;border:1px solid #00ccff;color:#00ccff;font-family:monospace;font-size:8px;padding:3px 8px;cursor:pointer;">INVITE</button>':'')
+      + '<button onclick="onlineRemoveFriend(\''+safeU.replace(/'/g,"\\'")+'\''+')" style="background:#1a1a1a;border:1px solid #1a1a1a;color:#333;font-family:monospace;font-size:8px;padding:3px 6px;cursor:pointer;" title="Remove">✕</button>'
       + '</div></div>';
   }).join('');
 }
@@ -17334,7 +17408,7 @@ function onlineRemoveFriend(username) {
     + 'background:rgba(0,0,0,0.97);border:1px solid #333;font-family:monospace;color:#fff;'
     + 'padding:22px 28px;z-index:70;text-align:center;letter-spacing:1px;min-width:200px;';
   el.innerHTML = '<div style="font-size:10px;color:#aaa;margin-bottom:4px;">REMOVE FRIEND</div>'
-    + '<div style="font-size:12px;margin-bottom:16px;">'+username+'</div>'
+    + '<div style="font-size:12px;margin-bottom:16px;">'+_esc(username)+'</div>'
     + '<div style="display:flex;gap:8px;justify-content:center;">'
     + '<button id="_rmYes" style="background:#1a1a1a;border:1px solid #ff4444;color:#ff4444;font-family:monospace;font-size:10px;padding:6px 16px;cursor:pointer;">REMOVE</button>'
     + '<button id="_rmNo" style="background:#1a1a1a;border:1px solid #333;color:#555;font-family:monospace;font-size:10px;padding:6px 14px;cursor:pointer;">CANCEL</button>'
@@ -17357,7 +17431,7 @@ function onlineSendInvite(username) {
   el.id = 'onlineInviteModal';
   el.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);'
     + 'background:rgba(0,0,0,0.97);border:1px solid #333;font-family:monospace;color:#fff;padding:24px 28px;z-index:60;min-width:240px;';
-  el.innerHTML = '<div style="font-size:11px;color:#aaa;letter-spacing:2px;margin-bottom:14px;">INVITE  <span style="color:#fff;">'+username+'</span></div>'
+  el.innerHTML = '<div style="font-size:11px;color:#aaa;letter-spacing:2px;margin-bottom:14px;">INVITE  <span style="color:#fff;">'+_esc(username)+'</span></div>'
     + '<div style="margin-bottom:10px;"><div style="font-size:9px;color:#444;letter-spacing:1px;margin-bottom:4px;">TIME CONTROL</div>'
     + '<select id="_invTc" style="width:100%;background:#1a1a1a;border:1px solid #333;color:#aaa;font-family:monospace;font-size:10px;padding:5px;outline:none;">'
     + '<option value="none">No limit</option><option value="1">1 min (bullet)</option><option value="3">3 min (blitz)</option>'
@@ -17386,7 +17460,7 @@ function onlineShowMatchInvite(payload) {
     + 'background:rgba(0,0,0,0.95);border:1px solid #00ccff;font-family:monospace;color:#fff;'
     + 'padding:24px 32px;z-index:9999;text-align:center;letter-spacing:2px;min-width:220px;';
   el.innerHTML = '<div style="color:#00ccff;margin-bottom:6px;font-size:12px;">MATCH INVITE</div>'
-    + '<div style="font-size:11px;color:#aaa;margin-bottom:4px;">'+(payload.avatar||'♟')+' '+payload.from+'</div>'
+    + '<div style="font-size:11px;color:#aaa;margin-bottom:4px;">'+_esc(payload.avatar||'♟')+' '+_esc(payload.from)+'</div>'
     + '<div style="font-size:9px;color:#555;margin-bottom:14px;">ELO '+payload.elo+'</div>'
     + '<div style="display:flex;gap:10px;justify-content:center;">'
     + '<button id="_invAccept" style="background:#1a1a1a;border:1px solid #00ff88;color:#00ff88;font-family:monospace;font-size:11px;padding:7px 18px;cursor:pointer;">ACCEPT</button>'
