@@ -99,11 +99,11 @@ body { min-height: -webkit-fill-available; -webkit-touch-callout: none; -webkit-
     left: auto; right: 0;
     width: calc(100% - 120px);
   }
-  #menuBtn  { top: 8px; left: 8px; padding: 4px 10px; font-size: 13px; }
-  #hud      { top: 52px; font-size: 11px; }
-  #onlineColorIndicator { top: 6px !important; font-size: 8px !important; }
-  #chessClock { bottom: auto !important; top: 36px !important; }
-  #moveToggle { top: 8px; right: 8px; padding: 4px 10px; font-size: 13px; }
+  #menuBtn  { top: calc(8px + env(safe-area-inset-top)); left: 8px; padding: 4px 10px; font-size: 13px; }
+  #hud      { top: calc(52px + env(safe-area-inset-top)); font-size: 11px; }
+  #onlineColorIndicator { top: calc(6px + env(safe-area-inset-top)) !important; font-size: 8px !important; }
+  #chessClock { bottom: auto !important; top: calc(36px + env(safe-area-inset-top)) !important; }
+  #moveToggle { top: calc(8px + env(safe-area-inset-top)); right: 8px; padding: 4px 10px; font-size: 13px; }
   #tutorialOverlay .tut-panel,
   #puzzleOverlay .puz-panel { max-width: 92vw; max-height: 80vh; }
 }
@@ -331,7 +331,7 @@ body { min-height: -webkit-fill-available; -webkit-touch-callout: none; -webkit-
 .arcadeRateRow{display:flex;gap:4px;}
 .arcadeRateBtn{background:#1e0535;border:1px solid #3d1055;color:#6b3a80;padding:3px 10px;font-family:monospace;font-size:10px;cursor:pointer;border-radius:2px;letter-spacing:1px;}
 .arcadeRateBtn.active{border-color:#ffaa00;color:#ffaa00;}
-#arcadeBar{position:fixed;top:44px;left:0;width:100%;background:#0d0020;border-bottom:1px solid #2d0a4e;padding:3px 12px;font-family:monospace;font-size:10px;color:#7a5a8a;z-index:19;display:none;letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#arcadeBar{position:fixed;top:calc(44px + env(safe-area-inset-top));left:0;width:100%;background:#0d0020;border-bottom:1px solid #2d0a4e;padding:3px 12px;font-family:monospace;font-size:10px;color:#7a5a8a;z-index:19;display:none;letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 #arcadeEventBanner{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-family:monospace;font-size:20px;text-align:center;z-index:36;pointer-events:none;display:none;line-height:1.6;padding:0 20px;text-shadow:0 0 20px currentColor;}
 
 /* ── ACCOUNT SYSTEM STYLES ── */
@@ -355,7 +355,7 @@ body { min-height: -webkit-fill-available; -webkit-touch-callout: none; -webkit-
 #acctAvatarRow{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:4px 0;}
 .acct-avatar{font-size:22px;cursor:pointer;padding:4px 6px;border:2px solid transparent;border-radius:4px;transition:border-color 0.15s;}
 .acct-avatar.sel{border-color:#e95420;}
-#accountBadge{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:21;font-family:monospace;font-size:11px;color:#5e2750;letter-spacing:1px;pointer-events:none;display:none;}
+#accountBadge{position:fixed;top:calc(12px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:21;font-family:monospace;font-size:11px;color:#5e2750;letter-spacing:1px;pointer-events:none;display:none;}
 #offlineBanner{position:fixed;bottom:0;left:0;right:0;z-index:200;background:rgba(40,20,60,0.95);color:#c8a8e8;font-family:monospace;font-size:12px;padding:7px 16px;display:none;align-items:center;justify-content:center;gap:12px;border-top:1px solid #5e2750;}
 #offlineBanner button{background:none;border:1px solid #5e2750;color:#c8a8e8;font-family:monospace;font-size:11px;cursor:pointer;padding:2px 8px;border-radius:3px;}
 
@@ -405,7 +405,7 @@ body { min-height: -webkit-fill-available; -webkit-touch-callout: none; -webkit-
 
 /* ── Rotate Board Button ── */
 #rotateBoardBtn {
-  position:fixed; top:12px; left:56px; z-index:22;
+  position:fixed; top:calc(12px + env(safe-area-inset-top)); left:56px; z-index:22;
   background:var(--ui-btn-bg); border:1px solid var(--ui-btn-border);
   color:var(--ui-font-dim); font-family:var(--ui-font-family);
   font-size:11px; letter-spacing:1px; padding:6px 10px;
@@ -515,6 +515,8 @@ body { min-height: -webkit-fill-available; -webkit-touch-callout: none; -webkit-
 /* UI hide mode — suppress elements managed by their own intervals */
 body.ui-hidden #minimap,
 body.ui-hidden #offlineBanner { display:none !important; }
+/* ── Prevent 300ms iOS tap delay on all interactive elements ── */
+button, [role="button"], input[type="range"], label.toggle, select { touch-action: manipulation; }
 </style>
 </head>
 <body>
@@ -1259,6 +1261,14 @@ body.ui-hidden #offlineBanner { display:none !important; }
 
             <div class="settingSection">
               <h3>Touch (Mobile)</h3>
+              <table style="width:100%;border-collapse:collapse;font-size:9px;letter-spacing:1px;margin-bottom:10px;">
+                <tr><td style="color:#555;padding:4px 0;width:55%;">1-finger tap</td><td style="color:#ccc;">Select / move piece</td></tr>
+                <tr><td style="color:#555;padding:4px 0;">1-finger swipe up/down</td><td style="color:#ccc;">Layer up / down</td></tr>
+                <tr><td style="color:#555;padding:4px 0;">1-finger drag (PAN mode)</td><td style="color:#ccc;">Pan the board</td></tr>
+                <tr><td style="color:#555;padding:4px 0;">2-finger swipe left/right</td><td style="color:#ccc;">Rotate board</td></tr>
+                <tr><td style="color:#555;padding:4px 0;">2-finger swipe up/down</td><td style="color:#ccc;">Tilt board</td></tr>
+                <tr><td style="color:#555;padding:4px 0;">2-finger pinch</td><td style="color:#ccc;">Zoom in / out</td></tr>
+              </table>
               <div class="settingRow"><label>Tap to Select</label><div class="controls"><label class="toggle"><input type="checkbox" id="inputTouchTap" checked><div class="track"></div><div class="thumb"></div></label></div></div>
               <div class="settingRow"><label>Swipe Layer</label><div class="controls"><label class="toggle"><input type="checkbox" id="advSwipeLayer2" checked><div class="track"></div><div class="thumb"></div></label></div></div>
               <div class="settingRow"><label>Pinch Zoom</label><div class="controls"><label class="toggle"><input type="checkbox" id="advPinchZoom2" checked><div class="track"></div><div class="thumb"></div></label></div></div>
@@ -1715,11 +1725,11 @@ body.ui-hidden #offlineBanner { display:none !important; }
 <!-- Rotate 180° button -->
 <button id="rotateBoardBtn" title="Rotate board 180°">⟳ 180°</button>
 
-<button id="hintBtn" style="position:fixed;top:12px;left:134px;display:none;z-index:22;background:#111;color:#ffaa00;border:1px solid #444;padding:6px 10px;font-family:monospace;font-size:11px;cursor:pointer;letter-spacing:1px;border-radius:2px;" title="Show hint">💡</button>
-<button id="undoBtn" style="position:fixed;top:12px;left:172px;display:none;z-index:22;background:#111;color:#aaa;border:1px solid #444;padding:6px 10px;font-family:monospace;font-size:11px;cursor:pointer;letter-spacing:1px;border-radius:2px;" title="Undo last move">↩</button>
-<button id="panBoardBtn" style="position:fixed;top:48px;left:116px;display:none;z-index:22;background:#111;color:#aaa;border:1px solid #333;padding:4px 8px;font-family:monospace;font-size:10px;cursor:pointer;letter-spacing:1px;border-radius:2px;" title="Pan board — Alt+drag or click to toggle. Double-click to reset.">✥ PAN</button>
-<button id="uiHideBtn" style="position:fixed;bottom:60px;right:12px;z-index:9999;background:rgba(10,10,10,0.85);color:#666;border:1px solid #333;padding:6px 9px;font-family:monospace;font-size:13px;cursor:pointer;border-radius:3px;line-height:1;" title="Toggle UI visibility">◻</button>
-<button id="layerVisToggle" style="position:fixed;top:48px;left:12px;display:none;z-index:22;background:#111;color:#aaa;border:1px solid #333;padding:4px 8px;font-family:monospace;font-size:10px;cursor:pointer;letter-spacing:1px;border-radius:2px;" title="Cycle layer visibility">◈ LTD</button>
+<button id="hintBtn" style="position:fixed;top:calc(12px + env(safe-area-inset-top));left:134px;display:none;z-index:22;background:#111;color:#ffaa00;border:1px solid #444;padding:6px 10px;font-family:monospace;font-size:11px;cursor:pointer;letter-spacing:1px;border-radius:2px;touch-action:manipulation;" title="Show hint">💡</button>
+<button id="undoBtn" style="position:fixed;top:calc(12px + env(safe-area-inset-top));left:172px;display:none;z-index:22;background:#111;color:#aaa;border:1px solid #444;padding:6px 10px;font-family:monospace;font-size:11px;cursor:pointer;letter-spacing:1px;border-radius:2px;touch-action:manipulation;" title="Undo last move">↩</button>
+<button id="panBoardBtn" style="position:fixed;top:calc(48px + env(safe-area-inset-top));left:116px;display:none;z-index:22;background:#111;color:#aaa;border:1px solid #333;padding:4px 8px;font-family:monospace;font-size:10px;cursor:pointer;letter-spacing:1px;border-radius:2px;touch-action:manipulation;" title="Pan board — Alt+drag or click to toggle. Double-click to reset.">✥ PAN</button>
+<button id="uiHideBtn" style="position:fixed;bottom:60px;right:12px;z-index:9999;background:rgba(10,10,10,0.85);color:#666;border:1px solid #333;padding:6px 9px;font-family:monospace;font-size:13px;cursor:pointer;border-radius:3px;line-height:1;touch-action:manipulation;" title="Toggle UI visibility">◻</button>
+<button id="layerVisToggle" style="position:fixed;top:calc(48px + env(safe-area-inset-top));left:12px;display:none;z-index:22;background:#111;color:#aaa;border:1px solid #333;padding:4px 8px;font-family:monospace;font-size:10px;cursor:pointer;letter-spacing:1px;border-radius:2px;touch-action:manipulation;" title="Cycle layer visibility">◈ LTD</button>
 
 <!-- ======================================================
      LAYOUT EDITOR OVERLAY
@@ -1733,13 +1743,13 @@ body.ui-hidden #offlineBanner { display:none !important; }
 </div>
 
 <button id="menuBtn" style="
-  position:fixed;top:12px;left:12px;
+  position:fixed;top:calc(12px + env(safe-area-inset-top));left:12px;
   background:#111;color:#fff;border:1px solid #444;padding:6px 12px;z-index:20;
-  font-family:monospace;font-size:16px;cursor:pointer;letter-spacing:0;
+  font-family:monospace;font-size:16px;cursor:pointer;letter-spacing:0;touch-action:manipulation;
 ">☰</button>
 
 <div id="hud" style="
-  position:fixed;top:52px;left:50%;transform:translateX(-50%);
+  position:fixed;top:calc(52px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);
   color:white;font-family:monospace;font-size:11px;z-index:20;
   background:rgba(0,0,0,0.75);padding:4px 14px;border:1px solid #333;
   letter-spacing:2px;pointer-events:none;white-space:nowrap;
@@ -1754,15 +1764,15 @@ body.ui-hidden #offlineBanner { display:none !important; }
 ">BOT THINKING<span id="botThinkingDots"></span></div>
 
 <button id="moveToggle" style="
-  position:fixed;top:12px;right:80px;
+  position:fixed;top:calc(12px + env(safe-area-inset-top));right:80px;
   background:#111;color:#fff;border:1px solid #444;padding:6px 12px;z-index:20;
-  font-family:monospace;font-size:12px;cursor:pointer;letter-spacing:1px;
+  font-family:monospace;font-size:12px;cursor:pointer;letter-spacing:1px;touch-action:manipulation;
 ">MOVES</button>
 
 <button id="viewToggle" style="
-  position:fixed;top:12px;right:12px;
+  position:fixed;top:calc(12px + env(safe-area-inset-top));right:12px;
   background:#111;color:#fff;border:1px solid #444;padding:6px 12px;z-index:20;
-  font-family:monospace;font-size:12px;cursor:pointer;letter-spacing:1px;
+  font-family:monospace;font-size:12px;cursor:pointer;letter-spacing:1px;touch-action:manipulation;
 ">VIEW</button>
 
 <!-- Clock UI created dynamically by time-control system — avoids duplicate clockToggleBtn id -->
@@ -1811,7 +1821,7 @@ body.ui-hidden #offlineBanner { display:none !important; }
      UI: MOVE PANEL
 ====================================================== -->
 <div id="movePanel" style="
-  position:fixed;top:48px;right:12px;width:260px;max-height:60vh;overflow:auto;
+  position:fixed;top:calc(48px + env(safe-area-inset-top));right:12px;width:260px;max-height:60vh;overflow:auto;
   background:#111;color:#fff;border:1px solid #444;
   padding:8px;display:none;font-family:monospace;font-size:13px;z-index:20;
 ">
@@ -6244,7 +6254,6 @@ let selPlate, movePlates = [], pulsePlates = [], pulseT = 0;
 let promotionActive = false, animations = [], history = [], lastMoveSquares = [];
 let snapshots = [], reviewing = false, threatPlates = [], reviewIndex = -1;
 let startMessageMesh = null, reviewArrows = [];
-let layerSwipeStartY = null, layerSwipeStartZ = null;
 let cosmicGlassActive = false, _cgTime = 0, _cgOrigMats = [], _cgOrigColors = null;
 
 const promotionGroup = new THREE.Group();
@@ -7992,7 +8001,6 @@ renderer.domElement.addEventListener("touchstart",function(e){
   if(menus.some(id=>document.getElementById(id).style.display!=="none")) return;
   e.preventDefault();
 
-  if(e.touches.length===2){layerSwipeStartY=(e.touches[0].clientY+e.touches[1].clientY)/2;layerSwipeStartZ=activeZ;}
   if(e.touches.length!==1) return;
 
   const r=renderer.domElement.getBoundingClientRect();
@@ -8088,22 +8096,25 @@ renderer.domElement.addEventListener("touchstart",function(e){
 },{passive:false});
 
 let px,py,pd;
-// camSwipe tracks single-finger vertical swipe for layer change (non-FREE modes)
+// 1-finger gesture state
 let camSwipeStartY=null, camSwipeStartZ=null, camSwipeLocked=false;
+let _1fAxis=null, _1fStartX=null, _1fStartY=null;
+// 2-finger gesture state
+let _2fPrevX=null, _2fPrevY=null, _2fAxis=null, _2fStartX=null, _2fStartY=null, _2fStartDist=null;
+
 renderer.domElement.addEventListener("touchmove",function(e){
   e.preventDefault();
-  if(e.touches.length===1&&px){
-    const dx=e.touches[0].clientX-px, dy=e.touches[0].clientY-py;
-    if(window._panModeActive && typeof window._doBoardPanTouch==='function'){
-      // Pan mode active (toggled via PAN button)
-      window._doBoardPanTouch(dx, dy);
-    } else if(cameraMode===CAMERA_MODES.FREE){
-      // FREE: full pivot drag rotation
-      pivot.rotation.y+=dx*0.01; pivot.rotation.x+=dy*0.01; coords();
-    } else {
-      // Other modes: vertical swipe changes layer
-      if(camSwipeStartY!==null&&!camSwipeLocked){
-        const delta=camSwipeStartY-e.touches[0].clientY;
+  if(e.touches.length===1){
+    const tx=e.touches[0].clientX, ty=e.touches[0].clientY;
+    // Lock gesture axis on first significant movement
+    if(_1fAxis===null && _1fStartX!==null){
+      const adx=Math.abs(tx-_1fStartX), ady=Math.abs(ty-_1fStartY);
+      if(Math.max(adx,ady)>8) _1fAxis=(adx>ady)?'h':'v';
+    }
+    if(_1fAxis==='v' && UI_PREFS.swipeLayer){
+      // 1-finger vertical: layer change (works in all camera modes)
+      if(camSwipeStartY!==null && !camSwipeLocked){
+        const delta=camSwipeStartY-ty;
         if(Math.abs(delta)>30){
           const dir=delta>0?1:-1;
           const newZ=Math.max(0,Math.min(LAYERS-1,camSwipeStartZ+dir));
@@ -8113,49 +8124,75 @@ renderer.domElement.addEventListener("touchmove",function(e){
             SND.layer(activeZ); HAP.vib('layer'); flashLayerIndicator(activeZ);
             camOnLayerChange();
           }
-          camSwipeLocked=true;  // one step per gesture
+          camSwipeLocked=true;
         }
       }
+    } else if(_1fAxis==='h' && window._panModeActive && typeof window._doBoardPanTouch==='function'){
+      // 1-finger horizontal: pan board (PAN mode only)
+      if(px!==null) window._doBoardPanTouch(tx-px, 0);
     }
+    px=tx; py=ty;
   }
   if(e.touches.length===2){
-    const x1=e.touches[0].clientX,y1=e.touches[0].clientY,x2=e.touches[1].clientX,y2=e.touches[1].clientY;
-    const distance=Math.sqrt((x1-x2)**2+(y1-y2)**2),avgY=(y1+y2)/2;
-    const verticalMove=layerSwipeStartY===null?0:Math.abs(layerSwipeStartY-avgY);
-    if(verticalMove>20){
-      const delta=layerSwipeStartY===null?0:layerSwipeStartY-avgY;
-      let newZ=Math.max(0,Math.min(LAYERS-1,layerSwipeStartZ+Math.floor(delta/40)));
-      if(newZ!==activeZ){
-        activeZ=newZ; update(); coords();
-        document.getElementById("zSlider").value=activeZ;
-        SND.layer(activeZ); HAP.vib('layer'); flashLayerIndicator(activeZ);
-        camOnLayerChange();
+    const x1=e.touches[0].clientX, y1=e.touches[0].clientY;
+    const x2=e.touches[1].clientX, y2=e.touches[1].clientY;
+    const cx=(x1+x2)/2, cy=(y1+y2)/2;
+    const dist=Math.hypot(x2-x1, y2-y1);
+    // Determine gesture type: swipe (rotation) vs pinch (zoom)
+    if(_2fAxis===null && _2fStartX!==null){
+      const dx=cx-_2fStartX, dy=cy-_2fStartY;
+      const moved=Math.hypot(dx,dy);
+      const distDelta=Math.abs(dist-(_2fStartDist||dist));
+      if(moved>12 && moved>distDelta){ _2fAxis=(Math.abs(dx)>Math.abs(dy))?'h':'v'; }
+      else if(distDelta>20){ _2fAxis='zoom'; }
+    }
+    if((_2fAxis==='h'||_2fAxis==='v') && UI_PREFS.boardRotate){
+      // 2-finger swipe: rotate board
+      if(_2fPrevX!==null){
+        if(_2fAxis==='h'){ pivot.rotation.y+=(cx-_2fPrevX)*0.01; }
+        else             { pivot.rotation.x+=(cy-_2fPrevY)*0.01; }
+        coords();
       }
     } else {
-      // Pinch zoom — works in all modes
-      // Zoom along the camera→lookAt vector so view stays centered on subject
-      if (pd) {
-        const ratio = pd / distance;
-        if (cameraMode === CAMERA_MODES.FREE) {
+      // Pinch zoom (axis='zoom' or undetermined)
+      if(UI_PREFS.pinchZoom && pd){
+        const ratio=pd/dist;
+        if(cameraMode===CAMERA_MODES.FREE){
           camera.position.multiplyScalar(ratio);
         } else {
-          // Zoom toward _camLookAt (the layer center), not toward world origin
-          const dir = new THREE.Vector3().subVectors(camera.position, _camLookAt);
+          const dir=new THREE.Vector3().subVectors(camera.position,_camLookAt);
           dir.multiplyScalar(ratio);
           camera.position.copy(_camLookAt).add(dir);
         }
       }
     }
-    pd=distance;
+    _2fPrevX=cx; _2fPrevY=cy;
+    pd=dist;
   }
-  px=e.touches[0]?.clientX; py=e.touches[0]?.clientY;
 },{passive:false});
 renderer.domElement.addEventListener("touchstart",function(e2){
-  // Track start for swipe gesture (non-FREE modes)
-  if(e2.touches.length===1){ camSwipeStartY=e2.touches[0].clientY; camSwipeStartZ=activeZ; camSwipeLocked=false; }
+  // Initialise gesture state for the new touch
+  if(e2.touches.length===1){
+    camSwipeStartY=e2.touches[0].clientY; camSwipeStartZ=activeZ; camSwipeLocked=false;
+    _1fAxis=null; _1fStartX=e2.touches[0].clientX; _1fStartY=e2.touches[0].clientY;
+    px=e2.touches[0].clientX; py=e2.touches[0].clientY;
+  }
+  if(e2.touches.length===2){
+    const x1=e2.touches[0].clientX, y1=e2.touches[0].clientY;
+    const x2=e2.touches[1].clientX, y2=e2.touches[1].clientY;
+    const cx=(x1+x2)/2, cy=(y1+y2)/2;
+    const d=Math.hypot(x2-x1, y2-y1);
+    _2fStartX=cx; _2fStartY=cy; _2fStartDist=d;
+    _2fPrevX=cx; _2fPrevY=cy;
+    _2fAxis=null; pd=d;
+  }
 },{passive:true, capture:false});
-// Note: the existing touchstart handler above handles piece selection; this capture:false listener fires after it
-renderer.domElement.addEventListener("touchend",()=>{px=py=pd=null;layerSwipeStartY=null;layerSwipeStartZ=null;camSwipeStartY=null;camSwipeLocked=false;});
+renderer.domElement.addEventListener("touchend",()=>{
+  px=py=pd=null;
+  camSwipeStartY=null; camSwipeStartZ=null; camSwipeLocked=false;
+  _1fAxis=null; _1fStartX=null; _1fStartY=null;
+  _2fPrevX=null; _2fPrevY=null; _2fAxis=null; _2fStartX=null; _2fStartY=null; _2fStartDist=null;
+});
 
 /* ======================================================
    UI WIRING
@@ -9516,7 +9553,7 @@ const TUTS = [
   {
     section:'cubic_chess',
     title: "Navigating Layers",
-    text:  "Use the LAYER SLIDER on the right edge of the screen to change which layer you are viewing. On mobile, use a two-finger swipe up or down. The corner indicator shows your current layer (L1–L4).",
+    text:  "Use the LAYER SLIDER on the right edge of the screen to change which layer you are viewing. On mobile, swipe one finger up or down on the board. The corner indicator shows your current layer (L1–L4).",
     demo: null, puzzle: null, highlight: "zSlider"
   },
   {
@@ -14658,7 +14695,7 @@ isInCheck = function(color) {
 var ctfHudEl = (function() {
   var el = document.createElement('div');
   el.id = 'ctfHud';
-  el.style.cssText = 'position:fixed;top:44px;left:50%;transform:translateX(-50%);'
+  el.style.cssText = 'position:fixed;top:calc(44px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);'
     +'z-index:21;font-family:monospace;font-size:10px;letter-spacing:1px;'
     +'background:rgba(0,0,0,0.75);padding:3px 12px;border:1px solid #333;'
     +'display:none;white-space:nowrap;pointer-events:none;';
@@ -16512,7 +16549,7 @@ function onlineShowColorIndicator(myColor, opponent) {
   var btnStyle = 'background:rgba(0,0,0,0.6);border:1px solid #333;color:#666;'
     + 'font-family:monospace;font-size:8px;padding:2px 7px;cursor:pointer;letter-spacing:1px;'
     + 'transition:border-color 0.15s,color 0.15s;white-space:nowrap;';
-  el.style.cssText = 'position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:22;'
+  el.style.cssText = 'position:fixed;top:calc(8px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:22;'
     + 'background:rgba(0,0,0,0.72);border:1px solid #222;border-radius:2px;'
     + 'font-family:monospace;font-size:9px;letter-spacing:2px;padding:4px 10px;'
     + 'pointer-events:auto;white-space:nowrap;display:flex;align-items:center;gap:8px;';
@@ -16558,7 +16595,7 @@ function onlineShowThinking() {
   if (_thinkingEl) return;
   var el = document.createElement('div');
   el.id = 'onlineThinking';
-  el.style.cssText = 'position:fixed;top:12px;left:50%;transform:translateX(-50%);'
+  el.style.cssText = 'position:fixed;top:calc(12px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);'
     + 'font-family:monospace;font-size:10px;letter-spacing:2px;color:#888;'
     + 'pointer-events:none;z-index:21;animation:onlineThinkPulse 1.4s ease-in-out infinite;';
   el.textContent = 'opponent thinking...';
@@ -16607,7 +16644,7 @@ var _signalIndicator = (function() {
   var el = document.createElement('div');
   el.id = 'signalIndicator';
   el.title = 'Network signal';
-  el.style.cssText = 'position:fixed;top:11px;left:52px;z-index:22;display:none;'
+  el.style.cssText = 'position:fixed;top:calc(11px + env(safe-area-inset-top));left:52px;z-index:22;display:none;'
     + 'align-items:flex-end;gap:2px;padding:3px 5px;cursor:default;';
   el.innerHTML = '<svg width="22" height="16" viewBox="0 0 22 16" xmlns="http://www.w3.org/2000/svg">'
     + '<rect class="sb" id="sb1" x="0" y="11" width="4" height="5" rx="1"/>'
@@ -17141,7 +17178,7 @@ function onlineShowMatchBanner(matchInfo) {
 function onlineShowEloToast(delta, newElo, result) {
   var col = result==='win' ? '#00ff88' : result==='loss' ? '#ff4444' : '#ffaa00';
   var toast = document.createElement('div');
-  toast.style.cssText = 'position:fixed;top:60px;right:16px;background:rgba(0,0,0,0.92);'
+  toast.style.cssText = 'position:fixed;top:calc(60px + env(safe-area-inset-top));right:16px;background:rgba(0,0,0,0.92);'
     + 'border:1px solid '+col+';font-family:monospace;font-size:11px;color:'+col+';'
     + 'padding:10px 16px;z-index:55;letter-spacing:1px;transition:opacity 0.5s;';
   toast.innerHTML = result.toUpperCase() + '<br>ELO ' + (delta>=0?'+':'') + delta + ' - ' + newElo;
@@ -17153,7 +17190,7 @@ function onlineShowEloToast(delta, newElo, result) {
 function onlineShowToast(msg, colorInt) {
   var col = '#' + (colorInt||0xaaaaaa).toString(16).padStart(6,'0');
   var toast = document.createElement('div');
-  toast.style.cssText = 'position:fixed;top:60px;right:16px;background:rgba(0,0,0,0.92);'
+  toast.style.cssText = 'position:fixed;top:calc(60px + env(safe-area-inset-top));right:16px;background:rgba(0,0,0,0.92);'
     + 'border:1px solid '+col+';font-family:monospace;font-size:10px;color:'+col+';'
     + 'padding:10px 16px;z-index:55;letter-spacing:1px;';
   toast.textContent = msg;
