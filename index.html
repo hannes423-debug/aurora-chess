@@ -8099,20 +8099,20 @@ let px,py,pd;
 // 1-finger gesture state
 let camSwipeStartY=null, camSwipeStartZ=null;
 let _1fAxis=null, _1fStartX=null, _1fStartY=null;
-// 2-finger gesture state
-let _2fPrevX=null, _2fPrevY=null, _2fAxis=null, _2fStartX=null, _2fStartY=null, _2fStartDist=null;
+// 2-finger gesture state — only prev center needed; no axis lock
+let _2fPrevX=null, _2fPrevY=null;
 
 renderer.domElement.addEventListener("touchmove",function(e){
   e.preventDefault();
   if(e.touches.length===1){
     const tx=e.touches[0].clientX, ty=e.touches[0].clientY;
-    // Lock gesture axis on first significant movement
+    // Lock axis on first significant movement so layer-swipe and pan don't bleed into each other
     if(_1fAxis===null && _1fStartX!==null){
       const adx=Math.abs(tx-_1fStartX), ady=Math.abs(ty-_1fStartY);
       if(Math.max(adx,ady)>8) _1fAxis=(adx>ady)?'h':'v';
     }
     if(_1fAxis==='v' && UI_PREFS.swipeLayer){
-      // 1-finger vertical: proportional layer change (~50px per layer step)
+      // Proportional layer change: ~50px per step
       if(camSwipeStartY!==null){
         const delta=camSwipeStartY-ty;
         const newZ=Math.max(0,Math.min(LAYERS-1,camSwipeStartZ+Math.round(delta/50)));
@@ -8124,7 +8124,6 @@ renderer.domElement.addEventListener("touchmove",function(e){
         }
       }
     } else if(_1fAxis==='h' && window._panModeActive && typeof window._doBoardPanTouch==='function'){
-      // 1-finger horizontal: pan board (PAN mode only)
       if(px!==null) window._doBoardPanTouch(tx-px, 0);
     }
     px=tx; py=ty;
@@ -8134,24 +8133,15 @@ renderer.domElement.addEventListener("touchmove",function(e){
     const x2=e.touches[1].clientX, y2=e.touches[1].clientY;
     const cx=(x1+x2)/2, cy=(y1+y2)/2;
     const dist=Math.hypot(x2-x1, y2-y1);
-    // Determine gesture type: swipe (rotation) vs pinch (zoom)
-    if(_2fAxis===null && _2fStartX!==null){
-      const dx=cx-_2fStartX, dy=cy-_2fStartY;
-      const moved=Math.hypot(dx,dy);
-      const distDelta=Math.abs(dist-(_2fStartDist||dist));
-      if(moved>12 && moved>distDelta){ _2fAxis=(Math.abs(dx)>Math.abs(dy))?'h':'v'; }
-      else if(distDelta>20){ _2fAxis='zoom'; }
-    }
-    if((_2fAxis==='h'||_2fAxis==='v') && UI_PREFS.boardRotate){
-      // 2-finger swipe: rotate board
-      if(_2fPrevX!==null){
-        if(_2fAxis==='h'){ pivot.rotation.y+=(cx-_2fPrevX)*0.01; }
-        else             { pivot.rotation.x+=(cy-_2fPrevY)*0.01; }
+    if(_2fPrevX!==null){
+      // Rotation: driven by center-point movement — both axes always live, no locking
+      if(UI_PREFS.boardRotate){
+        pivot.rotation.y+=(cx-_2fPrevX)*0.01;
+        pivot.rotation.x+=(cy-_2fPrevY)*0.01;
         coords();
       }
-    } else {
-      // Pinch zoom (axis='zoom' or undetermined)
-      if(UI_PREFS.pinchZoom && pd){
+      // Zoom: driven by distance change — geometrically independent from rotation
+      if(UI_PREFS.pinchZoom && pd && dist>0){
         const ratio=pd/dist;
         if(cameraMode===CAMERA_MODES.FREE){
           camera.position.multiplyScalar(ratio);
@@ -8167,7 +8157,6 @@ renderer.domElement.addEventListener("touchmove",function(e){
   }
 },{passive:false});
 renderer.domElement.addEventListener("touchstart",function(e2){
-  // Initialise gesture state for the new touch
   if(e2.touches.length===1){
     camSwipeStartY=e2.touches[0].clientY; camSwipeStartZ=activeZ;
     _1fAxis=null; _1fStartX=e2.touches[0].clientX; _1fStartY=e2.touches[0].clientY;
@@ -8176,18 +8165,15 @@ renderer.domElement.addEventListener("touchstart",function(e2){
   if(e2.touches.length===2){
     const x1=e2.touches[0].clientX, y1=e2.touches[0].clientY;
     const x2=e2.touches[1].clientX, y2=e2.touches[1].clientY;
-    const cx=(x1+x2)/2, cy=(y1+y2)/2;
-    const d=Math.hypot(x2-x1, y2-y1);
-    _2fStartX=cx; _2fStartY=cy; _2fStartDist=d;
-    _2fPrevX=cx; _2fPrevY=cy;
-    _2fAxis=null; pd=d;
+    _2fPrevX=(x1+x2)/2; _2fPrevY=(y1+y2)/2;
+    pd=Math.hypot(x2-x1, y2-y1);
   }
 },{passive:true, capture:false});
 renderer.domElement.addEventListener("touchend",()=>{
   px=py=pd=null;
   camSwipeStartY=null; camSwipeStartZ=null;
   _1fAxis=null; _1fStartX=null; _1fStartY=null;
-  _2fPrevX=null; _2fPrevY=null; _2fAxis=null; _2fStartX=null; _2fStartY=null; _2fStartDist=null;
+  _2fPrevX=null; _2fPrevY=null;
 });
 
 /* ======================================================
