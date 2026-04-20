@@ -991,7 +991,6 @@ button, [role="button"], input[type="range"], label.toggle, select { touch-actio
               <h3>Model Source</h3>
               <div class="chipRow" id="apModelChips">
                 <button class="chip active" data-apmodel="glb">GLB Models</button>
-                <button class="chip" data-apmodel="procedural">Procedural</button>
               </div>
               <div id="apGlbStatus" style="font-size:9px;color:#3d1055;letter-spacing:1px;margin-top:4px;">Waiting for loader…</div>
             </div>
@@ -1148,7 +1147,7 @@ button, [role="button"], input[type="range"], label.toggle, select { touch-actio
               <div class="settingRow"><label>Size</label><div class="controls"><input class="settingSlider" type="range" id="msgSize" min="30" max="120" value="80"></div></div>
               <div class="settingRow"><label>Duration (s)</label><div class="controls"><input class="settingSlider" type="range" id="msgDur" min="1" max="10" value="3"></div></div>
               <div class="settingRow"><label>Animation</label><div class="controls"><div class="chipRow" id="msgAnimChips" style="margin:0;"><button class="chip active" data-msganim="fade">FADE</button><button class="chip" data-msganim="zap">ZAP</button><button class="chip" data-msganim="slide">SLIDE</button><button class="chip" data-msganim="pulse">PULSE</button></div></div></div>
-              <div class="settingRow"><label>Layer</label><div class="controls"><div class="chipRow" id="msgLayerChips" style="margin:0;"><button class="chip active" data-msglayer="current">CUR</button><button class="chip" data-msglayer="top">TOP</button><button class="chip" data-msglayer="0">L1</button><button class="chip" data-msglayer="3">L4</button><button class="chip" data-msglayer="7">L8</button></div></div></div>
+              <div class="settingRow"><label>Layer</label><div class="controls"><div class="chipRow" id="msgLayerChips" style="margin:0;"><button class="chip active" data-msglayer="current">CUR</button><button class="chip" data-msglayer="top">TOP</button><button class="chip" data-msglayer="0">L1</button><button class="chip" data-msglayer="3">L4</button></div></div></div>
               <div class="settingRow"><label>Glow</label><div class="controls"><label class="toggle"><input type="checkbox" id="msgGlow" checked><div class="track"></div><div class="thumb"></div></label></div></div>
               <div class="settingRow"><label></label><div class="controls"><button class="chip" id="msgPreview" style="border-color:#444;color:#aaa;padding:4px 12px;">▶ Preview</button></div></div>
             </div>
@@ -1173,7 +1172,7 @@ button, [role="button"], input[type="range"], label.toggle, select { touch-actio
             <div class="settingSection">
               <h3>Layer Visibility</h3>
               <div class="settingRow"><label>Mode</label><div class="controls"><div class="chipRow" style="margin:0;"><button class="chip active" data-layervis="limited">Limited</button><button class="chip" data-layervis="current">Current</button><button class="chip" data-layervis="all">All</button></div></div></div>
-              <div class="settingRow" id="layerVisCountRow"><label>Layers Shown (<span id="layerVisCountLabel">5</span>)</label><div class="controls"><input class="settingSlider" type="range" id="layerVisCount" min="1" max="8" value="5"></div></div>
+              <div class="settingRow" id="layerVisCountRow"><label>Layers Shown (<span id="layerVisCountLabel">5</span>)</label><div class="controls"><input class="settingSlider" type="range" id="layerVisCount" min="1" max="4" value="4"></div></div>
             </div>
             <div class="settingSection">
               <h3>Visual</h3>
@@ -9048,7 +9047,7 @@ const PUZZLES = [
     solution:[{from:{x:1,y:5,z:1},to:{x:2,y:7,z:1}}],
     turn:"white", goal:"checkmate", movesAllowed:1,
     pieces:[
-      {type:"king",   color:"white", x:7,y:7,z:7, moved:true},
+      {type:"king",   color:"white", x:7,y:7,z:3, moved:true},
       {type:"knight", color:"white", x:1,y:5,z:1, moved:true},
       {type:"king",   color:"black", x:0,y:7,z:0, moved:true},
       {type:"pawn",   color:"black", x:1,y:7,z:0, moved:true},
@@ -9067,7 +9066,7 @@ const PUZZLES = [
     solution:[{from:{x:3,y:2,z:0},to:{x:5,y:1,z:0}}],
     turn:"white", goal:"checkmate", movesAllowed:1,
     pieces:[
-      {type:"king",   color:"white", x:0,y:7,z:7, moved:true},
+      {type:"king",   color:"white", x:0,y:7,z:3, moved:true},
       {type:"knight", color:"white", x:3,y:2,z:0, moved:true},
       {type:"king",   color:"black", x:7,y:0,z:0, moved:true},
       {type:"pawn",   color:"black", x:6,y:0,z:0, moved:true},
@@ -9086,7 +9085,7 @@ const PUZZLES = [
     solution:[{from:{x:0,y:2,z:0},to:{x:2,y:1,z:0}}],
     turn:"white", goal:"checkmate", movesAllowed:1,
     pieces:[
-      {type:"king",   color:"white", x:7,y:7,z:7, moved:true},
+      {type:"king",   color:"white", x:7,y:7,z:3, moved:true},
       {type:"knight", color:"white", x:0,y:2,z:0, moved:true},
       {type:"king",   color:"black", x:0,y:0,z:0, moved:true},
       {type:"pawn",   color:"black", x:1,y:0,z:0, moved:true},
@@ -9100,76 +9099,77 @@ const PUZZLES = [
   },
 
   // ──────────────── ROOK LIFT (4-7) ────────────────
-  // King in top-layer corner (z=7). Three rooks on z=0 cover all
-  // non-column escape squares via z-axis. Rook on the z-column
-  // captures the pawn one layer below; queen protects it so
-  // the king can't recapture.
+  // Black king on top layer (z=3) corner, surrounded by three covering rooks
+  // on z=0 that seal all adjacent escape squares via the z-axis.
+  // The lifting rook starts on z=1 (queen at z=0 guards behind it), captures
+  // the blocking pawn at z=2, and checks the king at z=3.
+  // After the lift, queen at z=0 guards the rook through the now-empty z=1.
   {
     id:4, name:"Rook Lift I", difficulty:"beginner", category:"rook_lift",
-    objective:"White to move — Checkmate in 1. The king is on layer 8 — look up the z-axis!",
-    hint:"Lift the rook one layer by capturing the blocking pawn",
-    solution:[{from:{x:7,y:7,z:4},to:{x:7,y:7,z:6}}],
+    objective:"White to move — Checkmate in 1. The king is on layer 4 — lift the rook up the Z-axis!",
+    hint:"Capture the pawn to lift the rook — the queen guards it from below",
+    solution:[{from:{x:7,y:7,z:1},to:{x:7,y:7,z:2}}],
     turn:"white", goal:"checkmate", movesAllowed:1,
     pieces:[
       {type:"king",  color:"white", x:0,y:0,z:0, moved:true},
       {type:"queen", color:"white", x:7,y:7,z:0, moved:true},
-      {type:"rook",  color:"white", x:7,y:7,z:4, moved:true},
+      {type:"rook",  color:"white", x:7,y:7,z:1, moved:true},
       {type:"rook",  color:"white", x:6,y:7,z:0, moved:true},
       {type:"rook",  color:"white", x:7,y:6,z:0, moved:true},
       {type:"rook",  color:"white", x:6,y:6,z:0, moved:true},
-      {type:"king",  color:"black", x:7,y:7,z:7, moved:true},
-      {type:"pawn",  color:"black", x:7,y:7,z:6, moved:true}
+      {type:"king",  color:"black", x:7,y:7,z:3, moved:true},
+      {type:"pawn",  color:"black", x:7,y:7,z:2, moved:true}
     ]
   },
   {
     id:5, name:"Rook Lift II", difficulty:"beginner", category:"rook_lift",
-    objective:"White to move — Checkmate in 1. The king sits on layer 8 corner — use the z-axis!",
-    hint:"Lift the rook by capturing the pawn one layer below the king",
-    solution:[{from:{x:0,y:0,z:4},to:{x:0,y:0,z:6}}],
+    objective:"White to move — Checkmate in 1. The king sits on layer 4 corner — use the Z-axis!",
+    hint:"Capture the pawn to lift the rook — the queen guards it from below",
+    solution:[{from:{x:0,y:0,z:1},to:{x:0,y:0,z:2}}],
     turn:"white", goal:"checkmate", movesAllowed:1,
     pieces:[
       {type:"king",  color:"white", x:7,y:7,z:0, moved:true},
       {type:"queen", color:"white", x:0,y:0,z:0, moved:true},
-      {type:"rook",  color:"white", x:0,y:0,z:4, moved:true},
+      {type:"rook",  color:"white", x:0,y:0,z:1, moved:true},
       {type:"rook",  color:"white", x:1,y:0,z:0, moved:true},
       {type:"rook",  color:"white", x:0,y:1,z:0, moved:true},
       {type:"rook",  color:"white", x:1,y:1,z:0, moved:true},
-      {type:"king",  color:"black", x:0,y:0,z:7, moved:true},
-      {type:"pawn",  color:"black", x:0,y:0,z:6, moved:true}
+      {type:"king",  color:"black", x:0,y:0,z:3, moved:true},
+      {type:"pawn",  color:"black", x:0,y:0,z:2, moved:true}
     ]
   },
   {
     id:6, name:"Rook Lift III", difficulty:"beginner", category:"rook_lift",
-    objective:"White to move — Checkmate in 1. Layer 8 corner — all three escape squares sealed!",
-    hint:"The rook on the z-axis just needs to clear one pawn",
-    solution:[{from:{x:0,y:7,z:4},to:{x:0,y:7,z:6}}],
+    objective:"White to move — Checkmate in 1. Layer 4 corner — all escape squares sealed!",
+    hint:"The rook on the Z-axis just needs to clear one pawn",
+    solution:[{from:{x:0,y:7,z:1},to:{x:0,y:7,z:2}}],
     turn:"white", goal:"checkmate", movesAllowed:1,
     pieces:[
       {type:"king",  color:"white", x:7,y:0,z:0, moved:true},
       {type:"queen", color:"white", x:0,y:7,z:0, moved:true},
-      {type:"rook",  color:"white", x:0,y:7,z:4, moved:true},
+      {type:"rook",  color:"white", x:0,y:7,z:1, moved:true},
       {type:"rook",  color:"white", x:1,y:7,z:0, moved:true},
       {type:"rook",  color:"white", x:0,y:6,z:0, moved:true},
       {type:"rook",  color:"white", x:1,y:6,z:0, moved:true},
-      {type:"king",  color:"black", x:0,y:7,z:7, moved:true},
-      {type:"pawn",  color:"black", x:0,y:7,z:6, moved:true}
+      {type:"king",  color:"black", x:0,y:7,z:3, moved:true},
+      {type:"pawn",  color:"black", x:0,y:7,z:2, moved:true}
     ]
   },
   {
     id:7, name:"Rook Lift IV", difficulty:"beginner", category:"rook_lift",
-    objective:"White to move — Checkmate in 1. Four corners of layer 8 — same pattern, find it!",
-    hint:"Lift a rook into the z-column and let the queen guard the rook",
-    solution:[{from:{x:7,y:0,z:4},to:{x:7,y:0,z:6}}],
+    objective:"White to move — Checkmate in 1. Layer 4 corner — same pattern, different corner!",
+    hint:"Lift the rook by capturing the pawn — the queen guards from below",
+    solution:[{from:{x:7,y:0,z:1},to:{x:7,y:0,z:2}}],
     turn:"white", goal:"checkmate", movesAllowed:1,
     pieces:[
       {type:"king",  color:"white", x:0,y:7,z:0, moved:true},
       {type:"queen", color:"white", x:7,y:0,z:0, moved:true},
-      {type:"rook",  color:"white", x:7,y:0,z:4, moved:true},
+      {type:"rook",  color:"white", x:7,y:0,z:1, moved:true},
       {type:"rook",  color:"white", x:6,y:0,z:0, moved:true},
       {type:"rook",  color:"white", x:7,y:1,z:0, moved:true},
       {type:"rook",  color:"white", x:6,y:1,z:0, moved:true},
-      {type:"king",  color:"black", x:7,y:0,z:7, moved:true},
-      {type:"pawn",  color:"black", x:7,y:0,z:6, moved:true}
+      {type:"king",  color:"black", x:7,y:0,z:3, moved:true},
+      {type:"pawn",  color:"black", x:7,y:0,z:2, moved:true}
     ]
   },
 
@@ -9195,20 +9195,24 @@ const PUZZLES = [
   },
   {
     id:9, name:"Queen Diagonal", difficulty:"intermediate", category:"queen",
-    objective:"White to move — Checkmate in 1. Think diagonally — and remember layer 2!",
-    hint:"The queen can reach (1,1,0) in one move and check along the diagonal",
-    solution:[{from:{x:3,y:1,z:0},to:{x:1,y:1,z:0}}],
+    // Queen (3,3,0)→(1,1,0) via (-1,-1,0) diagonal, checks king at (0,0,0).
+    // Rook at (1,7,0) guards queen via x=1 column — king can't capture.
+    // All 7 escape squares from (0,0,0) are blocked by own pawns or covered.
+    objective:"White to move — Checkmate in 1. Seize the long diagonal — the rook guards your queen!",
+    hint:"The queen sweeps to a diagonal square close to the king — make sure it is guarded",
+    solution:[{from:{x:3,y:3,z:0},to:{x:1,y:1,z:0}}],
     turn:"white", goal:"checkmate", movesAllowed:1,
     pieces:[
-      {type:"king",  color:"white", x:7,y:7,z:7, moved:true},
-      {type:"queen", color:"white", x:3,y:1,z:0, moved:true},
-      {type:"rook",  color:"white", x:0,y:1,z:3, moved:true},
+      {type:"king",  color:"white", x:7,y:7,z:3, moved:true},
+      {type:"queen", color:"white", x:3,y:3,z:0, moved:true},
+      {type:"rook",  color:"white", x:1,y:7,z:0, moved:true},
       {type:"king",  color:"black", x:0,y:0,z:0, moved:true},
       {type:"pawn",  color:"black", x:1,y:0,z:0, moved:true},
       {type:"pawn",  color:"black", x:0,y:1,z:0, moved:true},
       {type:"pawn",  color:"black", x:0,y:0,z:1, moved:true},
       {type:"pawn",  color:"black", x:1,y:0,z:1, moved:true},
-      {type:"pawn",  color:"black", x:1,y:1,z:1, moved:true}
+      {type:"pawn",  color:"black", x:1,y:1,z:1, moved:true},
+      {type:"pawn",  color:"black", x:0,y:1,z:1, moved:true}
     ]
   },
 
@@ -9224,7 +9228,7 @@ const PUZZLES = [
     solution:[{from:{x:2,y:5,z:0},to:{x:4,y:4,z:0}}],
     turn:"white", goal:"check", movesAllowed:1,
     pieces:[
-      {type:"king",   color:"white", x:0,y:0,z:7, moved:true},
+      {type:"king",   color:"white", x:0,y:0,z:3, moved:true},
       {type:"knight", color:"white", x:2,y:5,z:0, moved:true},
       {type:"king",   color:"black", x:3,y:2,z:0, moved:true},
       {type:"rook",   color:"black", x:5,y:6,z:0, moved:true}
@@ -9232,20 +9236,20 @@ const PUZZLES = [
   },
   {
     id:11, name:"Z-Axis Pierce", difficulty:"beginner", category:"layer",
-    // Rook (4,4,0)→(4,4,3) captures pawn at (4,4,3).
-    // From (4,4,3): checks king (4,4,7) straight up z-axis.
-    // Path (4,4,4),(4,4,5),(4,4,6) is clear ✓
-    // King NOT in check before move (pawn at (4,4,3) blocks rook) ✓
+    // Rook (4,4,0)→(4,4,2) captures pawn at (4,4,2).
+    // From (4,4,2): checks king (4,4,3) straight up z-axis.
+    // Path through (4,4,1) is clear ✓
+    // King NOT in check before move (pawn at (4,4,2) blocks rook) ✓
     objective:"White to move — Punch through the pawn and check the king above!",
     hint:"The rook travels straight up between layers — one piece blocks the way",
-    solution:[{from:{x:4,y:4,z:0},to:{x:4,y:4,z:3}}],
+    solution:[{from:{x:4,y:4,z:0},to:{x:4,y:4,z:2}}],
     turn:"white", goal:"check", movesAllowed:1,
     pieces:[
       {type:"king",  color:"white", x:0,y:0,z:0, moved:true},
       {type:"rook",  color:"white", x:4,y:4,z:0, moved:true},
-      {type:"king",  color:"black", x:4,y:4,z:7, moved:true},
-      {type:"pawn",  color:"black", x:4,y:4,z:3, moved:true},
-      {type:"rook",  color:"black", x:7,y:7,z:7, moved:true}
+      {type:"king",  color:"black", x:4,y:4,z:3, moved:true},
+      {type:"pawn",  color:"black", x:4,y:4,z:2, moved:true},
+      {type:"rook",  color:"black", x:7,y:7,z:3, moved:true}
     ]
   },
 
@@ -9260,7 +9264,7 @@ const PUZZLES = [
     solution:[{from:{x:4,y:0,z:3},to:{x:5,y:1,z:3}}],
     turn:"white", goal:"check", movesAllowed:1,
     pieces:[
-      {type:"king",   color:"white", x:0,y:7,z:7, moved:true},
+      {type:"king",   color:"white", x:0,y:7,z:3, moved:true},
       {type:"bishop", color:"white", x:4,y:0,z:3, moved:true},
       {type:"king",   color:"black", x:7,y:3,z:3, moved:true},
       {type:"pawn",   color:"black", x:5,y:1,z:3, moved:true},
@@ -9279,7 +9283,7 @@ const PUZZLES = [
     solution:[{from:{x:5,y:0,z:0},to:{x:5,y:4,z:0}}],
     turn:"white", goal:"check", movesAllowed:1,
     pieces:[
-      {type:"king",  color:"white", x:7,y:7,z:7, moved:true},
+      {type:"king",  color:"white", x:7,y:7,z:3, moved:true},
       {type:"rook",  color:"white", x:5,y:0,z:0, moved:true},
       {type:"king",  color:"black", x:5,y:7,z:0, moved:true},
       {type:"pawn",  color:"black", x:5,y:4,z:0, moved:true},
@@ -9290,18 +9294,18 @@ const PUZZLES = [
   // ──────────────── QUEEN LAYER ATTACK (14) ────────────────
   {
     id:14, name:"Queen Spear", difficulty:"beginner", category:"queen",
-    // Queen (3,3,0) captures pawn (3,3,3) moving straight up z-axis ✓
-    // From (3,3,3): checks king (3,3,7) — path (3,3,4-6) clear ✓
-    // King NOT in check before move (pawn at (3,3,3) blocks z-axis) ✓
+    // Queen (3,3,0) captures pawn (3,3,2) moving straight up z-axis ✓
+    // From (3,3,2): checks king (3,3,3) — path through (3,3,1) is clear ✓
+    // King NOT in check before move (pawn at (3,3,2) blocks z-axis) ✓
     objective:"White to move — Clear the Z-axis and skewer the king above!",
     hint:"The queen can travel straight up between layers — something is in the way",
-    solution:[{from:{x:3,y:3,z:0},to:{x:3,y:3,z:3}}],
+    solution:[{from:{x:3,y:3,z:0},to:{x:3,y:3,z:2}}],
     turn:"white", goal:"check", movesAllowed:1,
     pieces:[
       {type:"king",  color:"white", x:0,y:0,z:0, moved:true},
       {type:"queen", color:"white", x:3,y:3,z:0, moved:true},
-      {type:"king",  color:"black", x:3,y:3,z:7, moved:true},
-      {type:"pawn",  color:"black", x:3,y:3,z:3, moved:true},
+      {type:"king",  color:"black", x:3,y:3,z:3, moved:true},
+      {type:"pawn",  color:"black", x:3,y:3,z:2, moved:true},
       {type:"rook",  color:"black", x:7,y:7,z:0, moved:true}
     ]
   },
@@ -9315,9 +9319,9 @@ const PUZZLES = [
     solution:[{from:{x:2,y:2,z:0},to:{x:5,y:5,z:0}}],
     turn:"white", goal:"capture", targetAt:{x:5,y:5,z:0}, movesAllowed:1,
     pieces:[
-      {type:"king",   color:"white", x:0,y:7,z:7, moved:true},
+      {type:"king",   color:"white", x:0,y:7,z:3, moved:true},
       {type:"bishop", color:"white", x:2,y:2,z:0, moved:true},
-      {type:"king",   color:"black", x:7,y:0,z:7, moved:true},
+      {type:"king",   color:"black", x:7,y:0,z:3, moved:true},
       {type:"rook",   color:"black", x:5,y:5,z:0, moved:true}
     ]
   },
@@ -9329,9 +9333,9 @@ const PUZZLES = [
     solution:[{from:{x:3,y:3,z:0},to:{x:5,y:4,z:0}}],
     turn:"white", goal:"capture", targetAt:{x:5,y:4,z:0}, movesAllowed:1,
     pieces:[
-      {type:"king",   color:"white", x:0,y:0,z:7, moved:true},
+      {type:"king",   color:"white", x:0,y:0,z:3, moved:true},
       {type:"knight", color:"white", x:3,y:3,z:0, moved:true},
-      {type:"king",   color:"black", x:7,y:7,z:7, moved:true},
+      {type:"king",   color:"black", x:7,y:7,z:3, moved:true},
       {type:"bishop", color:"black", x:5,y:4,z:0, moved:true}
     ]
   },
@@ -9343,9 +9347,9 @@ const PUZZLES = [
     solution:[{from:{x:0,y:3,z:0},to:{x:7,y:3,z:0}}],
     turn:"white", goal:"capture", targetAt:{x:7,y:3,z:0}, movesAllowed:1,
     pieces:[
-      {type:"king",   color:"white", x:0,y:7,z:7, moved:true},
+      {type:"king",   color:"white", x:0,y:7,z:3, moved:true},
       {type:"rook",   color:"white", x:0,y:3,z:0, moved:true},
-      {type:"king",   color:"black", x:7,y:7,z:7, moved:true},
+      {type:"king",   color:"black", x:7,y:7,z:3, moved:true},
       {type:"bishop", color:"black", x:7,y:3,z:0, moved:true}
     ]
   },
@@ -9357,9 +9361,9 @@ const PUZZLES = [
     solution:[{from:{x:3,y:1,z:0},to:{x:4,y:2,z:0}}],
     turn:"white", goal:"capture", targetAt:{x:4,y:2,z:0}, movesAllowed:1,
     pieces:[
-      {type:"king",   color:"white", x:0,y:0,z:7, moved:true},
+      {type:"king",   color:"white", x:0,y:0,z:3, moved:true},
       {type:"pawn",   color:"white", x:3,y:1,z:0, moved:false},
-      {type:"king",   color:"black", x:7,y:7,z:7, moved:true},
+      {type:"king",   color:"black", x:7,y:7,z:3, moved:true},
       {type:"bishop", color:"black", x:4,y:2,z:0, moved:true}
     ]
   },
@@ -9371,9 +9375,9 @@ const PUZZLES = [
     solution:[{from:{x:3,y:3,z:0},to:{x:3,y:4,z:2}}],
     turn:"white", goal:"capture", targetAt:{x:3,y:4,z:2}, movesAllowed:1,
     pieces:[
-      {type:"king",   color:"white", x:0,y:0,z:7, moved:true},
+      {type:"king",   color:"white", x:0,y:0,z:3, moved:true},
       {type:"knight", color:"white", x:3,y:3,z:0, moved:true},
-      {type:"king",   color:"black", x:7,y:7,z:7, moved:true},
+      {type:"king",   color:"black", x:7,y:7,z:3, moved:true},
       {type:"bishop", color:"black", x:3,y:4,z:2, moved:true}
     ]
   }
@@ -9629,13 +9633,7 @@ function loadPuzzlePieces(puzData) {
   if (startMessageMesh) { pivot.remove(startMessageMesh); startMessageMesh = null; }
 
   puzData.pieces.forEach(s => {
-    let p;
-    if (s.type==='pawn')   p = pawn(s.color);
-    if (s.type==='rook')   p = rook(s.color);
-    if (s.type==='knight') p = knight(s.color);
-    if (s.type==='bishop') p = bishop(s.color);
-    if (s.type==='queen')  p = queen(s.color);
-    if (s.type==='king')   p = king(s.color);
+    const p = buildPiece(s.type, s.color);
     if (!p) return;
     place(p, s.x, s.y, s.z);
     p.userData.moved = !!s.moved;
@@ -16123,7 +16121,7 @@ tickLayerHighlight = function(dt) {
    ONLINE MODULE  (WebSocket matchmaking + WebRTC P2P)
 ================================================================ */
 
-var CC_DEFAULT_SERVER = 'wss://cubic-chess.tail09d577.ts.net';
+var CC_DEFAULT_SERVER = 'wss://cubic-chess.tail09d577.ts.net'; // ← replace with output of: tailscale funnel 3000
 
 var ONLINE_SERVER = (function() {
   var loc = window.location;
@@ -16905,7 +16903,7 @@ var _onlineLobby = (function() {
         <button id="onlineAdvToggle" style="background:none;border:none;color:#333;font-family:monospace;font-size:9px;cursor:pointer;letter-spacing:1px;padding:0;">- Advanced</button>
         <div id="onlineAdvSection" style="display:none;margin-top:8px;">
           <div style="display:flex;gap:6px;">
-            <input id="onlineServerInput" type="text" placeholder="wss://cubic-chess.tail09d577.ts.net"
+            <input id="onlineServerInput" type="text" placeholder="ws://192.168.x.x:3000"
               style="flex:1;background:#1a1a1a;border:1px solid #333;color:#aaa;font-family:monospace;
                      font-size:10px;padding:6px 8px;outline:none;">
             <button id="onlineConnectBtn" style="background:#1a1a1a;border:1px solid #444;color:#00ccff;
@@ -17501,13 +17499,7 @@ function onlineLog(msg) { console.log('[online]', msg); }
 
 // Auto-connect on page load if we have a stored server URL
 (function() {
-  // Migrate: strip legacy :3000 port from stored Tailscale Funnel URLs (now served on 443)
-  var stored = localStorage.getItem('cc_server_url');
-  if (stored && stored.match(/tail[0-9a-f]+\.ts\.net:3000/)) {
-    stored = stored.replace(/:3000$/, '');
-    localStorage.setItem('cc_server_url', stored);
-  }
-  var url = stored || CC_DEFAULT_SERVER;
+  var url = localStorage.getItem('cc_server_url') || CC_DEFAULT_SERVER;
   if (url) setTimeout(function() { onlineConnect(url); }, 800);
 })();
 
