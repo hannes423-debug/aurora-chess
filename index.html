@@ -16123,7 +16123,7 @@ tickLayerHighlight = function(dt) {
    ONLINE MODULE  (WebSocket matchmaking + WebRTC P2P)
 ================================================================ */
 
-var CC_DEFAULT_SERVER = 'wss://cubic-chess.tail09d577.ts.net'; // ← replace with output of: tailscale funnel 3000
+var CC_DEFAULT_SERVER = 'wss://cubic-chess.tail09d577.ts.net';
 
 var ONLINE_SERVER = (function() {
   var loc = window.location;
@@ -16905,7 +16905,7 @@ var _onlineLobby = (function() {
         <button id="onlineAdvToggle" style="background:none;border:none;color:#333;font-family:monospace;font-size:9px;cursor:pointer;letter-spacing:1px;padding:0;">- Advanced</button>
         <div id="onlineAdvSection" style="display:none;margin-top:8px;">
           <div style="display:flex;gap:6px;">
-            <input id="onlineServerInput" type="text" placeholder="ws://192.168.x.x:3000"
+            <input id="onlineServerInput" type="text" placeholder="wss://cubic-chess.tail09d577.ts.net"
               style="flex:1;background:#1a1a1a;border:1px solid #333;color:#aaa;font-family:monospace;
                      font-size:10px;padding:6px 8px;outline:none;">
             <button id="onlineConnectBtn" style="background:#1a1a1a;border:1px solid #444;color:#00ccff;
@@ -17501,7 +17501,13 @@ function onlineLog(msg) { console.log('[online]', msg); }
 
 // Auto-connect on page load if we have a stored server URL
 (function() {
-  var url = localStorage.getItem('cc_server_url') || CC_DEFAULT_SERVER;
+  // Migrate: strip legacy :3000 port from stored Tailscale Funnel URLs (now served on 443)
+  var stored = localStorage.getItem('cc_server_url');
+  if (stored && stored.match(/tail[0-9a-f]+\.ts\.net:3000/)) {
+    stored = stored.replace(/:3000$/, '');
+    localStorage.setItem('cc_server_url', stored);
+  }
+  var url = stored || CC_DEFAULT_SERVER;
   if (url) setTimeout(function() { onlineConnect(url); }, 800);
 })();
 
