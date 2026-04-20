@@ -1284,6 +1284,7 @@ button, [role="button"], input[type="range"], label.toggle, select { touch-actio
               <div class="settingRow"><label>Swipe Layer</label><div class="controls"><label class="toggle"><input type="checkbox" id="advSwipeLayer2" checked><div class="track"></div><div class="thumb"></div></label></div></div>
               <div class="settingRow"><label>Pinch Zoom</label><div class="controls"><label class="toggle"><input type="checkbox" id="advPinchZoom2" checked><div class="track"></div><div class="thumb"></div></label></div></div>
               <div class="settingRow"><label>Board Rotation</label><div class="controls"><label class="toggle"><input type="checkbox" id="advBoardRotate2" checked><div class="track"></div><div class="thumb"></div></label></div></div>
+              <div class="settingRow"><label>Swipe Actions</label><div class="controls"><div class="chipRow"><button class="chip active" data-swipemode="default">1F=LAYER</button><button class="chip" data-swipemode="swapped">1F=ROTATE</button></div></div></div>
             </div>
 
             <div class="settingSection">
@@ -8112,6 +8113,7 @@ let camSwipeStartY=null, camSwipeStartZ=null;
 let _1fAxis=null, _1fStartX=null, _1fStartY=null;
 // 2-finger gesture state — only prev center needed; no axis lock
 let _2fPrevX=null, _2fPrevY=null;
+let _2fLayerStartY=null, _2fLayerStartZ=null;
 
 renderer.domElement.addEventListener("touchmove",function(e){
   e.preventDefault();
@@ -8122,8 +8124,14 @@ renderer.domElement.addEventListener("touchmove",function(e){
       const adx=Math.abs(tx-_1fStartX), ady=Math.abs(ty-_1fStartY);
       if(Math.max(adx,ady)>8) _1fAxis=(adx>ady)?'h':'v';
     }
-    if(_1fAxis==='v' && UI_PREFS.swipeLayer){
-      // Proportional layer change: ~50px per step
+    if(_1fAxis==='v' && INPUT_CFG.swipeMode==='swapped'){
+      // Swapped: 1-finger vertical → rotate board
+      if(UI_PREFS.boardRotate && py!==null){
+        pivot.rotation.x+=(ty-py)*0.01;
+        coords();
+      }
+    } else if(_1fAxis==='v' && UI_PREFS.swipeLayer){
+      // Default: 1-finger vertical → layer change (~50px per step)
       if(camSwipeStartY!==null){
         const delta=camSwipeStartY-ty;
         const newZ=Math.max(0,Math.min(LAYERS-1,camSwipeStartZ+Math.round(delta/50)));
@@ -8145,13 +8153,27 @@ renderer.domElement.addEventListener("touchmove",function(e){
     const cx=(x1+x2)/2, cy=(y1+y2)/2;
     const dist=Math.hypot(x2-x1, y2-y1);
     if(_2fPrevX!==null){
-      // Rotation: driven by center-point movement — both axes always live, no locking
-      if(UI_PREFS.boardRotate){
-        pivot.rotation.y+=(cx-_2fPrevX)*0.01;
-        pivot.rotation.x+=(cy-_2fPrevY)*0.01;
-        coords();
+      if(INPUT_CFG.swipeMode==='swapped'){
+        // Swapped: 2-finger vertical → layer change, horizontal → ignored for layer
+        if(UI_PREFS.swipeLayer && _2fLayerStartY!==null){
+          const delta=_2fLayerStartY-cy;
+          const newZ=Math.max(0,Math.min(LAYERS-1,_2fLayerStartZ+Math.round(delta/50)));
+          if(newZ!==activeZ){
+            activeZ=newZ; update(); coords();
+            document.getElementById("zSlider").value=activeZ;
+            SND.layer(activeZ); HAP.vib('layer'); flashLayerIndicator(activeZ);
+            camOnLayerChange();
+          }
+        }
+      } else {
+        // Default: 2-finger → rotate board
+        if(UI_PREFS.boardRotate){
+          pivot.rotation.y+=(cx-_2fPrevX)*0.01;
+          pivot.rotation.x+=(cy-_2fPrevY)*0.01;
+          coords();
+        }
       }
-      // Zoom: driven by distance change — geometrically independent from rotation
+      // Zoom: driven by distance change — geometrically independent
       if(UI_PREFS.pinchZoom && pd && dist>0){
         const ratio=pd/dist;
         if(cameraMode===CAMERA_MODES.FREE){
@@ -8177,6 +8199,7 @@ renderer.domElement.addEventListener("touchstart",function(e2){
     const x1=e2.touches[0].clientX, y1=e2.touches[0].clientY;
     const x2=e2.touches[1].clientX, y2=e2.touches[1].clientY;
     _2fPrevX=(x1+x2)/2; _2fPrevY=(y1+y2)/2;
+    _2fLayerStartY=_2fPrevY; _2fLayerStartZ=activeZ;
     pd=Math.hypot(x2-x1, y2-y1);
   }
 },{passive:true, capture:false});
@@ -8185,6 +8208,7 @@ renderer.domElement.addEventListener("touchend",()=>{
   camSwipeStartY=null; camSwipeStartZ=null;
   _1fAxis=null; _1fStartX=null; _1fStartY=null;
   _2fPrevX=null; _2fPrevY=null;
+  _2fLayerStartY=null; _2fLayerStartZ=null;
 });
 
 /* ======================================================
@@ -15404,6 +15428,7 @@ var INPUT_CFG = {
   gamepadEnabled:  true,
   gamepadDeadzone: 0.15,
   gamepadSens:     10,
+  swipeMode:       'default', // 'default': 1F=layer/2F=rotate; 'swapped': 1F=rotate/2F=layer
 };
 
 function loadInputCFG() {
@@ -15497,6 +15522,18 @@ loadInputCFG();
       var orig = document.getElementById('adv'+pair[1].charAt(0).toUpperCase()+pair[1].slice(1));
       if (orig) orig.checked = e.target.checked;
     });
+  });
+
+  // Swipe mode chips
+  document.querySelectorAll('[data-swipemode]').forEach(function(btn) {
+    btn.classList.toggle('active', btn.dataset.swipemode === INPUT_CFG.swipeMode);
+    btn.onclick = function() {
+      INPUT_CFG.swipeMode = btn.dataset.swipemode;
+      document.querySelectorAll('[data-swipemode]').forEach(function(b) {
+        b.classList.toggle('active', b.dataset.swipemode === INPUT_CFG.swipeMode);
+      });
+      saveInputCFG();
+    };
   });
 })();
 
