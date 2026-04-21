@@ -622,6 +622,14 @@ button, [role="button"], input[type="range"], label.toggle, select { touch-actio
     <div class="profile-stat">Bot wins      <span id="pStatBotWins">0</span></div>
     <div class="profile-stat">Puzzles solved<span id="pStatPuzzles">0</span></div>
 
+    <div id="profileFriendsSection" style="display:none;margin:8px 0;border-top:1px solid #2d0a4e;padding-top:8px;">
+      <div class="profile-stat">Friends<span id="pStatFriends">0</span></div>
+      <div style="display:flex;gap:6px;margin-top:6px;">
+        <button id="profileViewFriendsBtn" class="acct-btn" style="flex:1;font-size:10px;">VIEW FRIENDS</button>
+        <button id="profileAddFriendBtn"   class="acct-btn" style="flex:1;font-size:10px;">ADD FRIEND</button>
+      </div>
+    </div>
+
     <div id="savedGamesPanel">
       <div style="font-size:11px;letter-spacing:2px;color:#555;margin-top:4px;">SAVED GAMES</div>
       <div id="savedGamesList"></div>
@@ -1495,6 +1503,40 @@ button, [role="button"], input[type="range"], label.toggle, select { touch-actio
   25%     { transform: translate(-3vw, 4vh) scale(1.2); }
   75%     { transform: translate(4vw, -3vh) scale(0.85); }
 }
+
+/* ══ PLAY FLOW ══ */
+.playPanel{width:300px;max-height:85vh;overflow-y:auto;}
+.playHeader{text-align:center;margin-bottom:20px;}
+.playTitle{font-size:18px;letter-spacing:5px;color:#f0e6ff;}
+.playSubtitle{font-size:9px;color:#5e2750;letter-spacing:3px;margin-top:4px;}
+.playModeBtn{width:100%;background:#12001e;border:1px solid #3d1055;color:#f0e6ff;padding:14px 16px;font-family:monospace;font-size:12px;cursor:pointer;letter-spacing:2px;text-align:left;transition:border-color 0.15s,color 0.15s;margin-bottom:8px;box-sizing:border-box;}
+.playModeBtn:hover{border-color:#9b8fa8;color:#fff;}
+.playModeBtn .sub{font-size:9px;color:#5e2750;letter-spacing:1px;margin-top:4px;font-weight:normal;}
+.playStep{position:fixed;inset:0;background:rgba(10,0,20,0.88);display:none;flex-direction:column;justify-content:center;align-items:center;font-family:monospace;color:#f0e6ff;overflow-y:auto;}
+.timeChipRow{display:flex;gap:4px;flex-wrap:wrap;}
+.timeChip{background:#1e0535;border:1px solid #3d1055;color:#7a5a8a;padding:4px 8px;font-family:monospace;font-size:10px;cursor:pointer;border-radius:2px;letter-spacing:1px;transition:all 0.1s;}
+.timeChip:hover{color:#ce93d8;border-color:#6b2a80;}
+.timeChip.active{background:#2d0a4e;color:#ce93d8;border-color:#ce93d8;}
+.tierHeader{display:flex;justify-content:space-between;align-items:center;padding:9px 0;margin:8px 0 4px;cursor:pointer;user-select:none;border-top:1px solid #2d0a4e;}
+.tierHeaderLabel{font-size:9px;letter-spacing:3px;color:#5e2750;text-transform:uppercase;}
+.tierHeader:hover .tierHeaderLabel{color:#9b8fa8;}
+.tierArrow{font-size:10px;color:#5e2750;transition:transform 0.2s;}
+.tierArrow.open{transform:rotate(180deg);}
+.tierContent{overflow:hidden;}
+.tierContent.collapsed{display:none;}
+.notif-badge{display:inline-block;background:#ff4444;color:#fff;font-size:8px;border-radius:10px;padding:1px 5px;margin-left:4px;font-family:monospace;letter-spacing:0;vertical-align:middle;line-height:1.4;}
+#hudGearBtn{position:fixed;bottom:52px;left:12px;z-index:22;background:#1e0535;border:1px solid #3d1055;color:#5e2750;font-family:monospace;font-size:10px;letter-spacing:1px;padding:4px 8px;cursor:pointer;border-radius:2px;display:none;transition:color 0.15s,border-color 0.15s;}
+#hudGearBtn:hover{color:#ce93d8;border-color:#6b2a80;}
+#hudQuickPanel{position:fixed;bottom:82px;left:12px;background:#12001e;border:1px solid #3d1055;z-index:23;display:none;width:200px;font-family:monospace;font-size:11px;color:#9b8fa8;padding:10px 12px;box-shadow:0 4px 20px rgba(0,0,0,0.8);}
+#helpOverlay{position:fixed;inset:0;background:rgba(10,0,20,0.92);display:none;flex-direction:column;justify-content:center;align-items:center;z-index:44;font-family:monospace;color:#f0e6ff;overflow-y:auto;}
+#friendPanel{position:fixed;inset:0;background:rgba(10,0,20,0.92);z-index:74;display:none;flex-direction:column;justify-content:center;align-items:center;font-family:monospace;color:#f0e6ff;}
+.friendPanelBox{width:300px;max-height:88vh;background:#12001e;border:1px solid #3d1055;display:flex;flex-direction:column;overflow:hidden;}
+.friendPanelHeader{padding:14px 16px;border-bottom:1px solid #2d0a4e;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
+.friendItem{display:flex;justify-content:space-between;align-items:center;padding:7px 12px;border-bottom:1px solid #1e0535;font-size:11px;}
+.friendItem:hover{background:#1e0535;}
+.fDot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-right:8px;display:inline-block;}
+.fDot.online{background:#00ff88;}.fDot.playing{background:#ffaa00;}.fDot.queued{background:#ffff00;}.fDot.offline{background:#3d1055;}
+#playStepOnline{z-index:45;}
 </style>
 
 <div id="menuBg">
@@ -1519,29 +1561,29 @@ button, [role="button"], input[type="range"], label.toggle, select { touch-actio
   <div style="color:#5e2750;font-size:9px;letter-spacing:4px;margin-bottom:28px;position:relative;z-index:1;">CHESS</div>
 
   <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:0;">
-  <!-- PRIMARY PLAY ACTIONS -->
-  <button class="menuBtn modeBtn" data-mode="classic" style="margin-bottom:4px;">Play</button>
-  <button class="modeBtn" id="openOnlineBtn" style="margin-bottom:4px;">Play Online</button>
-  <button class="modeBtn" id="gameModesBtn" style="margin-bottom:4px;">Game Modes</button>
+    <button class="modeBtn" id="mainPlayBtn"    style="margin-bottom:4px;">▶ Play</button>
+    <button class="modeBtn" id="mainPuzzlesBtn" style="margin-bottom:4px;">🧩 Puzzles</button>
 
-  <!-- DIVIDER -->
-  <div style="width:120px;border-top:1px solid #1a1a1a;margin:10px 0;"></div>
+    <div style="width:120px;border-top:1px solid #2d0a4e;margin:10px 0;"></div>
 
-  <!-- SECONDARY MODES -->
-  <button class="modeBtn" id="openPuzzleSelectBtn" style="margin-bottom:4px;">Puzzle Mode</button>
-  <button class="modeBtn" id="openTutorialBtn"     style="margin-bottom:4px;">Tutorial</button>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;">
+      <button id="mainSettingsBtn" style="background:#1e0535;border:1px solid #3d1055;color:#9b8fa8;padding:6px 12px;font-family:monospace;font-size:11px;cursor:pointer;letter-spacing:1px;transition:border-color 0.15s,color 0.15s;">⚙</button>
+      <button id="mainProfileBtn"  style="background:#1e0535;border:1px solid #3d1055;color:#9b8fa8;padding:6px 12px;font-family:monospace;font-size:11px;cursor:pointer;letter-spacing:1px;transition:border-color 0.15s,color 0.15s;position:relative;">👤<span id="mainProfileBadge" class="notif-badge" style="display:none;"></span></button>
+      <button id="mainHelpBtn"     style="background:#1e0535;border:1px solid #3d1055;color:#9b8fa8;padding:6px 12px;font-family:monospace;font-size:11px;cursor:pointer;letter-spacing:1px;transition:border-color 0.15s,color 0.15s;">?</button>
+    </div>
 
-  <!-- DIVIDER -->
-  <div style="width:120px;border-top:1px solid #1a1a1a;margin:10px 0;"></div>
+    <div id="serverStatusLine" style="margin-top:14px;font-size:9px;color:#4a2060;letter-spacing:1px;cursor:pointer;user-select:none;" title="Click to toggle server connection">⬤ OFFLINE MODE</div>
 
-  <!-- SETTINGS + PROFILE + SUPPORT -->
-  <div style="display:flex;gap:8px;margin-bottom:6px;">
-    <button id="mainSettingsBtn" style="background:#1e0535;border:1px solid #3d1055;color:#9b8fa8;padding:6px 14px;font-family:monospace;font-size:11px;cursor:pointer;letter-spacing:1px;transition:border-color 0.15s,color 0.15s;">⚙ Settings</button>
-    <button id="mainProfileBtn"  style="background:#1e0535;border:1px solid #3d1055;color:#9b8fa8;padding:6px 14px;font-family:monospace;font-size:11px;cursor:pointer;letter-spacing:1px;transition:border-color 0.15s,color 0.15s;">👤 Profile</button>
+    <!-- Hidden legacy buttons for backward compat -->
+    <div style="display:none;">
+      <button class="menuBtn modeBtn" data-mode="classic"></button>
+      <button class="modeBtn" id="openOnlineBtn"></button>
+      <button class="modeBtn" id="gameModesBtn"></button>
+      <button class="modeBtn" id="openPuzzleSelectBtn"></button>
+      <button class="modeBtn" id="openTutorialBtn"></button>
+      <button id="mainSupportBtn"></button>
+    </div>
   </div>
-  <button id="mainSupportBtn" style="background:#1e0535;border:1px solid #3d1055;color:#9b8fa8;padding:6px 14px;font-family:monospace;font-size:11px;cursor:pointer;letter-spacing:1px;transition:border-color 0.15s,color 0.15s;">? Support</button>
-  <div id="serverStatusLine" style="margin-top:14px;font-size:9px;color:#4a2060;letter-spacing:1px;cursor:pointer;user-select:none;" title="Click to toggle server connection">⬤ OFFLINE MODE</div>
-  </div><!-- end z-index wrapper -->
 </div>
 
 <!-- ======================================================
@@ -1640,6 +1682,238 @@ button, [role="button"], input[type="range"], label.toggle, select { touch-actio
 </div>
 
 <!-- ======================================================
+     UI: PLAY STEP 1 — MODE
+====================================================== -->
+<div id="playStep1" class="playStep" style="z-index:44;">
+  <div class="playPanel">
+    <div class="playHeader">
+      <div class="playTitle">PLAY</div>
+      <div class="playSubtitle">CHOOSE MODE</div>
+    </div>
+    <button class="playModeBtn" id="ps1Standard">♟ STANDARD CHESS<div class="sub">Classic 3D chess — full rules</div></button>
+    <button class="playModeBtn" id="ps1Arcade" style="border-color:#00ff88;color:#00ff88;">⚡ ARCADE<div class="sub" style="color:#2d5540;">Power orbs · Board morphs · Chaos events</div></button>
+    <button class="playModeBtn" id="ps1CTF" style="border-color:#ff6600;color:#ff6600;">🚩 CAPTURE THE FLAG<div class="sub" style="color:#5e3300;">Steal the flag · Deliver to enemy base</div></button>
+    <div style="width:100%;border-top:1px solid #2d0a4e;margin:12px 0 8px;"></div>
+    <button class="modeBtn" id="ps1Back" style="width:100%;margin:0;">← Back</button>
+  </div>
+</div>
+
+<!-- ======================================================
+     UI: PLAY STEP 2 — PLAYERS
+====================================================== -->
+<div id="playStep2" class="playStep" style="z-index:44;">
+  <div class="playPanel">
+    <div class="playHeader">
+      <div class="playTitle" id="ps2Title">PLAY</div>
+      <div class="playSubtitle">WHO'S PLAYING?</div>
+    </div>
+    <button class="playModeBtn" id="ps2Local">👥 PASS &amp; PLAY<div class="sub">Two players on one device</div></button>
+    <button class="playModeBtn" id="ps2Bot">🤖 VS COMPUTER<div class="sub">Play against the AI</div></button>
+    <button class="playModeBtn" id="ps2Online" style="border-color:#ce93d8;color:#ce93d8;">🌐 PLAY ONLINE<div class="sub" id="ps2OnlineSub" style="color:#5e2750;">Quick match · Friends · Private game</div></button>
+    <div style="width:100%;border-top:1px solid #2d0a4e;margin:12px 0 8px;"></div>
+    <button class="modeBtn" id="ps2Back" style="width:100%;margin:0;">← Back</button>
+  </div>
+</div>
+
+<!-- ======================================================
+     UI: PLAY STEP 3 — CONFIGURE
+====================================================== -->
+<div id="playStep3" class="playStep" style="z-index:44;">
+  <div class="playPanel">
+    <div class="playHeader">
+      <div class="playTitle" id="ps3Title">CONFIGURE</div>
+      <div class="playSubtitle">STEP 3 OF 3</div>
+    </div>
+
+    <div id="ps3DiffSection" style="display:none;border-bottom:1px solid #2d0a4e;padding-bottom:12px;margin-bottom:12px;">
+      <div style="font-size:9px;color:#5e2750;letter-spacing:2px;margin-bottom:8px;">🤖 DIFFICULTY</div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px;">
+        <button class="chip active" data-ps3color="white">WHITE</button>
+        <button class="chip" data-ps3color="black">BLACK</button>
+        <button class="chip" data-ps3color="random">RANDOM</button>
+      </div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;">
+        <button class="chip" data-ps3diff="easy">EASY</button>
+        <button class="chip active" data-ps3diff="medium">MEDIUM</button>
+        <button class="chip" data-ps3diff="hard">HARD</button>
+        <button class="chip" data-ps3diff="max">MAX</button>
+      </div>
+      <div style="margin-top:10px;display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#7a5a8a;">
+        <span>Show Hint Button</span>
+        <label class="toggle"><input type="checkbox" id="ps3HintToggle" checked><div class="track"></div><div class="thumb"></div></label>
+      </div>
+      <div style="margin-top:6px;display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#7a5a8a;">
+        <span>Show Undo Button</span>
+        <label class="toggle"><input type="checkbox" id="ps3UndoToggle" checked><div class="track"></div><div class="thumb"></div></label>
+      </div>
+    </div>
+
+    <div style="border-bottom:1px solid #2d0a4e;padding-bottom:12px;margin-bottom:12px;">
+      <div style="font-size:9px;color:#5e2750;letter-spacing:2px;margin-bottom:8px;">⏱ TIME CONTROL</div>
+      <div class="timeChipRow">
+        <button class="timeChip active" data-time="0">OFF</button>
+        <button class="timeChip" data-time="1">1</button>
+        <button class="timeChip" data-time="3">3</button>
+        <button class="timeChip" data-time="5">5</button>
+        <button class="timeChip" data-time="10">10</button>
+        <button class="timeChip" data-time="15">15</button>
+        <button class="timeChip" data-time="30">30</button>
+      </div>
+      <div style="font-size:9px;color:#3d1055;letter-spacing:1px;margin-top:4px;">Minutes per player · OFF = no limit</div>
+    </div>
+
+    <div id="ps3ArcadeSection" style="display:none;margin-bottom:12px;">
+      <div id="ps3ArcadeHeader" style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;cursor:pointer;border-top:1px solid #2d0a4e;margin-bottom:4px;">
+        <span style="font-size:9px;color:#5e2750;letter-spacing:2px;">⚡ ORB SETTINGS</span>
+        <span id="ps3ArcadeArrow" style="font-size:10px;color:#5e2750;transition:transform 0.2s;">▾</span>
+      </div>
+      <div id="ps3ArcadeContent" style="display:none;">
+        <div class="arcadeRow"><span>Power Orbs</span><button class="arcadeToggleBtn on" data-ps3arc="powerOrbs">ON</button></div>
+        <div class="arcadeRow"><span>Board Morphing</span><button class="arcadeToggleBtn on" data-ps3arc="boardMorphing">ON</button></div>
+        <div class="arcadeRow"><span>Timer Orbs</span><button class="arcadeToggleBtn on" data-ps3arc="timerEffects">ON</button></div>
+        <div class="arcadeRow"><span>Random Events</span><button class="arcadeToggleBtn on" data-ps3arc="randomEvents">ON</button></div>
+        <div class="arcadeRow" style="margin-top:4px;">
+          <span>Spawn Rate</span>
+          <div class="arcadeRateRow">
+            <button class="arcadeRateBtn" data-ps3rate="low">LOW</button>
+            <button class="arcadeRateBtn active" data-ps3rate="medium">MED</button>
+            <button class="arcadeRateBtn" data-ps3rate="high">HIGH</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:8px;">
+      <button class="modeBtn" id="ps3Back" style="flex:1;margin:0;">← Back</button>
+      <button class="modeBtn" id="ps3Play" style="flex:1;margin:0;border-color:#ce93d8;color:#ce93d8;">▶ Play</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================================
+     UI: ONLINE PLAY FLOW
+====================================================== -->
+<div id="playStepOnline" class="playStep" style="z-index:45;">
+  <div class="playPanel">
+    <div class="playHeader">
+      <div class="playTitle">ONLINE</div>
+      <div id="psoStatus" style="font-size:9px;letter-spacing:2px;margin-top:4px;color:#5e2750;">OFFLINE</div>
+    </div>
+    <div id="psoOfflineNote" style="font-size:10px;color:#7a5a8a;text-align:center;margin-bottom:16px;line-height:1.9;display:none;">
+      Server offline — try again later<br>
+      <button id="psoRetryBtn" style="background:none;border:1px solid #3d1055;color:#7a5a8a;font-family:monospace;font-size:9px;padding:3px 12px;cursor:pointer;margin-top:6px;letter-spacing:1px;">RETRY</button>
+    </div>
+    <div id="psoAuthRequired" style="font-size:10px;color:#7a5a8a;text-align:center;margin-bottom:16px;line-height:1.9;display:none;">
+      <button id="psoLoginBtn" style="background:#1e0535;border:1px solid #ce93d8;color:#ce93d8;font-family:monospace;font-size:10px;padding:6px 18px;cursor:pointer;letter-spacing:1px;">LOGIN / REGISTER</button>
+    </div>
+    <div id="psoPlayOptions">
+      <button class="playModeBtn" id="psoQuickMatch" style="border-color:#00ff88;color:#00ff88;">⚡ QUICK MATCH<div class="sub" style="color:#2d5540;">Matchmake automatically</div></button>
+      <button class="playModeBtn" id="psoFriendGame" style="border-color:#ce93d8;color:#ce93d8;">👥 PLAY A FRIEND<div class="sub" style="color:#5e2750;">Challenge from your friend list</div></button>
+      <button class="playModeBtn" id="psoPrivateGame">🔒 PRIVATE GAME<div class="sub">Generate a room code to share</div></button>
+    </div>
+    <div id="psoLobbyArea" style="display:none;text-align:center;padding:14px 0;">
+      <div id="psoLobbyText" style="font-size:12px;color:#00ff88;letter-spacing:2px;margin-bottom:8px;"></div>
+      <div id="psoLobbyTimer" style="font-size:9px;color:#5e2750;letter-spacing:1px;margin-bottom:16px;min-height:14px;"></div>
+      <button id="psoCancelBtn" style="background:#1e0535;border:1px solid #ff4444;color:#ff4444;font-family:monospace;font-size:10px;padding:6px 18px;cursor:pointer;letter-spacing:1px;">CANCEL</button>
+    </div>
+    <div id="psoPrivateSection" style="display:none;border-top:1px solid #2d0a4e;padding-top:12px;margin-top:8px;">
+      <div style="font-size:9px;color:#5e2750;letter-spacing:2px;margin-bottom:8px;">ROOM CODE</div>
+      <div style="display:flex;gap:6px;margin-bottom:6px;">
+        <div id="psoRoomCode" style="flex:1;background:#1e0535;border:1px solid #3d1055;color:#ce93d8;font-family:monospace;font-size:16px;padding:7px 10px;letter-spacing:4px;text-align:center;"></div>
+        <button id="psoCopyCode" style="background:#1e0535;border:1px solid #3d1055;color:#7a5a8a;font-family:monospace;font-size:9px;padding:6px 10px;cursor:pointer;white-space:nowrap;">COPY</button>
+      </div>
+      <div style="font-size:9px;color:#3d1055;letter-spacing:1px;text-align:center;margin-bottom:8px;">Share this code with your friend</div>
+      <button id="psoCancelRoom" style="width:100%;background:#1e0535;border:1px solid #3d1055;color:#7a5a8a;font-family:monospace;font-size:9px;padding:5px;cursor:pointer;letter-spacing:1px;">CANCEL ROOM</button>
+    </div>
+    <div id="psoJoinSection" style="border-top:1px solid #2d0a4e;padding-top:12px;margin-top:8px;">
+      <div style="font-size:9px;color:#5e2750;letter-spacing:2px;margin-bottom:8px;">JOIN WITH CODE</div>
+      <div style="display:flex;gap:6px;">
+        <input id="psoJoinInput" type="text" placeholder="Enter code" maxlength="8"
+          style="flex:1;background:#1e0535;border:1px solid #3d1055;color:#f0e6ff;font-family:monospace;font-size:13px;padding:6px 8px;outline:none;letter-spacing:3px;text-transform:uppercase;">
+        <button id="psoJoinBtn" style="background:#1e0535;border:1px solid #ce93d8;color:#ce93d8;font-family:monospace;font-size:10px;padding:6px 12px;cursor:pointer;white-space:nowrap;letter-spacing:1px;">JOIN</button>
+      </div>
+    </div>
+    <div style="width:100%;border-top:1px solid #2d0a4e;margin:14px 0 8px;"></div>
+    <button class="modeBtn" id="psoBack" style="width:100%;margin:0;">← Back</button>
+  </div>
+</div>
+
+<!-- ======================================================
+     UI: HELP OVERLAY
+====================================================== -->
+<div id="helpOverlay">
+  <div style="width:300px;max-height:88vh;overflow-y:auto;background:#12001e;border:1px solid #3d1055;padding:20px;box-sizing:border-box;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+      <div style="font-size:14px;letter-spacing:4px;color:#ce93d8;">? HELP</div>
+      <button id="helpClose" style="background:none;border:none;color:#5e2750;cursor:pointer;font-size:14px;">✕</button>
+    </div>
+    <div style="margin-bottom:14px;">
+      <button id="helpTutorialBtn" style="width:100%;background:#1e0535;border:1px solid #6b2a80;color:#f0e6ff;padding:12px 14px;font-family:monospace;font-size:11px;cursor:pointer;letter-spacing:2px;text-align:left;box-sizing:border-box;">
+        📖 TUTORIAL<div style="font-size:9px;color:#5e2750;letter-spacing:1px;margin-top:3px;">Learn the rules of 3D chess step by step</div>
+      </button>
+    </div>
+    <div style="margin-bottom:14px;">
+      <div style="font-size:9px;color:#5e2750;letter-spacing:2px;margin-bottom:7px;">IN-GAME CONTROLS</div>
+      <table style="width:100%;border-collapse:collapse;font-size:9px;letter-spacing:1px;">
+        <tr><td style="color:#5e2750;padding:3px 0;width:44%;">Q / E or ↑↓</td><td style="color:#9b8fa8;">Layer down / up</td></tr>
+        <tr><td style="color:#5e2750;padding:3px 0;">1 – 8</td><td style="color:#9b8fa8;">Jump to layer</td></tr>
+        <tr><td style="color:#5e2750;padding:3px 0;">R or F</td><td style="color:#9b8fa8;">Flip board 180°</td></tr>
+        <tr><td style="color:#5e2750;padding:3px 0;">V</td><td style="color:#9b8fa8;">Cycle camera mode</td></tr>
+        <tr><td style="color:#5e2750;padding:3px 0;">Esc</td><td style="color:#9b8fa8;">Deselect / Pause</td></tr>
+        <tr><td style="color:#5e2750;padding:3px 0;">← / →</td><td style="color:#9b8fa8;">Review prev / next move</td></tr>
+        <tr><td style="color:#5e2750;padding:3px 0;">M</td><td style="color:#9b8fa8;">Toggle move list</td></tr>
+      </table>
+    </div>
+    <div style="margin-bottom:14px;">
+      <div style="font-size:9px;color:#5e2750;letter-spacing:2px;margin-bottom:7px;">HUD BUTTON GUIDE</div>
+      <table style="width:100%;border-collapse:collapse;font-size:9px;letter-spacing:1px;">
+        <tr><td style="color:#5e2750;padding:3px 0;width:44%;">⟳ 180°</td><td style="color:#9b8fa8;">Rotate board 180°</td></tr>
+        <tr><td style="color:#5e2750;padding:3px 0;">💡 Hint</td><td style="color:#9b8fa8;">Highlight best move</td></tr>
+        <tr><td style="color:#5e2750;padding:3px 0;">↩ Undo</td><td style="color:#9b8fa8;">Take back last move</td></tr>
+        <tr><td style="color:#5e2750;padding:3px 0;">VIEW</td><td style="color:#9b8fa8;">Cycle camera view modes</td></tr>
+      </table>
+    </div>
+    <div style="margin-bottom:14px;">
+      <div style="font-size:9px;color:#5e2750;letter-spacing:2px;margin-bottom:7px;">ABOUT AURORA CHESS</div>
+      <div style="font-size:9px;color:#7a5a8a;line-height:2;">
+        Aurora Chess is played on an 8×8×8 board.<br>
+        Pieces move in all three dimensions.<br>
+        Knights jump in 3D L-shapes.
+      </div>
+    </div>
+    <button id="helpBackBtn" class="modeBtn" style="width:100%;margin:0;">← Back</button>
+  </div>
+</div>
+
+<!-- ======================================================
+     UI: FRIEND PANEL
+====================================================== -->
+<div id="friendPanel">
+  <div class="friendPanelBox">
+    <div class="friendPanelHeader">
+      <div style="font-size:12px;letter-spacing:3px;color:#ce93d8;">FRIENDS</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button id="friendPanelAddBtn" style="background:#1e0535;border:1px solid #ce93d8;color:#ce93d8;font-family:monospace;font-size:9px;padding:3px 10px;cursor:pointer;letter-spacing:1px;">+ ADD</button>
+        <button id="friendPanelClose" style="background:none;border:none;color:#5e2750;cursor:pointer;font-size:16px;line-height:1;padding:0 2px;">✕</button>
+      </div>
+    </div>
+    <div id="friendPanelAddSection" style="display:none;padding:10px 12px;border-bottom:1px solid #2d0a4e;flex-shrink:0;">
+      <div style="display:flex;gap:6px;margin-bottom:6px;">
+        <input id="friendPanelInput" type="text" placeholder="Search by username" maxlength="20"
+          style="flex:1;background:#1e0535;border:1px solid #3d1055;color:#f0e6ff;font-family:monospace;font-size:10px;padding:5px 8px;outline:none;">
+        <button id="friendPanelSearchBtn" style="background:#1e0535;border:1px solid #ce93d8;color:#ce93d8;font-family:monospace;font-size:9px;padding:5px 10px;cursor:pointer;white-space:nowrap;letter-spacing:1px;">SEND</button>
+      </div>
+      <div id="friendPanelSearchResult" style="font-size:9px;color:#5e2750;min-height:14px;"></div>
+    </div>
+    <div id="friendPanelOffline" style="padding:16px;text-align:center;font-size:10px;color:#5e2750;letter-spacing:1px;display:none;flex-shrink:0;">
+      Connect to a server to see your friends
+    </div>
+    <div id="friendPanelRequests" style="flex-shrink:0;"></div>
+    <div id="friendPanelList" style="flex:1;overflow-y:auto;"></div>
+  </div>
+</div>
+
+<!-- ======================================================
      UI: PAUSE MENU
 ====================================================== -->
 <div id="pauseMenu" style="
@@ -1653,15 +1927,20 @@ button, [role="button"], input[type="range"], label.toggle, select { touch-actio
 
   <div style="width:120px;border-top:1px solid #1a1a1a;margin:8px 0;"></div>
 
-  <button class="modeBtn" id="settingsBtn">⚙ Settings</button>
-  <button class="modeBtn" id="uiSettingsBtn">☰ UI / Controls</button>
-  <button class="modeBtn" id="pauseProfileBtn">👤 Profile</button>
-  <button class="modeBtn" id="pauseTutorialBtn">? Tutorial</button>
+  <button class="modeBtn" id="pauseDrawBtn" style="color:#ffaa00;">⚖ Offer Draw</button>
+  <button class="modeBtn" id="pauseResignBtn" style="color:#ff4444;">⚑ Resign</button>
 
-  <div id="onlinePauseSection" style="display:none;flex-direction:column;align-items:center;">
-    <div style="width:120px;border-top:1px solid #1a1a1a;margin:8px 0;"></div>
-    <button class="modeBtn" id="pauseDrawBtn" style="color:#ffaa00;">⚖ Offer Draw</button>
-    <button class="modeBtn" id="pauseResignBtn" style="color:#ff4444;">⚑ Resign</button>
+  <div style="width:120px;border-top:1px solid #1a1a1a;margin:8px 0;"></div>
+
+  <button class="modeBtn" id="settingsBtn">⚙ Settings</button>
+
+  <!-- Legacy buttons kept hidden for JS compat -->
+  <!-- Legacy buttons kept hidden for JS compat -->
+  <div style="display:none;">
+    <button class="modeBtn" id="uiSettingsBtn">☰ UI / Controls</button>
+    <button class="modeBtn" id="pauseProfileBtn">👤 Profile</button>
+    <button class="modeBtn" id="pauseTutorialBtn">? Tutorial</button>
+    <div id="onlinePauseSection"></div>
   </div>
 
   <div style="width:120px;border-top:1px solid #1a1a1a;margin:8px 0;"></div>
@@ -1759,6 +2038,15 @@ button, [role="button"], input[type="range"], label.toggle, select { touch-actio
   background:#111;color:#fff;border:1px solid #444;padding:6px 12px;z-index:20;
   font-family:monospace;font-size:16px;cursor:pointer;letter-spacing:0;touch-action:manipulation;
 ">☰</button>
+
+<button id="hudGearBtn">⚙ Quick</button>
+<div id="hudQuickPanel">
+  <label id="hqToggle_legalMoves" class="uiToggleRow"><span>Legal hints</span><span class="uiToggleDot on">●</span></label>
+  <label id="hqToggle_threats"    class="uiToggleRow"><span>Threat lines</span><span class="uiToggleDot on">●</span></label>
+  <label id="hqToggle_coords"     class="uiToggleRow"><span>Coordinates</span><span class="uiToggleDot on">●</span></label>
+  <label id="hqToggle_trails"     class="uiToggleRow"><span>Move trails</span><span class="uiToggleDot on">●</span></label>
+  <label id="hqToggle_lastMove"   class="uiToggleRow"><span>Last move</span><span class="uiToggleDot on">●</span></label>
+</div>
 
 <div id="hud" style="
   position:fixed;top:calc(52px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);
@@ -8214,22 +8502,29 @@ renderer.domElement.addEventListener("touchend",()=>{
 /* ======================================================
    UI WIRING
 ====================================================== */
-document.getElementById("menuBtn").onclick=()=>{SND.ui();HAP.vib('ui');document.getElementById("onlinePauseSection").style.display=ONLINE.inMatch?'flex':'none';document.getElementById("pauseMenu").style.display="flex";};
+document.getElementById("menuBtn").onclick=()=>{SND.ui();HAP.vib('ui');document.getElementById("pauseMenu").style.display="flex";};
 document.getElementById("resumeBtn").onclick=()=>{SND.confirm();document.getElementById("pauseMenu").style.display="none";};
 document.getElementById("pauseResignBtn").onclick=()=>{
-  if(!ONLINE.inMatch)return;
   SND.confirm(); document.getElementById("pauseMenu").style.display="none";
-  onlineDCSend('resign');
-  onlineRecordResult(ONLINE.myColor==='white'?'black_wins':'white_wins');
-  endGame('You resigned.');
+  if(ONLINE.inMatch){
+    onlineDCSend('resign');
+    onlineRecordResult(ONLINE.myColor==='white'?'black_wins':'white_wins');
+    endGame('You resigned.');
+  } else {
+    var loser=turn;
+    endGame((loser==='white'?'Black':'White')+' wins by resignation');
+  }
 };
 document.getElementById("pauseDrawBtn").onclick=()=>{
-  if(!ONLINE.inMatch)return;
-  if(ONLINE._drawOfferSent){onlineShowToast('Draw offer already pending.',0xffaa00);return;}
-  ONLINE._drawOfferSent=true;
-  onlineDCSend('draw_offer');
-  document.getElementById("pauseMenu").style.display="none";
-  onlineShowToast('Draw offered — waiting for opponent.',0xffaa00);
+  SND.ui(); document.getElementById("pauseMenu").style.display="none";
+  if(ONLINE.inMatch){
+    if(ONLINE._drawOfferSent){onlineShowToast('Draw offer already pending.',0xffaa00);return;}
+    ONLINE._drawOfferSent=true;
+    onlineDCSend('draw_offer');
+    onlineShowToast('Draw offered — waiting for opponent.',0xffaa00);
+  } else {
+    endGame('Draw agreed');
+  }
 };
 document.getElementById("restartBtn").onclick=()=>{
   SND.confirm(); document.getElementById("pauseMenu").style.display="none";
@@ -8248,6 +8543,7 @@ function _doExit() {
   renderer.domElement.style.pointerEvents="none";
   var _rbtn=document.getElementById("rotateBoardBtn"); if(_rbtn)_rbtn.style.display="none";
   var _pbn=document.getElementById("panBoardBtn"); if(_pbn)_pbn.style.display="none";
+  var _gear=document.getElementById("hudGearBtn"); if(_gear){_gear.style.display="none";var _qp=document.getElementById("hudQuickPanel");if(_qp)_qp.style.display="none";}
   document.getElementById("mainMenu").style.display="flex";
 }
 document.getElementById("exitBtn").onclick=()=>{
@@ -8506,21 +8802,202 @@ document.getElementById("liveMove").onclick=()=>{
   syncMoveNumBar();
 };
 
-document.querySelectorAll(".menuBtn").forEach(btn=>{btn.onclick=()=>{SND.confirm();if(btn.dataset.mode==="classic"){document.getElementById("mainMenu").style.display="none";document.getElementById("modeMenu").style.display="flex";}};});
-
-// Main menu Settings + Profile buttons
+// ── NEW MAIN MENU ────────────────────────────────────────────────────────────
+document.getElementById('mainPlayBtn').onclick = () => {
+  SND.ui();
+  document.getElementById('mainMenu').style.display = 'none';
+  document.getElementById('playStep1').style.display = 'flex';
+};
+document.getElementById('mainPuzzlesBtn').onclick = () => {
+  SND.ui();
+  document.getElementById('mainMenu').style.display = 'none';
+  if (typeof openPuzzleSelect === 'function') openPuzzleSelect();
+  else document.getElementById('puzzleSelectOverlay').style.display = 'flex';
+};
 document.getElementById('mainSettingsBtn').onclick = () => {
   SND.ui();
   document.getElementById('mainMenu').style.display = 'none';
   _settingsOrigin = 'mainMenu';
   document.getElementById('settingsOverlay').style.display = 'flex';
-  drawSettingsPreview();
+  if (typeof drawSettingsPreview === 'function') drawSettingsPreview();
 };
 document.getElementById('mainProfileBtn').onclick = () => {
   SND.ui();
   document.getElementById('mainMenu').style.display = 'none';
   openProfileOverlay();
 };
+document.getElementById('mainHelpBtn').onclick = () => {
+  SND.ui();
+  document.getElementById('mainMenu').style.display = 'none';
+  document.getElementById('helpOverlay').style.display = 'flex';
+};
+document.getElementById('helpClose').onclick = () => {
+  SND.ui();
+  document.getElementById('helpOverlay').style.display = 'none';
+  document.getElementById('mainMenu').style.display = 'flex';
+};
+document.getElementById('helpBackBtn').onclick = () => {
+  SND.ui();
+  document.getElementById('helpOverlay').style.display = 'none';
+  document.getElementById('mainMenu').style.display = 'flex';
+};
+document.getElementById('helpTutorialBtn').onclick = () => {
+  SND.ui();
+  document.getElementById('helpOverlay').style.display = 'none';
+  document.getElementById('tutorialOverlay').style.display = 'flex';
+  if (typeof startTutorial === 'function') startTutorial();
+};
+
+// ── PLAY STEP 1 ─────────────────────────────────────────────────────────────
+var _playMode = 'standard';
+document.getElementById('ps1Back').onclick = () => {
+  SND.ui();
+  document.getElementById('playStep1').style.display = 'none';
+  document.getElementById('mainMenu').style.display = 'flex';
+};
+document.getElementById('ps1Standard').onclick = () => { SND.confirm(); _playMode = 'standard'; _goToPlayStep2(); };
+document.getElementById('ps1Arcade').onclick   = () => { SND.confirm(); _playMode = 'arcade';   _goToPlayStep2(); };
+document.getElementById('ps1CTF').onclick      = () => { SND.confirm(); _playMode = 'ctf';      _goToPlayStep2(); };
+
+function _goToPlayStep2() {
+  document.getElementById('playStep1').style.display = 'none';
+  const modeNames = { standard: 'STANDARD CHESS', arcade: 'ARCADE', ctf: 'CAPTURE THE FLAG' };
+  document.getElementById('ps2Title').textContent = modeNames[_playMode] || 'PLAY';
+  var onlineSub = document.getElementById('ps2OnlineSub');
+  if (onlineSub) {
+    var isOnl = typeof ONLINE !== 'undefined' && ONLINE.connected;
+    onlineSub.textContent = isOnl ? 'Quick match · Friends · Private game' : 'Server offline — try again later';
+    onlineSub.style.color = isOnl ? '#5e2750' : '#553322';
+  }
+  document.getElementById('playStep2').style.display = 'flex';
+}
+
+// ── PLAY STEP 2 ─────────────────────────────────────────────────────────────
+var _playPlayers = 'local';
+document.getElementById('ps2Back').onclick = () => { SND.ui(); document.getElementById('playStep2').style.display = 'none'; document.getElementById('playStep1').style.display = 'flex'; };
+document.getElementById('ps2Local').onclick  = () => { SND.confirm(); _playPlayers = 'local';  _goToPlayStep3(); };
+document.getElementById('ps2Bot').onclick    = () => { SND.confirm(); _playPlayers = 'bot';    _goToPlayStep3(); };
+document.getElementById('ps2Online').onclick = () => {
+  SND.confirm(); _playPlayers = 'online';
+  document.getElementById('playStep2').style.display = 'none';
+  if (typeof _openOnlinePlayStep === 'function') _openOnlinePlayStep();
+};
+
+function _goToPlayStep3() {
+  document.getElementById('playStep2').style.display = 'none';
+  document.getElementById('ps3DiffSection').style.display = (_playPlayers === 'bot') ? 'block' : 'none';
+  document.getElementById('ps3ArcadeSection').style.display = (_playMode === 'arcade') ? 'block' : 'none';
+  const modeNames = { standard: 'CONFIGURE', arcade: 'ARCADE — CONFIGURE', ctf: 'CTF — CONFIGURE' };
+  document.getElementById('ps3Title').textContent = modeNames[_playMode] || 'CONFIGURE';
+  document.getElementById('playStep3').style.display = 'flex';
+}
+
+// ── PLAY STEP 3 ─────────────────────────────────────────────────────────────
+var _ps3Diff = 'medium', _ps3Color = 'white', _ps3Time = 0;
+
+document.querySelectorAll('[data-ps3diff]').forEach(btn => {
+  btn.onclick = () => {
+    SND.ui(); _ps3Diff = btn.dataset.ps3diff;
+    document.querySelectorAll('[data-ps3diff]').forEach(b => b.classList.toggle('active', b.dataset.ps3diff === _ps3Diff));
+    botDifficulty = _ps3Diff;
+  };
+});
+document.querySelectorAll('[data-ps3color]').forEach(btn => {
+  btn.onclick = () => {
+    SND.ui(); _ps3Color = btn.dataset.ps3color;
+    document.querySelectorAll('[data-ps3color]').forEach(b => b.classList.toggle('active', b.dataset.ps3color === _ps3Color));
+  };
+});
+document.querySelectorAll('[data-time]').forEach(btn => {
+  btn.onclick = () => {
+    SND.ui(); _ps3Time = parseInt(btn.dataset.time);
+    document.querySelectorAll('[data-time]').forEach(b => b.classList.toggle('active', parseInt(b.dataset.time) === _ps3Time));
+  };
+});
+document.getElementById('ps3ArcadeHeader').onclick = () => {
+  SND.ui();
+  var c = document.getElementById('ps3ArcadeContent'), a = document.getElementById('ps3ArcadeArrow');
+  var open = c.style.display !== 'none';
+  c.style.display = open ? 'none' : 'block';
+  a.style.transform = open ? '' : 'rotate(180deg)';
+};
+document.querySelectorAll('[data-ps3arc]').forEach(btn => {
+  btn.onclick = () => {
+    SND.ui(); var key = btn.dataset.ps3arc; var on = btn.classList.toggle('on');
+    btn.classList.toggle('off', !on); btn.textContent = on ? 'ON' : 'OFF';
+    var leg = document.querySelector('[data-arc="'+key+'"]');
+    if (leg) { leg.classList.toggle('on', on); leg.classList.toggle('off', !on); leg.textContent = on ? 'ON' : 'OFF'; }
+  };
+});
+document.querySelectorAll('[data-ps3rate]').forEach(btn => {
+  btn.onclick = () => {
+    SND.ui(); var rate = btn.dataset.ps3rate;
+    document.querySelectorAll('[data-ps3rate]').forEach(b => b.classList.toggle('active', b.dataset.ps3rate === rate));
+    var leg = document.querySelector('[data-rate="'+rate+'"]');
+    if (leg) { document.querySelectorAll('[data-rate]').forEach(b => b.classList.remove('active')); leg.classList.add('active'); }
+  };
+});
+document.getElementById('ps3Back').onclick = () => { SND.ui(); document.getElementById('playStep3').style.display = 'none'; document.getElementById('playStep2').style.display = 'flex'; };
+document.getElementById('ps3Play').onclick = () => {
+  SND.confirm();
+  document.getElementById('playStep3').style.display = 'none';
+  if (_ps3Time > 0) { timeEnabled = true; TIME_CONTROL_MINS = _ps3Time; } else { timeEnabled = false; }
+  var col = _ps3Color === 'random' ? (Math.random() < 0.5 ? 'white' : 'black') : _ps3Color;
+  // Apply hint/undo from new toggles
+  var ps3h = document.getElementById('ps3HintToggle'), ps3u = document.getElementById('ps3UndoToggle');
+  if (typeof BOT_OPTS !== 'undefined') { if (ps3h) BOT_OPTS.hint = ps3h.checked; if (ps3u) BOT_OPTS.undo = ps3u.checked; }
+  if (_playMode === 'ctf') {
+    if (_playPlayers === 'bot') { botDifficulty = _ps3Diff; if (typeof startCTFGame === 'function') startCTFGame('bot'); else { botColor = 'black'; playerColor = 'white'; startLocalGame(); } }
+    else { botColor = null; playerColor = 'white'; if (typeof startCTFGame === 'function') startCTFGame('local'); else startLocalGame(); }
+    return;
+  }
+  if (_playMode === 'arcade') {
+    if (_playPlayers === 'bot') { botDifficulty = _ps3Diff; playerColor = col; botColor = (col === 'white' ? 'black' : 'white'); }
+    else { botColor = null; playerColor = 'white'; }
+    if (typeof startArcadeGame === 'function') startArcadeGame(); else startLocalGame();
+    return;
+  }
+  if (_playPlayers === 'local') { botColor = null; playerColor = 'white'; startLocalGame(); }
+  else if (_playPlayers === 'bot') {
+    botDifficulty = _ps3Diff; playerColor = col; botColor = (col === 'white' ? 'black' : 'white');
+    startLocalGame(); if (botColor === 'white') setTimeout(botMove, 400);
+  }
+};
+
+// ── HUD GEAR BUTTON ──────────────────────────────────────────────────────────
+document.getElementById('hudGearBtn').onclick = (e) => {
+  e.stopPropagation(); SND.ui();
+  var panel = document.getElementById('hudQuickPanel');
+  var opening = panel.style.display === 'none';
+  panel.style.display = opening ? 'block' : 'none';
+  if (opening && typeof UI_PREFS !== 'undefined') {
+    [['hqToggle_legalMoves','legalMoves'],['hqToggle_threats','threats'],
+     ['hqToggle_coords','coords'],['hqToggle_trails','trails'],['hqToggle_lastMove','lastMove']]
+    .forEach(([rowId, key]) => {
+      var row = document.getElementById(rowId); if (!row) return;
+      var dot = row.querySelector('.uiToggleDot'); if (!dot) return;
+      var on = !!UI_PREFS[key]; dot.classList.toggle('on', on); dot.classList.toggle('off', !on);
+    });
+  }
+};
+document.addEventListener('click', () => { var p = document.getElementById('hudQuickPanel'); if (p) p.style.display = 'none'; }, true);
+(function() {
+  function _wireHudToggle(rowId, prefKey) {
+    var row = document.getElementById(rowId); if (!row) return;
+    var dot = row.querySelector('.uiToggleDot');
+    row.onclick = () => {
+      SND.ui(); var nowOn = dot && !dot.classList.contains('on');
+      if (dot) { dot.classList.toggle('on', nowOn); dot.classList.toggle('off', !nowOn); }
+      if (typeof applyUIPref === 'function') applyUIPref(prefKey, nowOn);
+      else if (typeof UI_PREFS !== 'undefined') UI_PREFS[prefKey] = nowOn;
+    };
+  }
+  _wireHudToggle('hqToggle_legalMoves','legalMoves');
+  _wireHudToggle('hqToggle_threats','threats');
+  _wireHudToggle('hqToggle_coords','coords');
+  _wireHudToggle('hqToggle_trails','trails');
+  _wireHudToggle('hqToggle_lastMove','lastMove');
+})();
 
 // Bot time control toggle
 // Local (pass & play) time toggle
@@ -8629,6 +9106,7 @@ function startLocalGame(){
   if(_ubtn) _ubtn.style.display=(botColor&&BOT_OPTS.undo)?'block':'none';
   var _lvbtn=document.getElementById('layerVisToggle'); if(_lvbtn) _lvbtn.style.display='block';
   var _panBoardBtnGame=document.getElementById('panBoardBtn'); if(_panBoardBtnGame) _panBoardBtnGame.style.display='block';
+  var _gear=document.getElementById('hudGearBtn'); if(_gear) _gear.style.display='block';
   // Steam rich presence
   if (window.Steam && window.Steam.isAvailable) {
     const mode = botColor ? 'vs Bot' : (typeof ONLINE !== 'undefined' && ONLINE.inMatch) ? 'Online' : 'Local';
@@ -11494,6 +11972,16 @@ function openProfileOverlay() {
   document.getElementById('saveCurrentBtn').style.display =
     ACC_active.username === GUEST_USER ? 'none' : 'block';
   renderSavedGames();
+  // Friends section — show when online and logged in
+  var fSection = document.getElementById('profileFriendsSection');
+  if (fSection) {
+    var onlineLoggedIn = typeof ONLINE !== 'undefined' && ONLINE.loggedIn;
+    fSection.style.display = onlineLoggedIn ? 'block' : 'none';
+    if (onlineLoggedIn) {
+      var fCount = document.getElementById('pStatFriends');
+      if (fCount) fCount.textContent = (ONLINE.friends || []).length;
+    }
+  }
   // Reset delete confirmation state each time the panel opens
   document.getElementById('deleteAccountSection').style.display = 'none';
   document.getElementById('acctDeleteBtn').style.display =
@@ -11541,6 +12029,14 @@ function renderSavedGames() {
 
 document.getElementById('profileCloseBtn').onclick = () => {
   document.getElementById('profileOverlay').style.display = 'none';
+};
+document.getElementById('profileViewFriendsBtn').onclick = () => {
+  document.getElementById('profileOverlay').style.display = 'none';
+  if (typeof openFriendPanel === 'function') openFriendPanel(false);
+};
+document.getElementById('profileAddFriendBtn').onclick = () => {
+  document.getElementById('profileOverlay').style.display = 'none';
+  if (typeof openFriendPanel === 'function') openFriendPanel(true);
 };
 document.getElementById('saveCurrentBtn').onclick = () => gameSave();
 document.getElementById('acctLogoutBtn').onclick  = () => {
@@ -16382,6 +16878,23 @@ function onlineHandle(msg) {
     case 'avatar_updated':
       if (ONLINE.player) ONLINE.player.avatar = payload.avatar;
       onlineUpdateUI(); break;
+    case 'room_created': {
+      var _pso2 = document.getElementById('playStepOnline');
+      if (_pso2 && _pso2.style.display !== 'none') {
+        var _rc = document.getElementById('psoRoomCode'); if (_rc) _rc.textContent = payload.code;
+        var _ps = document.getElementById('psoPrivateSection'); if (_ps) _ps.style.display = 'block';
+      }
+      break;
+    }
+    case 'room_join_err':
+      onlineShowToast(payload.msg || 'Room not found', 0xff4444); break;
+    case 'room_expired': {
+      var _pso3 = document.getElementById('playStepOnline');
+      if (_pso3 && _pso3.style.display !== 'none') {
+        var _ps2 = document.getElementById('psoPrivateSection'); if (_ps2) _ps2.style.display = 'none';
+      }
+      onlineShowToast('Private room expired', 0x555555); break;
+    }
   }
 }
 
@@ -17051,8 +17564,10 @@ function onlineQueueTimer() {
     var countStr = _queueCompatible === 0 ? 'none searching'
       : _queueCompatible === 1 ? '1 other searching'
       : _queueCompatible + ' others searching';
-    document.getElementById('onlineQueueStatus').textContent =
-      'Searching- ' + timeStr + '  ·  ' + countStr;
+    var qs = document.getElementById('onlineQueueStatus');
+    if (qs) qs.textContent = 'Searching- ' + timeStr + '  ·  ' + countStr;
+    var pt = document.getElementById('psoLobbyTimer');
+    if (pt) pt.textContent = timeStr;
   }, 1000);
 }
 
@@ -17178,7 +17693,9 @@ function onlineLoadHistory() {
 function onlineShowMatchBanner(matchInfo) {
   _onlineLobby.style.display = 'none';
   document.getElementById('mainMenu').style.display = 'none';
-  _queued = false;
+  var _pso = document.getElementById('playStepOnline'); if (_pso) _pso.style.display = 'none';
+  var _fp  = document.getElementById('friendPanel');    if (_fp)  _fp.style.display  = 'none';
+  _queued = false; clearInterval(_queueTimerRef);
   var qb = document.getElementById('onlineQueueBtn');
   qb.textContent = 'FIND MATCH'; qb.style.borderColor = '#00ff88'; qb.style.color = '#00ff88';
   document.getElementById('onlineQueueStatus').textContent = '';
@@ -17416,6 +17933,13 @@ function onlineSetAvatar(avatar) {
 
 /* -- Friends UI ------------------------------------------------ */
 function onlineUpdateFriends() {
+  // Update main menu profile badge
+  var badge = document.getElementById('mainProfileBadge');
+  if (badge) {
+    var nb = ONLINE.requests.length;
+    badge.textContent = nb > 0 ? String(nb) : '';
+    badge.style.display = nb > 0 ? 'inline-block' : 'none';
+  }
   var btn = document.getElementById('onlineFriendsBtn');
   if (btn) {
     var n = ONLINE.requests.length;
@@ -17465,6 +17989,9 @@ function onlineUpdateFriends() {
       + '<button onclick="onlineRemoveFriend(\''+safeU.replace(/'/g,"\\'")+'\''+')" style="background:#1a1a1a;border:1px solid #1a1a1a;color:#333;font-family:monospace;font-size:8px;padding:3px 6px;cursor:pointer;" title="Remove">✕</button>'
       + '</div></div>';
   }).join('');
+  // Refresh friend panel if open
+  var fp = document.getElementById('friendPanel');
+  if (fp && fp.style.display !== 'none') _renderFriendPanel(false);
 }
 function onlineRemoveFriend(username) {
   var ex = document.getElementById('_rmFriendModal'); if (ex) ex.remove();
@@ -17545,6 +18072,182 @@ function onlineShowMatchInvite(payload) {
 }
 
 function onlineLog(msg) { console.log('[online]', msg); }
+
+/* ── Play-step online overlay ──────────────────────────────── */
+var _psoInited = false;
+
+function _openOnlinePlayStep() {
+  var overlay = document.getElementById('playStepOnline');
+  if (!overlay) return;
+  _psoRefreshState();
+  overlay.style.display = 'flex';
+  if (_psoInited) return;
+  _psoInited = true;
+
+  document.getElementById('psoBack').onclick = function() {
+    SND.ui(); _psoLeaveIfQueued();
+    overlay.style.display = 'none';
+    document.getElementById('playStep2').style.display = 'flex';
+  };
+  document.getElementById('psoRetryBtn').onclick = function() {
+    SND.ui();
+    var url = localStorage.getItem('cc_server_url') || CC_DEFAULT_SERVER;
+    if (url) onlineConnect(url);
+    else { overlay.style.display = 'none'; onlineOpenLobby(); }
+  };
+  document.getElementById('psoLoginBtn').onclick = function() {
+    SND.ui(); overlay.style.display = 'none'; onlineOpenLobby();
+  };
+  document.getElementById('psoQuickMatch').onclick = function() {
+    SND.confirm(); if (!ONLINE.loggedIn) return;
+    _queued = true;
+    onlineSend('queue_join', { timeControl: 'none', gameMode: 'standard', ranked: true });
+    document.getElementById('psoPlayOptions').style.display = 'none';
+    document.getElementById('psoLobbyArea').style.display = 'block';
+    document.getElementById('psoLobbyText').textContent = 'SEARCHING...';
+    document.getElementById('psoLobbyTimer').textContent = '';
+    onlineQueueTimer();
+  };
+  document.getElementById('psoFriendGame').onclick = function() {
+    SND.confirm(); overlay.style.display = 'none'; openFriendPanel(false, true);
+  };
+  document.getElementById('psoPrivateGame').onclick = function() {
+    SND.confirm(); onlineSend('room_create', { timeControl: 'none', gameMode: 'standard', ranked: false });
+  };
+  document.getElementById('psoCancelBtn').onclick = function() {
+    SND.ui(); _psoLeaveIfQueued();
+    document.getElementById('psoLobbyArea').style.display = 'none';
+    document.getElementById('psoPlayOptions').style.display = 'block';
+  };
+  document.getElementById('psoCancelRoom').onclick = function() {
+    SND.ui(); onlineSend('room_cancel', {});
+    document.getElementById('psoPrivateSection').style.display = 'none';
+  };
+  document.getElementById('psoCopyCode').onclick = function() {
+    var code = document.getElementById('psoRoomCode').textContent;
+    if (navigator.clipboard) navigator.clipboard.writeText(code);
+    this.textContent = 'COPIED'; var self = this;
+    setTimeout(function() { self.textContent = 'COPY'; }, 1500);
+  };
+  document.getElementById('psoJoinBtn').onclick = function() {
+    SND.confirm();
+    var code = document.getElementById('psoJoinInput').value.trim().toUpperCase();
+    if (!code) return;
+    onlineSend('room_join', { code: code });
+    document.getElementById('psoJoinInput').value = '';
+  };
+  document.getElementById('psoJoinInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') document.getElementById('psoJoinBtn').click();
+  });
+}
+
+function _psoRefreshState() {
+  var connected = ONLINE.connected, loggedIn = ONLINE.loggedIn;
+  var statusEl = document.getElementById('psoStatus');
+  if (statusEl) statusEl.textContent =
+    !connected ? 'OFFLINE' : !loggedIn ? 'CONNECTED — LOGIN REQUIRED' :
+    'ONLINE — ' + (ONLINE.player ? ONLINE.player.username : '');
+  var offNote = document.getElementById('psoOfflineNote');
+  var authReq = document.getElementById('psoAuthRequired');
+  var playOpt = document.getElementById('psoPlayOptions');
+  var lobby   = document.getElementById('psoLobbyArea');
+  var privSec = document.getElementById('psoPrivateSection');
+  if (offNote) offNote.style.display = !connected ? 'block' : 'none';
+  if (authReq) authReq.style.display = (connected && !loggedIn) ? 'block' : 'none';
+  if (playOpt) playOpt.style.display = (connected && loggedIn) ? 'block' : 'none';
+  if (lobby)   lobby.style.display   = 'none';
+  if (privSec) privSec.style.display = 'none';
+}
+
+function _psoLeaveIfQueued() {
+  if (_queued) {
+    _queued = false; clearInterval(_queueTimerRef);
+    onlineSend('queue_leave', {});
+    var qb = document.getElementById('onlineQueueBtn');
+    if (qb) { qb.textContent = 'FIND MATCH'; qb.style.borderColor = '#00ff88'; qb.style.color = '#00ff88'; }
+    var qs = document.getElementById('onlineQueueStatus'); if (qs) qs.textContent = '';
+  }
+}
+
+/* ── Full-screen friend panel ──────────────────────────────── */
+function openFriendPanel(openAdd, challengeMode) {
+  var panel = document.getElementById('friendPanel');
+  if (!panel) return;
+  panel.style.display = 'flex';
+  var addSection = document.getElementById('friendPanelAddSection');
+  if (addSection) addSection.style.display = openAdd ? 'block' : 'none';
+  var offline = document.getElementById('friendPanelOffline');
+  if (offline) offline.style.display = ONLINE.connected ? 'none' : 'flex';
+  _renderFriendPanel(challengeMode || false);
+  if (panel._wired) return;
+  panel._wired = true;
+  document.getElementById('friendPanelClose').onclick = function() {
+    SND.ui(); panel.style.display = 'none';
+    if (document.getElementById('mainMenu').style.display === 'none')
+      document.getElementById('mainMenu').style.display = 'flex';
+  };
+  document.getElementById('friendPanelAddBtn').onclick = function() {
+    SND.ui();
+    var s = document.getElementById('friendPanelAddSection');
+    if (s) s.style.display = s.style.display === 'none' ? 'block' : 'none';
+  };
+  document.getElementById('friendPanelSearchBtn').onclick = function() {
+    var u = document.getElementById('friendPanelInput').value.trim();
+    if (!u) return;
+    if (!ONLINE.loggedIn) { document.getElementById('friendPanelSearchResult').textContent = 'Not logged in'; return; }
+    onlineSend('friend_add', { username: u });
+    document.getElementById('friendPanelInput').value = '';
+    document.getElementById('friendPanelSearchResult').textContent = 'Request sent...';
+    setTimeout(function() { var el = document.getElementById('friendPanelSearchResult'); if (el) el.textContent = ''; }, 3000);
+  };
+  document.getElementById('friendPanelInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') document.getElementById('friendPanelSearchBtn').click();
+  });
+}
+
+function _renderFriendPanel(challengeMode) {
+  var reqEl = document.getElementById('friendPanelRequests');
+  if (reqEl) {
+    if (ONLINE.requests.length) {
+      reqEl.innerHTML = '<div style="padding:8px 12px 4px;font-size:8px;color:#5e2750;letter-spacing:2px;">PENDING REQUESTS</div>'
+        + ONLINE.requests.map(function(r) {
+          var fu = _esc(r.from);
+          return '<div class="friendItem">'
+            + '<div style="display:flex;align-items:center;gap:8px;"><span style="font-size:14px;">'+(r.avatar||'♟')+'</span>'
+            + '<span style="font-size:10px;color:#9b8fa8;">'+fu+'</span></div>'
+            + '<div style="display:flex;gap:4px;">'
+            + '<button onclick="onlineSend(\'friend_accept\',{from:\''+fu+'\'});onlineUpdateFriends();" style="background:#1e0535;border:1px solid #00ff88;color:#00ff88;font-family:monospace;font-size:8px;padding:3px 8px;cursor:pointer;">ACCEPT</button>'
+            + '<button onclick="onlineSend(\'friend_decline\',{from:\''+fu+'\'});ONLINE.requests=ONLINE.requests.filter(function(x){return x.from!==\''+fu+'\';});onlineUpdateFriends();" style="background:#1e0535;border:1px solid #3d1055;color:#7a5a8a;font-family:monospace;font-size:8px;padding:3px 8px;cursor:pointer;">DECLINE</button>'
+            + '</div></div>';
+        }).join('');
+    } else { reqEl.innerHTML = ''; }
+  }
+  var listEl = document.getElementById('friendPanelList');
+  if (!listEl) return;
+  if (!ONLINE.connected || !ONLINE.loggedIn) { listEl.innerHTML = ''; return; }
+  if (!ONLINE.friends.length) {
+    listEl.innerHTML = '<div style="padding:16px;color:#3d1055;font-size:9px;text-align:center;letter-spacing:1px;">No friends yet — add someone above</div>';
+    return;
+  }
+  var sorted = ONLINE.friends.slice().sort(function(a,b) {
+    var o = { idle:0, queued:1, playing:2, offline:3 };
+    return (o[a.status]||3) - (o[b.status]||3);
+  });
+  listEl.innerHTML = sorted.map(function(f) {
+    var dotClass = 'fDot '+(f.status==='offline'?'offline':f.status==='playing'?'playing':f.status==='queued'?'queued':'online');
+    var label    = f.status==='offline'?'offline':f.status==='playing'?'playing':f.status==='queued'?'searching':'online';
+    var canChallenge = challengeMode && f.status==='idle' && !ONLINE.inMatch;
+    var fu = _esc(f.username);
+    return '<div class="friendItem">'
+      + '<div style="display:flex;align-items:center;gap:8px;"><span class="'+dotClass+'"></span>'
+      + '<div><div style="font-size:10px;color:#9b8fa8;">'+_esc(f.avatar||'♟')+' '+fu+'</div>'
+      + '<div style="font-size:8px;color:#5e2750;">'+label+'  ·  ELO '+(f.elo||1200)+'</div></div></div>'
+      + '<div style="display:flex;gap:4px;">'
+      + (canChallenge ? '<button onclick="onlineSendInvite(\''+fu+'\')" style="background:#1e0535;border:1px solid #ce93d8;color:#ce93d8;font-family:monospace;font-size:8px;padding:3px 8px;cursor:pointer;">PLAY</button>' : '')
+      + '<button onclick="onlineRemoveFriend(\''+fu+'\')" style="background:#1e0535;border:1px solid #2d0a4e;color:#3d1055;font-family:monospace;font-size:8px;padding:3px 6px;cursor:pointer;" title="Remove">✕</button>'
+      + '</div></div>';
+  }).join('');
+}
 
 // Auto-connect on page load if we have a stored server URL
 (function() {
