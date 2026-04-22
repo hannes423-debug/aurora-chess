@@ -1783,6 +1783,31 @@ button, [role="button"], input[type="range"], label.toggle, select { touch-actio
       </div>
     </div>
 
+    <div id="ps3CTFSection" style="display:none;border-top:1px solid #2d0a4e;padding-top:12px;margin-bottom:12px;">
+      <div style="font-size:9px;color:#5e2750;letter-spacing:2px;margin-bottom:8px;">🚩 POINTS TO WIN</div>
+      <div style="display:flex;gap:4px;margin-bottom:4px;">
+        <button class="timeChip active" data-ctfpts="1">1</button>
+        <button class="timeChip" data-ctfpts="2">2</button>
+        <button class="timeChip" data-ctfpts="3">3</button>
+      </div>
+      <div id="ps3CTFAdvHeader" style="display:flex;justify-content:space-between;align-items:center;padding:6px 0 2px;cursor:pointer;">
+        <span style="font-size:9px;color:#3d1055;letter-spacing:1px;">▸ ADVANCED</span>
+        <span id="ps3CTFAdvArrow" style="font-size:10px;color:#3d1055;transition:transform 0.2s;">▾</span>
+      </div>
+      <div id="ps3CTFAdvContent" style="display:none;padding-top:4px;">
+        <div style="font-size:9px;color:#5e2750;letter-spacing:1px;margin-bottom:4px;">POINTS: <span id="ps3CTFPtsLabel">1</span></div>
+        <input type="range" id="ps3CTFSlider" min="1" max="10" value="1" style="width:100%;accent-color:#ce93d8;margin-bottom:10px;">
+        <div style="font-size:9px;color:#5e2750;letter-spacing:2px;margin-bottom:6px;">INCREMENT (sec per move)</div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;">
+          <button class="timeChip active" data-ctfinc="0">+0</button>
+          <button class="timeChip" data-ctfinc="1">+1</button>
+          <button class="timeChip" data-ctfinc="2">+2</button>
+          <button class="timeChip" data-ctfinc="3">+3</button>
+          <button class="timeChip" data-ctfinc="5">+5</button>
+        </div>
+      </div>
+    </div>
+
     <div style="display:flex;gap:8px;margin-top:8px;">
       <button class="modeBtn" id="ps3Back" style="flex:1;margin:0;">← Back</button>
       <button class="modeBtn" id="ps3Play" style="flex:1;margin:0;border-color:#ce93d8;color:#ce93d8;">▶ Play</button>
@@ -8887,6 +8912,7 @@ function _goToPlayStep3() {
   document.getElementById('playStep2').style.display = 'none';
   document.getElementById('ps3DiffSection').style.display = (_playPlayers === 'bot') ? 'block' : 'none';
   document.getElementById('ps3ArcadeSection').style.display = (_playMode === 'arcade') ? 'block' : 'none';
+  document.getElementById('ps3CTFSection').style.display   = (_playMode === 'ctf')    ? 'block' : 'none';
   const modeNames = { standard: 'CONFIGURE', arcade: 'ARCADE — CONFIGURE', ctf: 'CTF — CONFIGURE' };
   document.getElementById('ps3Title').textContent = modeNames[_playMode] || 'CONFIGURE';
   document.getElementById('playStep3').style.display = 'flex';
@@ -8937,6 +8963,38 @@ document.querySelectorAll('[data-ps3rate]').forEach(btn => {
     if (leg) { document.querySelectorAll('[data-rate]').forEach(b => b.classList.remove('active')); leg.classList.add('active'); }
   };
 });
+// ── CTF config ───────────────────────────────────────────────────────────────
+var _ctfPoints = 1, _ctfIncrement = 0;
+document.querySelectorAll('[data-ctfpts]').forEach(btn => {
+  btn.onclick = () => {
+    SND.ui(); _ctfPoints = parseInt(btn.dataset.ctfpts);
+    document.querySelectorAll('[data-ctfpts]').forEach(b => b.classList.toggle('active', parseInt(b.dataset.ctfpts) === _ctfPoints));
+    var sl = document.getElementById('ps3CTFSlider'); if (sl) sl.value = _ctfPoints;
+    var lb = document.getElementById('ps3CTFPtsLabel'); if (lb) lb.textContent = _ctfPoints;
+  };
+});
+document.querySelectorAll('[data-ctfinc]').forEach(btn => {
+  btn.onclick = () => {
+    SND.ui(); _ctfIncrement = parseInt(btn.dataset.ctfinc);
+    document.querySelectorAll('[data-ctfinc]').forEach(b => b.classList.toggle('active', parseInt(b.dataset.ctfinc) === _ctfIncrement));
+  };
+});
+document.getElementById('ps3CTFAdvHeader').onclick = () => {
+  SND.ui();
+  var c = document.getElementById('ps3CTFAdvContent'), open = c.style.display !== 'none';
+  c.style.display = open ? 'none' : 'block';
+  document.getElementById('ps3CTFAdvArrow').style.transform = open ? '' : 'rotate(180deg)';
+};
+(function() {
+  var sl = document.getElementById('ps3CTFSlider');
+  if (!sl) return;
+  sl.oninput = () => {
+    _ctfPoints = parseInt(sl.value);
+    var lb = document.getElementById('ps3CTFPtsLabel'); if (lb) lb.textContent = _ctfPoints;
+    document.querySelectorAll('[data-ctfpts]').forEach(b => b.classList.toggle('active', parseInt(b.dataset.ctfpts) === _ctfPoints));
+  };
+})();
+
 document.getElementById('ps3Back').onclick = () => { SND.ui(); document.getElementById('playStep3').style.display = 'none'; document.getElementById('playStep2').style.display = 'flex'; };
 document.getElementById('ps3Play').onclick = () => {
   SND.confirm();
@@ -8948,6 +9006,9 @@ document.getElementById('ps3Play').onclick = () => {
   if (typeof BOT_OPTS !== 'undefined') { if (ps3h) BOT_OPTS.hint = ps3h.checked; if (ps3u) BOT_OPTS.undo = ps3u.checked; }
   if (_playMode === 'ctf') {
     ctfMode = true; arcadeSettings.enabled = false;
+    CTF.pointTarget = _ctfPoints;
+    CTF.increment   = _ctfIncrement;
+    CTF.firstMover  = 'white';
     if (_playPlayers === 'bot') { botDifficulty = _ps3Diff; botColor = 'black'; playerColor = 'white'; }
     else { botColor = null; playerColor = 'white'; }
     startLocalGame();
@@ -8971,22 +9032,41 @@ document.getElementById('ps3Play').onclick = () => {
 };
 
 // ── HUD GEAR BUTTON ──────────────────────────────────────────────────────────
-document.getElementById('hudGearBtn').onclick = (e) => {
-  e.stopPropagation(); SND.ui();
-  var panel = document.getElementById('hudQuickPanel');
-  var opening = panel.style.display === 'none';
-  panel.style.display = opening ? 'block' : 'none';
-  if (opening && typeof UI_PREFS !== 'undefined') {
-    [['hqToggle_legalMoves','legalMoves'],['hqToggle_threats','threats'],
-     ['hqToggle_coords','coords'],['hqToggle_trails','trails'],['hqToggle_lastMove','lastMove']]
-    .forEach(([rowId, key]) => {
-      var row = document.getElementById(rowId); if (!row) return;
-      var dot = row.querySelector('.uiToggleDot'); if (!dot) return;
-      var on = !!UI_PREFS[key]; dot.classList.toggle('on', on); dot.classList.toggle('off', !on);
-    });
+(function() {
+  var gearBtn   = document.getElementById('hudGearBtn');
+  var panel     = document.getElementById('hudQuickPanel');
+
+  function openPanel() {
+    panel.style.display = 'block';
+    if (typeof UI_PREFS !== 'undefined') {
+      [['hqToggle_legalMoves','legalMoves'],['hqToggle_threats','threats'],
+       ['hqToggle_coords','coords'],['hqToggle_trails','trails'],['hqToggle_lastMove','lastMove']]
+      .forEach(([rowId, key]) => {
+        var row = document.getElementById(rowId); if (!row) return;
+        var dot = row.querySelector('.uiToggleDot'); if (!dot) return;
+        var on = !!UI_PREFS[key]; dot.classList.toggle('on', on); dot.classList.toggle('off', !on);
+      });
+    }
   }
-};
-document.addEventListener('click', () => { var p = document.getElementById('hudQuickPanel'); if (p) p.style.display = 'none'; }, true);
+  function closePanel() { panel.style.display = 'none'; }
+
+  // Gear button: toggle open/close — stopPropagation prevents doc listener
+  function _gearToggle(e) {
+    e.stopPropagation();
+    SND.ui();
+    if (panel.style.display === 'none') openPanel(); else closePanel();
+  }
+  gearBtn.addEventListener('click', _gearToggle);
+  gearBtn.addEventListener('touchend', function(e) { e.preventDefault(); _gearToggle(e); });
+
+  // Outside click/tap closes the panel (bubble phase — gear stopPropagation keeps it from firing on btn)
+  document.addEventListener('click',    function(e) { if (panel.style.display!=='none' && !panel.contains(e.target)) closePanel(); });
+  document.addEventListener('touchend', function(e) { if (panel.style.display!=='none' && !panel.contains(e.target) && e.target!==gearBtn) closePanel(); });
+
+  // Panel rows need stopPropagation so tapping a toggle doesn't close the panel immediately
+  panel.addEventListener('click',    function(e) { e.stopPropagation(); });
+  panel.addEventListener('touchend', function(e) { e.stopPropagation(); });
+})();
 (function() {
   function _wireHudToggle(rowId, prefKey) {
     var row = document.getElementById(rowId); if (!row) return;
@@ -9581,13 +9661,16 @@ const PUZZLES = [
   },
   {
     id:2, name:"Smothered III", difficulty:"beginner", category:"smothered",
+    // Knight (4,3,0)→(6,2,0) via (+2,-1,0). From (6,2,0): attacks king (7,0,0) via (+1,-2,0).
+    // Old landing (5,1,0) was capturable by pawn (6,1,1) via XZ-diagonal (x-1,y,z-1).
+    // New landing (6,2,0): no black pawn can reach it (nearest pawns are at y=0,1 — row 2 is clear).
     objective:"White to move — Checkmate in 1. The black king is trapped on two layers!",
-    hint:"A knight move that looks wrong on this layer is legal because knights jump",
-    solution:[{from:{x:3,y:2,z:0},to:{x:5,y:1,z:0}}],
+    hint:"The knight jumps to a square two rows away from the king — check the (+1,-2) L-shape",
+    solution:[{from:{x:4,y:3,z:0},to:{x:6,y:2,z:0}}],
     turn:"white", goal:"checkmate", movesAllowed:1,
     pieces:[
       {type:"king",   color:"white", x:0,y:7,z:3, moved:true},
-      {type:"knight", color:"white", x:3,y:2,z:0, moved:true},
+      {type:"knight", color:"white", x:4,y:3,z:0, moved:true},
       {type:"king",   color:"black", x:7,y:0,z:0, moved:true},
       {type:"pawn",   color:"black", x:6,y:0,z:0, moved:true},
       {type:"pawn",   color:"black", x:7,y:1,z:0, moved:true},
@@ -9600,13 +9683,16 @@ const PUZZLES = [
   },
   {
     id:3, name:"Smothered IV", difficulty:"beginner", category:"smothered",
+    // Knight (3,3,0)→(1,2,0) via (-2,-1,0). From (1,2,0): attacks king (0,0,0) via (-1,-2,0).
+    // Old landing (2,1,0) was capturable by pawn (1,1,1) via XZ-diagonal (x+1,y,z-1).
+    // New landing (1,2,0): no black pawn at y=2 or z=1 rows can reach it.
     objective:"White to move — Checkmate in 1. The king can't escape to layer 2 either!",
-    hint:"The knight on the same layer can jump to an unexpected check square",
-    solution:[{from:{x:0,y:2,z:0},to:{x:2,y:1,z:0}}],
+    hint:"The knight crosses two files and one rank — find the (-1,-2) L-shape onto an empty square",
+    solution:[{from:{x:3,y:3,z:0},to:{x:1,y:2,z:0}}],
     turn:"white", goal:"checkmate", movesAllowed:1,
     pieces:[
       {type:"king",   color:"white", x:7,y:7,z:3, moved:true},
-      {type:"knight", color:"white", x:0,y:2,z:0, moved:true},
+      {type:"knight", color:"white", x:3,y:3,z:0, moved:true},
       {type:"king",   color:"black", x:0,y:0,z:0, moved:true},
       {type:"pawn",   color:"black", x:1,y:0,z:0, moved:true},
       {type:"pawn",   color:"black", x:0,y:1,z:0, moved:true},
@@ -9715,16 +9801,17 @@ const PUZZLES = [
   },
   {
     id:9, name:"Queen Diagonal", difficulty:"intermediate", category:"queen",
-    // Queen (3,3,0)→(1,1,0) via (-1,-1,0) diagonal, checks king at (0,0,0).
-    // Rook at (1,7,0) guards queen via x=1 column — king can't capture.
+    // Queen (3,1,0)→(1,1,0) along y=1 rank; from (1,1,0) diagonal (-1,-1,0) checks king at (0,0,0).
+    // Rook at (1,7,0) guards queen via x=1 file — king can't capture.
     // All 7 escape squares from (0,0,0) are blocked by own pawns or covered.
-    objective:"White to move — Checkmate in 1. Seize the long diagonal — the rook guards your queen!",
-    hint:"The queen sweeps to a diagonal square close to the king — make sure it is guarded",
-    solution:[{from:{x:3,y:3,z:0},to:{x:1,y:1,z:0}}],
+    // NOTE: queen must NOT start on the (3,3)→(0,0) diagonal — that would pre-check the king.
+    objective:"White to move — Checkmate in 1. Slide the queen along the rank, then the diagonal does the rest!",
+    hint:"The queen lands one square diagonally adjacent to the king — the rook on the same file guards it",
+    solution:[{from:{x:3,y:1,z:0},to:{x:1,y:1,z:0}}],
     turn:"white", goal:"checkmate", movesAllowed:1,
     pieces:[
       {type:"king",  color:"white", x:7,y:7,z:3, moved:true},
-      {type:"queen", color:"white", x:3,y:3,z:0, moved:true},
+      {type:"queen", color:"white", x:3,y:1,z:0, moved:true},
       {type:"rook",  color:"white", x:1,y:7,z:0, moved:true},
       {type:"king",  color:"black", x:0,y:0,z:0, moved:true},
       {type:"pawn",  color:"black", x:1,y:0,z:0, moved:true},
@@ -9830,78 +9917,7 @@ const PUZZLES = [
     ]
   },
 
-  // ──────────────── CAPTURE PUZZLES (15-19) ────────────────
-  {
-    id:15, name:"Bishop Strike", difficulty:"beginner", category:"capture",
-    // Bishop (2,2,0) slides (+1,+1,0) to (5,5,0): path (3,3,0),(4,4,0) clear ✓
-    objective:"White to move — Win material! Capture the undefended rook diagonally.",
-    hint:"Look for a clear diagonal from the bishop to the enemy piece",
-    solution:[{from:{x:2,y:2,z:0},to:{x:5,y:5,z:0}}],
-    turn:"white", goal:"capture", targetAt:{x:5,y:5,z:0}, movesAllowed:1,
-    pieces:[
-      {type:"king",   color:"white", x:0,y:7,z:3, moved:true},
-      {type:"bishop", color:"white", x:2,y:2,z:0, moved:true},
-      {type:"king",   color:"black", x:7,y:0,z:3, moved:true},
-      {type:"rook",   color:"black", x:5,y:5,z:0, moved:true}
-    ]
-  },
-  {
-    id:16, name:"Knight Capture", difficulty:"beginner", category:"capture",
-    // Knight (3,3,0)→(5,4,0) via (+2,+1,0) ✓
-    objective:"White to move — Win material! Capture the undefended bishop with the knight.",
-    hint:"Knights jump — find the L-shape that lands on the bishop",
-    solution:[{from:{x:3,y:3,z:0},to:{x:5,y:4,z:0}}],
-    turn:"white", goal:"capture", targetAt:{x:5,y:4,z:0}, movesAllowed:1,
-    pieces:[
-      {type:"king",   color:"white", x:0,y:0,z:3, moved:true},
-      {type:"knight", color:"white", x:3,y:3,z:0, moved:true},
-      {type:"king",   color:"black", x:7,y:7,z:3, moved:true},
-      {type:"bishop", color:"black", x:5,y:4,z:0, moved:true}
-    ]
-  },
-  {
-    id:17, name:"Rook Sweep", difficulty:"beginner", category:"capture",
-    // Rook (0,3,0) slides along y=3 rank to (7,3,0): path (1-6,3,0) clear ✓
-    objective:"White to move — Slide the rook across the rank to take the undefended bishop!",
-    hint:"Rooks travel any distance in a straight line",
-    solution:[{from:{x:0,y:3,z:0},to:{x:7,y:3,z:0}}],
-    turn:"white", goal:"capture", targetAt:{x:7,y:3,z:0}, movesAllowed:1,
-    pieces:[
-      {type:"king",   color:"white", x:0,y:7,z:3, moved:true},
-      {type:"rook",   color:"white", x:0,y:3,z:0, moved:true},
-      {type:"king",   color:"black", x:7,y:7,z:3, moved:true},
-      {type:"bishop", color:"black", x:7,y:3,z:0, moved:true}
-    ]
-  },
-  {
-    id:18, name:"Pawn Strike", difficulty:"beginner", category:"capture",
-    // White pawn (3,1,0, not moved) captures diagonally to (4,2,0) ✓
-    objective:"White to move — Capture the bishop with a diagonal pawn strike!",
-    hint:"Pawns capture diagonally forward — one square",
-    solution:[{from:{x:3,y:1,z:0},to:{x:4,y:2,z:0}}],
-    turn:"white", goal:"capture", targetAt:{x:4,y:2,z:0}, movesAllowed:1,
-    pieces:[
-      {type:"king",   color:"white", x:0,y:0,z:3, moved:true},
-      {type:"pawn",   color:"white", x:3,y:1,z:0, moved:false},
-      {type:"king",   color:"black", x:7,y:7,z:3, moved:true},
-      {type:"bishop", color:"black", x:4,y:2,z:0, moved:true}
-    ]
-  },
-  {
-    id:19, name:"Layer Leap", difficulty:"intermediate", category:"capture",
-    // Knight (3,3,0)→(3,4,2) via (0,+1,+2) ✓ cross-layer knight jump
-    objective:"White to move — Knights can jump across layers! Capture the bishop on layer 3.",
-    hint:"A knight can jump to a different layer using an L-shape that includes the Z-axis",
-    solution:[{from:{x:3,y:3,z:0},to:{x:3,y:4,z:2}}],
-    turn:"white", goal:"capture", targetAt:{x:3,y:4,z:2}, movesAllowed:1,
-    pieces:[
-      {type:"king",   color:"white", x:0,y:0,z:3, moved:true},
-      {type:"knight", color:"white", x:3,y:3,z:0, moved:true},
-      {type:"king",   color:"black", x:7,y:7,z:3, moved:true},
-      {type:"bishop", color:"black", x:3,y:4,z:2, moved:true}
-    ]
-  }
-  // ── Add puzzles 20-99 here. Fields required: id, name, difficulty,
+  // ── Add more puzzles here. Fields required: id, name, difficulty,
   //    category, objective, hint, solution, turn, goal, movesAllowed, pieces
 ];
 
@@ -12535,7 +12551,11 @@ function startTimer(color) {
       clearInterval(timerInterval); timerRunning = false;
       boardText('TIME', 0xff4444);
       SND.end(color !== playerColor);
-      setTimeout(() => endGame((color === 'white' ? 'Black' : 'White') + ' wins on time'), 1000);
+      if (ctfMode) {
+        setTimeout(function(){ CTF.handleTimeExpiry(color); }, 1000);
+      } else {
+        setTimeout(() => endGame((color === 'white' ? 'Black' : 'White') + ' wins on time'), 1000);
+      }
     }
   }, 1000);
 }
@@ -14916,17 +14936,21 @@ var ctfMode = false;
 var CTF = {
   // Flag data for each team
   white: { carrier: null, square: {x:4,y:0,z:0}, sprite: null, reset: function(){ CTF.white.square={x:4,y:0,z:0}; } },
-  black: { carrier: null, square: {x:4,y:7,z:7}, sprite: null, reset: function(){ CTF.black.square={x:4,y:7,z:7}; } },
+  black: { carrier: null, square: {x:4,y:7,z:3}, sprite: null, reset: function(){ CTF.black.square={x:4,y:7,z:3}; } },
 
   // Respawn queue: [{type, color, respawnOnTurn}]
   respawnQueue: [],
   turnCount: 0,
-  RESPAWN_TURNS: 4,
+  RESPAWN_TURNS: 8,
+  DELIVERY_LAYERS: [0, 1],
 
-  // Win condition: flag carrier reaches opponent's home row (Y=7 for white, Y=0 for black)
-  // on any of layers Z=0,1,2
-  DELIVERY_LAYERS: [0, 1],  // 4-layer board: white delivers at z=0,1; black at z=2,3
+  // Scoring state
+  scores: {white: 0, black: 0},
+  pointTarget: 1,
+  firstMover: 'white',
+  increment: 0,
 
+  // Reset flag/board state only (scores survive)
   reset: function() {
     CTF.white.carrier = null;
     CTF.black.carrier = null;
@@ -14935,6 +14959,65 @@ var CTF = {
     CTF.respawnQueue = [];
     CTF.turnCount = 0;
     CTF.removeSprites();
+  },
+
+  // Full game reset (called on new game start)
+  fullReset: function() {
+    CTF.scores = {white: 0, black: 0};
+    CTF.firstMover = 'white';
+    CTF.reset();
+  },
+
+  // Called when a team delivers the flag — handle scoring and round/game end
+  scorePoint: function(scorer) {
+    CTF.scores[scorer]++;
+    var ws = CTF.scores.white, bs = CTF.scores.black;
+    arcadeAnnounce('🚩 '+scorer.toUpperCase()+' SCORES!  '+ws+' – '+bs, scorer==='white'?0x00aaff:0xff6600);
+    if (typeof SND !== 'undefined' && SND.end) SND.end(false);
+    if (ws >= CTF.pointTarget || bs >= CTF.pointTarget) {
+      var winMsg = (scorer.charAt(0).toUpperCase()+scorer.slice(1))+' wins '+ws+' – '+bs+'!';
+      setTimeout(function(){ endGame(winMsg); }, 800);
+      return;
+    }
+    setTimeout(function(){ CTF.roundReset(); }, 1800);
+  },
+
+  _isRoundReset: false,
+
+  // Reset board for next round, cycle first-mover, keep scores
+  roundReset: function() {
+    var savedScores = {white: CTF.scores.white, black: CTF.scores.black};
+    var savedTarget  = CTF.pointTarget;
+    var savedInc     = CTF.increment;
+    CTF.firstMover   = (CTF.firstMover === 'white' ? 'black' : 'white');
+    var nextFirst    = CTF.firstMover;
+    CTF._isRoundReset = true;
+    startLocalGame();
+    CTF._isRoundReset = false;
+    CTF.scores      = savedScores;
+    CTF.pointTarget = savedTarget;
+    CTF.increment   = savedInc;
+    CTF.firstMover  = nextFirst;
+    turn = nextFirst;
+    if (typeof updateClockDisplay === 'function') updateClockDisplay();
+    setTimeout(function(){
+      CTF.refreshSprites();
+      updateCTFHud();
+      arcadeAnnounce(nextFirst.toUpperCase()+' MOVES FIRST THIS ROUND', nextFirst==='white'?0x88aaff:0xff8844);
+    }, 350);
+  },
+
+  // Called when a player's clock hits zero in CTF
+  handleTimeExpiry: function(color) {
+    var ws = CTF.scores.white, bs = CTF.scores.black;
+    var winner, msg;
+    if (ws > bs)      { winner='white'; msg='White wins '+ws+' – '+bs+' ('+color+' ran out of time)'; }
+    else if (bs > ws) { winner='black'; msg='Black wins '+bs+' – '+ws+' ('+color+' ran out of time)'; }
+    else {
+      winner = (color==='white'?'black':'white');
+      msg = winner.charAt(0).toUpperCase()+winner.slice(1)+' wins on time  ('+ws+' – '+bs+')';
+    }
+    endGame(msg);
   },
 
   removeSprites: function() {
@@ -15021,16 +15104,19 @@ var CTF = {
       }
       // Recreate the piece
       var newP;
-      if (r.type==='pawn')   newP=pawn(r.color);
-      else if (r.type==='rook')   newP=rook(r.color);
-      else if (r.type==='knight') newP=knight(r.color);
-      else if (r.type==='bishop') newP=bishop(r.color);
-      else if (r.type==='queen')  newP=queen(r.color);
-      else return; // don't respawn flag carrier piece type
+      if (!r.type || r.type === 'king') return; // don't respawn kings
+      newP = buildPiece(r.type, r.color);
       place(newP, sx, sy, sz);
       newP.userData.moved = true;
       arcadeAnnounce('♻ '+r.color.toUpperCase()+' '+r.type.toUpperCase()+' RESPAWNED!', r.color==='white'?0x88aaff:0xff8844);
     });
+  },
+
+  // Add increment seconds to the player who just moved
+  _addIncrement: function(movedColor) {
+    if (!CTF.increment || !timeEnabled || typeof timers === 'undefined') return;
+    timers[movedColor] = Math.min(timers[movedColor] + CTF.increment, 99*60);
+    if (typeof updateClockDisplay === 'function') updateClockDisplay();
   },
 
   // Check win condition after each move
@@ -15098,21 +15184,20 @@ executeMove = function(piece, t) {
       CTF.respawnQueue.push({type:destPiece.userData.type,color:destPiece.userData.color,startX:destPiece.userData.x,startY:destPiece.userData.y,startZ:destPiece.userData.z,respawnOnTurn:CTF.turnCount+CTF.RESPAWN_TURNS});
     }
     CTF.tickRespawns();
+    CTF._addIncrement(movingColor);
     var winner = CTF.checkWin();
-    if (winner) { setTimeout(function(){ endGame(winner.charAt(0).toUpperCase()+winner.slice(1)+' delivers the flag! '+winner.toUpperCase()+' WINS!'); }, 400); }
+    if (winner) { setTimeout(function(){ CTF.scorePoint(winner); }, 400); }
     return;
   }
 
   // ── Case 2: moving piece captures the opponent's flag CARRIER ──
   var ownFlag = CTF[movingColor];
   if (oppFlag.carrier && destPiece === oppFlag.carrier) {
-    // Two sub-cases:
     if (oppFlag.carrier.userData.color === movingColor) {
       // 2a: Own piece captures own flag carrier → TRANSFER
       var oldCarrier = oppFlag.carrier;
       var freeSquare = CTF.closestFreeSquare(oldCarrier.userData.x, oldCarrier.userData.y, oldCarrier.userData.z, piece);
       _ctfBaseExecMove.call(this, piece, t);
-      // New carrier = moving piece; old carrier displaced
       oppFlag.carrier = piece;
       if (freeSquare && pieces.indexOf(oldCarrier) !== -1) {
         var fromOld = {x:oldCarrier.userData.x,y:oldCarrier.userData.y,z:oldCarrier.userData.z};
@@ -15128,39 +15213,30 @@ executeMove = function(piece, t) {
       var captured = oppFlag.carrier;
       _ctfBaseExecMove.call(this, piece, t);
       oppFlag.carrier = null;
-      oppFlag.reset(); // flag returns to starting square
-      // Queue respawn of the carrier that was taken
+      oppFlag.reset();
       CTF.respawnQueue.push({type:captured.userData.type,color:captured.userData.color,startX:captured.userData.x,startY:captured.userData.y,startZ:captured.userData.z,respawnOnTurn:CTF.turnCount+CTF.RESPAWN_TURNS});
       arcadeAnnounce('🛡 FLAG RECOVERED! Returns to start!', oppColor==='white'?0x00aaff:0xff6600);
     }
     CTF.refreshSprites();
     CTF.tickRespawns();
+    CTF._addIncrement(movingColor);
     return;
   }
 
-  // ── Case 3: normal move — execute base, then queue respawn if capture ──
+  // ── Case 3: normal move ──
   _ctfBaseExecMove.call(this, piece, t);
   if (destPiece && pieces.indexOf(destPiece) === -1) {
-    // Piece was captured by base executeMove
     CTF.respawnQueue.push({type:destPiece.userData.type,color:destPiece.userData.color,startX:destPiece.userData.x,startY:destPiece.userData.y,startZ:destPiece.userData.z,respawnOnTurn:CTF.turnCount+CTF.RESPAWN_TURNS});
   }
-
-  // If the moving piece is already a carrier, update its tracked position
   if (oppFlag.carrier === piece) {
-    // carrier moved — sprite follows in anim loop
     arcadeAnnounce('🏃 FLAG CARRIER MOVING!', movingColor==='white'?0x00aaff:0xff6600);
   }
-
   CTF.tickRespawns();
   CTF.refreshSprites();
+  CTF._addIncrement(movingColor);
 
-  // Check win
   var winner2 = CTF.checkWin();
-  if (winner2) {
-    setTimeout(function(){
-      endGame(winner2.charAt(0).toUpperCase()+winner2.slice(1)+' delivers the flag! '+winner2.toUpperCase()+' WINS!');
-    }, 400);
-  }
+  if (winner2) { setTimeout(function(){ CTF.scorePoint(winner2); }, 400); }
 };
 
 /* ── Patch resetBoard for CTF cleanup ── */
@@ -15181,7 +15257,7 @@ var _ctfBaseStartLocal = startLocalGame;
 startLocalGame = function() {
   _ctfBaseStartLocal();
   if (!ctfMode) return;
-  CTF.reset();
+  if (CTF._isRoundReset) { CTF.reset(); } else { CTF.fullReset(); }
   // Remove kings from board — CTF has no king
   var kings = pieces.filter(function(p){ return p.userData.type==='king'; });
   kings.forEach(function(k){
@@ -15225,12 +15301,13 @@ function updateCTFHud() {
   if (!ctfMode) { ctfHudEl.style.display='none'; return; }
   ctfHudEl.style.display = 'block';
   var wStatus = CTF.black.carrier
-    ? (CTF.black.carrier.userData.color==='white' ? '🏃 CARRYING' : '🛡 ENEMY HAS IT')
-    : '🏠 AT BASE';
+    ? (CTF.black.carrier.userData.color==='white' ? '🏃' : '⚠')
+    : '🏠';
   var bStatus = CTF.white.carrier
-    ? (CTF.white.carrier.userData.color==='black' ? '🏃 CARRYING' : '🛡 ENEMY HAS IT')
-    : '🏠 AT BASE';
-  ctfHudEl.textContent = '⬜ FLAG: '+wStatus+'  ·  ⬛ FLAG: '+bStatus;
+    ? (CTF.white.carrier.userData.color==='black' ? '🏃' : '⚠')
+    : '🏠';
+  var target = CTF.pointTarget > 1 ? ' /'+CTF.pointTarget : '';
+  ctfHudEl.textContent = '⬜ '+CTF.scores.white+target+' '+wStatus+'  ·  ⬛ '+CTF.scores.black+target+' '+bStatus;
 }
 
 /* ── Extend executeMove to also refresh CTF HUD after every move ── */
@@ -19088,7 +19165,8 @@ drawSettingsPreview = function(page) {
     'gameBar','moveNumBar','reviewControls','layerFlash','arcadeEventBanner',
     'arcadeBar','clockW','clockB','clockToggleBtn','onlineColorIndicator',
     'offlineBanner',
-    'onlineStatusBar', 'onlineWidget', 'signalIndicator'
+    'onlineStatusBar', 'onlineWidget', 'signalIndicator',
+    'hudGearBtn', 'hudQuickPanel'
   ];
   // Expose hidden state globally so intervals/functions can respect it
   window._uiHidden = false;
