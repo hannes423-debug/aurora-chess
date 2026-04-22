@@ -8947,16 +8947,22 @@ document.getElementById('ps3Play').onclick = () => {
   var ps3h = document.getElementById('ps3HintToggle'), ps3u = document.getElementById('ps3UndoToggle');
   if (typeof BOT_OPTS !== 'undefined') { if (ps3h) BOT_OPTS.hint = ps3h.checked; if (ps3u) BOT_OPTS.undo = ps3u.checked; }
   if (_playMode === 'ctf') {
-    if (_playPlayers === 'bot') { botDifficulty = _ps3Diff; if (typeof startCTFGame === 'function') startCTFGame('bot'); else { botColor = 'black'; playerColor = 'white'; startLocalGame(); } }
-    else { botColor = null; playerColor = 'white'; if (typeof startCTFGame === 'function') startCTFGame('local'); else startLocalGame(); }
+    ctfMode = true; arcadeSettings.enabled = false;
+    if (_playPlayers === 'bot') { botDifficulty = _ps3Diff; botColor = 'black'; playerColor = 'white'; }
+    else { botColor = null; playerColor = 'white'; }
+    startLocalGame();
+    if (botColor === 'black') setTimeout(botMove, 400);
     return;
   }
   if (_playMode === 'arcade') {
+    arcadeSettings.enabled = true; ctfMode = false;
     if (_playPlayers === 'bot') { botDifficulty = _ps3Diff; playerColor = col; botColor = (col === 'white' ? 'black' : 'white'); }
     else { botColor = null; playerColor = 'white'; }
-    if (typeof startArcadeGame === 'function') startArcadeGame(); else startLocalGame();
+    startLocalGame();
+    if (botColor === 'white') setTimeout(botMove, 400);
     return;
   }
+  arcadeSettings.enabled = false; ctfMode = false;
   if (_playPlayers === 'local') { botColor = null; playerColor = 'white'; startLocalGame(); }
   else if (_playPlayers === 'bot') {
     botDifficulty = _ps3Diff; playerColor = col; botColor = (col === 'white' ? 'black' : 'white');
@@ -16707,8 +16713,11 @@ var ONLINE = {
   connected: false, loggedIn: false, inMatch: false,
   roomId: null, myColor: null, player: null, opponent: null,
   rated: true, gameMode: 'standard', timeControl: 'none',
+  currentPool: null,
   pingMs: null, _pingT: 0, _status: 'offline', _drawOfferSent: false, _syncing: false, _rtcTimer: null,
   friends: [], requests: [], pendingOut: [],
+  poolRatings: {}, poolCounts: {},
+  corrGames: { myTurn: [], theirTurn: [] }, corrGame: null, mySeek: null,
   setStatus: function(s) { ONLINE._status = s; onlineUpdateStatusBar(); }
 };
 
@@ -16765,6 +16774,7 @@ function onlineHandle(msg) {
       ONLINE.player = payload.player; ONLINE.loggedIn = true;
       localStorage.setItem('cc_online_username', payload.player.username);
       onlineLog('Registered as ' + payload.player.username);
+      ONLINE.poolRatings = {};
       onlineUpdateUI(); onlineCloseAuthOverlay(); break;
     case 'register_err':
       if ((payload.msg || '').toLowerCase().includes('taken')) {
@@ -16777,7 +16787,10 @@ function onlineHandle(msg) {
       ONLINE.player = payload.player; ONLINE.loggedIn = true;
       localStorage.setItem('cc_online_username', payload.player.username);
       onlineLog('Logged in as ' + payload.player.username);
+      if (payload.player.ratings) ONLINE.poolRatings = payload.player.ratings;
       onlineUpdateUI(); onlineCloseAuthOverlay();
+      onlineSend('rating:all', {});
+      onlineSend('corr:games_list', {});
       var _pm = localStorage.getItem('cc_pending_match');
       if (_pm) { try { var _pmd = JSON.parse(_pm); onlineSend('reconnect', { roomId: _pmd.roomId }); } catch(e) {} }
       break;
@@ -16817,6 +16830,7 @@ function onlineHandle(msg) {
       ONLINE.rated = payload.rated !== false;
       ONLINE.gameMode = payload.gameMode || 'standard';
       ONLINE.timeControl = payload.timeControl || 'none';
+      ONLINE.currentPool = payload.pool || null;
       ONLINE.setStatus('playing');
       localStorage.setItem('cc_pending_match', JSON.stringify({ roomId: payload.roomId, myColor: payload.color, opponent: payload.opponent, gameMode: ONLINE.gameMode, timeControl: ONLINE.timeControl, rated: ONLINE.rated }));
       onlineLog('Match found! vs ' + payload.opponent.username);
@@ -16895,6 +16909,92 @@ function onlineHandle(msg) {
       }
       onlineShowToast('Private room expired', 0x555555); break;
     }
+
+    // ── Pool ratings / counts ──────────────────────────────────
+    case 'match:searching_count':
+      ONLINE.poolCounts = payload.counts || {};
+      onlineLobbyUpdateCards();
+      break;
+
+    case 'rating:all':
+      ONLINE.poolRatings = payload.ratings || {};
+      onlineLobbyUpdateCards();
+      break;
+
+    case 'rating:data': {
+      if (payload.pool) {
+        ONLINE.poolRatings[payload.pool] = payload;
+        onlineLobbyUpdateCards();
+      }
+      break;
+    }
+
+    // ── Correspondence ────────────────────────────────────────
+    case 'corr:seeks_list':
+      ONLINE.mySeek = payload.mySeek || null;
+      onlineLobbyUpdateSeeks(payload.seeks || []);
+      break;
+
+    case 'corr:seek_posted':
+      onlineShowToast('Seek posted — waiting for opponent', 0x00ff88);
+      break;
+
+    case 'corr:seek_cancelled':
+      ONLINE.mySeek = null;
+      onlineShowToast('Seek cancelled', 0x555555);
+      break;
+
+    case 'corr:games_list':
+      ONLINE.corrGames = { myTurn: payload.myTurn || [], theirTurn: payload.theirTurn || [] };
+      onlineLobbyUpdateGamesPanel();
+      onlineUpdateGamesBadge();
+      // Show banner if it's our turn in correspondence games (on login / page return)
+      if ((payload.myTurn || []).length > 0) onlineShowCorrTurnBanner(payload.myTurn.length);
+      break;
+
+    case 'corr:game_update': {
+      var cg = payload.game;
+      if (!cg) break;
+      // Update in corrGames list
+      var _updateCorrList = function(arr) {
+        for (var ii = 0; ii < arr.length; ii++) if (arr[ii].gameId === cg.gameId) { arr[ii] = cg; return true; } return false;
+      };
+      if (!_updateCorrList(ONLINE.corrGames.myTurn) && !_updateCorrList(ONLINE.corrGames.theirTurn)) {
+        // New game — add to appropriate list
+        if (cg.isMyTurn) ONLINE.corrGames.myTurn.push(cg);
+        else ONLINE.corrGames.theirTurn.push(cg);
+      } else {
+        // Move between lists if turn changed
+        ONLINE.corrGames.myTurn   = ONLINE.corrGames.myTurn.filter(function(g) { return g.gameId !== cg.gameId; });
+        ONLINE.corrGames.theirTurn = ONLINE.corrGames.theirTurn.filter(function(g) { return g.gameId !== cg.gameId; });
+        if (cg.status === 'active') { if (cg.isMyTurn) ONLINE.corrGames.myTurn.push(cg); else ONLINE.corrGames.theirTurn.push(cg); }
+      }
+      onlineLobbyUpdateGamesPanel();
+      onlineUpdateGamesBadge();
+      // Update active game if we have it open
+      if (ONLINE.corrGame && ONLINE.corrGame.gameId === cg.gameId) {
+        ONLINE.corrGame = cg;
+        _onlineCorrShowHUD(cg);
+        if (cg.isMyTurn) { setGameInputEnabled(true); onlineShowToast("Your turn!", 0x00ff88); }
+        else { setGameInputEnabled(false); }
+      }
+      break;
+    }
+
+    case 'corr:game_started': {
+      var ng = payload.game;
+      if (!ng) break;
+      if (ng.isMyTurn) ONLINE.corrGames.myTurn.push(ng);
+      else ONLINE.corrGames.theirTurn.push(ng);
+      onlineLobbyUpdateGamesPanel();
+      onlineUpdateGamesBadge();
+      onlineShowToast('Correspondence game started! vs ' + (ng.myColor === 'white' ? ng.blackUser : ng.whiteUser), 0x00ff88);
+      break;
+    }
+
+    case 'corr:game_data':
+      if (payload.game) openCorrGame(payload.game);
+      break;
   }
 }
 
@@ -16965,10 +17065,13 @@ function onlineWireDataChannel(dc, matchInfo) {
       playerColor = ONLINE.myColor; botColor = null;
       arcadeSettings.enabled = (ONLINE.gameMode === 'arcade');
       ctfMode = (ONLINE.gameMode === 'ctf');
-      var _tcMap = { bullet:1, blitz:5, rapid:10, classical:30 };
-      if (ONLINE.timeControl && _tcMap[ONLINE.timeControl]) {
-        TIME_CONTROL_MINS = _tcMap[ONLINE.timeControl]; timeEnabled = true;
-      } else { timeEnabled = false; }
+      // Parse TC string like "10+3" → 10 min, or "none" → no clock
+      var _tcBase = 0;
+      if (ONLINE.timeControl && ONLINE.timeControl !== 'none') {
+        var _tcParts = ONLINE.timeControl.split('+');
+        _tcBase = parseInt(_tcParts[0]) || 0;
+      }
+      if (_tcBase > 0) { TIME_CONTROL_MINS = _tcBase; timeEnabled = true; } else { timeEnabled = false; }
       startLocalGame(); onlineShowMatchBanner(matchInfo);
       onlineShowColorIndicator(ONLINE.myColor, ONLINE.opponent);
       onlineUpdateThinking();
@@ -17056,17 +17159,35 @@ executeMove = function(piece, t) {
       onlineDCSend('clock_sync', { white: timers.white, black: timers.black });
   }
   if (ONLINE.inMatch) onlineUpdateThinking();
+  // Correspondence: send move to server
+  if (ONLINE.corrGame && ONLINE.corrGame.status === 'active' && wasMyTurn && !ONLINE._syncing) {
+    var snap = JSON.stringify(pieces.map(function(p) {
+      return { type: p.userData.type, color: p.userData.color, x: p.userData.x, y: p.userData.y, z: p.userData.z, moved: p.userData.moved };
+    }));
+    onlineSend('corr:move', { gameId: ONLINE.corrGame.gameId, move: { from: from, to: { x: t.x, y: t.y, z: t.z } }, snapshot: snap });
+    ONLINE.corrGame.isMyTurn = false;
+    setGameInputEnabled(false);
+  }
 };
 
 var _onlineBaseEnd = typeof endGame !== 'undefined' ? endGame : null;
 if (_onlineBaseEnd) {
   endGame = function(msg) {
     _onlineBaseEnd(msg);
-    if (!ONLINE.inMatch) return;
-    var result = 'draw', lmsg = (msg||'').toLowerCase();
-    if (lmsg.includes('white') && lmsg.includes('win')) result = 'white_wins';
-    else if (lmsg.includes('black') && lmsg.includes('win')) result = 'black_wins';
-    onlineRecordResult(result);
+    if (ONLINE.inMatch) {
+      var result = 'draw', lmsg = (msg||'').toLowerCase();
+      if (lmsg.includes('white') && lmsg.includes('win')) result = 'white_wins';
+      else if (lmsg.includes('black') && lmsg.includes('win')) result = 'black_wins';
+      onlineRecordResult(result);
+    }
+    if (ONLINE.corrGame && ONLINE.corrGame.status === 'active') {
+      var lmsg2 = (msg||'').toLowerCase();
+      var res2  = 'draw';
+      if (lmsg2.includes('white') && lmsg2.includes('win')) res2 = 'white_wins';
+      else if (lmsg2.includes('black') && lmsg2.includes('win')) res2 = 'black_wins';
+      onlineSend('corr:result', { gameId: ONLINE.corrGame.gameId, result: res2 });
+      ONLINE.corrGame.status = res2;
+    }
   };
 }
 
@@ -17312,21 +17433,82 @@ document.getElementById('openOnlineBtn').onclick = function() {
   };
 })();
 
-/* -- Lobby overlay --------------------------------------------- */
+/* -- New matchmaking lobby ---------------------------------------- */
+var _lobbyActiveMode = 'standard';
+var _queuedPool = null, _queuedTc = null;
+
+var LOBBY_TCS = [
+  { section: 'RAPID', badge: 'rapid', highlight: true, note: '★ recommended for 3D chess', cards: [
+    { tc: '10+0',  label: '10',    cat: 'rapid' },
+    { tc: '10+3',  label: '10|3',  cat: 'rapid' },
+    { tc: '15+10', label: '15|10', cat: 'rapid' },
+    { tc: '30+0',  label: '30',    cat: 'rapid' }
+  ]},
+  { section: 'BLITZ', badge: 'blitz', note: 'Fast for 3D — experienced players recommended', cards: [
+    { tc: '3+0',  label: '3',    cat: 'blitz' },
+    { tc: '3+2',  label: '3|2',  cat: 'blitz' },
+    { tc: '5+0',  label: '5',    cat: 'blitz' },
+    { tc: '5+3',  label: '5|3',  cat: 'blitz', minRec: true }
+  ]},
+  { section: 'CLASSICAL', badge: 'classical', cards: [
+    { tc: '30+10', label: '30|10', cat: 'classical' },
+    { tc: '60+0',  label: '60',    cat: 'classical' }
+  ]},
+  { section: 'CORRESPONDENCE', badge: 'correspondence', cards: [
+    { tc: '1d', label: '1 day',   cat: 'correspondence' },
+    { tc: '2d', label: '2 days',  cat: 'correspondence' },
+    { tc: '3d', label: '3 days',  cat: 'correspondence' },
+    { tc: '7d', label: '7 days',  cat: 'correspondence' }
+  ]}
+];
+
+var BADGE_COLORS = { rapid: '#00ccff', blitz: '#ffaa00', classical: '#ce93d8', correspondence: '#00ff88' };
+
+function _tcId(tc) { return tc.replace(/\+/g,'p').replace(/\|/g,'_'); }
+
+function _buildLobbyCardGrid() {
+  var html = '';
+  LOBBY_TCS.forEach(function(sec) {
+    var badgeCol = BADGE_COLORS[sec.badge] || '#aaa';
+    var secNote  = sec.note ? '<span style="color:' + badgeCol + '44;font-size:7px;margin-left:6px;">' + sec.note + '</span>' : '';
+    html += '<div style="margin-bottom:4px;">'
+      + '<div style="font-size:8px;color:#444;letter-spacing:2px;margin:10px 0 5px;display:flex;align-items:center;">'
+      + '<span style="color:' + (sec.highlight ? badgeCol + '99' : '#444') + ';">' + sec.section + '</span>'
+      + secNote + '</div>'
+      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;">';
+    sec.cards.forEach(function(card) {
+      var isCorr = (card.cat === 'correspondence');
+      html += '<div class="tcCard" data-tc="' + card.tc + '" data-cat="' + card.cat + '" style="background:#0a0a0a;border:1px solid #1a1a1a;padding:8px 7px;border-radius:2px;"'
+        + (card.minRec ? ' title="Minimum recommended blitz for 3D chess"' : '') + '>'
+        + '<div style="font-size:' + (isCorr ? '11px' : '16px') + ';font-family:monospace;color:#fff;line-height:1.1;">' + card.label + '</div>'
+        + '<div style="font-size:7px;letter-spacing:1px;color:' + badgeCol + ';border:1px solid ' + badgeCol + '33;display:inline-block;padding:1px 4px;margin:3px 0;">' + sec.badge.toUpperCase() + (card.minRec ? ' ★' : '') + '</div><br>'
+        + '<div id="cr_' + _tcId(card.tc) + '" style="font-size:10px;color:#00ccff;font-family:monospace;margin:4px 0 2px;">—</div>'
+        + '<div id="cc_' + card.cat + '_' + _tcId(card.tc) + '" style="font-size:7px;color:#444;margin-bottom:5px;">—</div>'
+        + (isCorr
+          ? '<button onclick="onlineCorrCardClick(\'' + card.tc + '\')" style="width:100%;padding:4px;background:#001a0a;border:1px solid #00ff88;color:#00ff88;font-family:monospace;font-size:8px;cursor:pointer;letter-spacing:1px;">SEEK</button>'
+          : '<button onclick="onlineJoinPool(\'' + card.cat + '\',\'' + card.tc + '\')" style="width:100%;padding:4px;background:#1a1a1a;border:1px solid #00ff88;color:#00ff88;font-family:monospace;font-size:8px;cursor:pointer;letter-spacing:1px;">PLAY</button>')
+        + '</div>';
+    });
+    html += '</div></div>';
+  });
+  return html;
+}
+
 var _onlineLobby = (function() {
   var el = document.createElement('div');
   el.id = 'onlineLobby';
-  el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.9);display:none;'
-    + 'flex-direction:column;justify-content:center;align-items:center;z-index:44;'
-    + 'font-family:monospace;color:#fff;';
+  el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.92);display:none;'
+    + 'flex-direction:column;justify-content:flex-start;align-items:center;z-index:44;'
+    + 'font-family:monospace;color:#fff;overflow-y:auto;padding:12px 0 24px;';
   el.innerHTML = `
-    <div style="width:300px;max-height:90vh;overflow-y:auto;">
-      <div style="text-align:center;margin-bottom:20px;">
-        <div style="font-size:18px;letter-spacing:4px;">- ONLINE</div>
-        <div id="onlineLobbyStatus" style="font-size:9px;color:#555;margin-top:4px;letter-spacing:2px;">CONNECTING-</div>
+    <div style="width:320px;">
+      <!-- Header -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <div style="font-size:15px;letter-spacing:4px;color:#f0e6ff;">ONLINE PLAY</div>
+        <div id="onlineLobbyStatus" style="font-size:8px;color:#555;letter-spacing:2px;">CONNECTING</div>
       </div>
 
-      <!-- Auth section (shown when connected but not logged in) -->
+      <!-- Auth section -->
       <div id="onlineAuthSection" class="settingSection" style="display:none;">
         <h3 style="color:#555;font-size:9px;letter-spacing:2px;margin:0 0 8px;">ACCOUNT</h3>
         <input id="onlineUsernameInput" type="text" placeholder="Username" maxlength="20"
@@ -17340,116 +17522,101 @@ var _onlineLobby = (function() {
       </div>
 
       <!-- Player info when logged in -->
-      <div id="onlinePlayerSection" class="settingSection" style="display:none;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <div id="onlinePlayerSection" class="settingSection" style="display:none;margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
           <div>
-            <div id="onlinePlayerName" style="font-size:13px;color:#fff;letter-spacing:1px;cursor:pointer;" title="View profile"></div>
-            <div id="onlinePlayerElo"  style="font-size:10px;color:#00ccff;letter-spacing:2px;margin-top:2px;"></div>
+            <div id="onlinePlayerName" style="font-size:12px;color:#fff;letter-spacing:1px;cursor:pointer;" title="View profile"></div>
+            <div id="onlinePlayerElo"  style="font-size:9px;color:#00ccff;letter-spacing:2px;margin-top:2px;"></div>
+            <div id="onlinePlayerStats" style="font-size:8px;color:#555;letter-spacing:1px;margin-top:1px;"></div>
           </div>
-          <button id="onlineLogoutBtn" style="background:#1a1a1a;border:1px solid #444;color:#777;font-family:monospace;font-size:9px;padding:4px 10px;cursor:pointer;">LOGOUT</button>
+          <div style="display:flex;gap:5px;align-items:center;">
+            <button id="onlineMyProfileBtn" style="background:#1a1a1a;border:1px solid #222;color:#555;font-family:monospace;font-size:8px;padding:3px 8px;cursor:pointer;">PROFILE</button>
+            <button id="onlineLogoutBtn" style="background:#1a1a1a;border:1px solid #444;color:#666;font-family:monospace;font-size:8px;padding:3px 8px;cursor:pointer;">LOGOUT</button>
+          </div>
         </div>
-        <div id="onlinePlayerStats" style="font-size:9px;color:#555;letter-spacing:1px;line-height:1.9;"></div>
-        <button id="onlineMyProfileBtn" style="margin-top:8px;width:100%;padding:5px;background:#1a1a1a;border:1px solid #222;color:#555;font-family:monospace;font-size:9px;cursor:pointer;letter-spacing:1px;">- MY PROFILE</button>
       </div>
 
-      <!-- Queue / leaderboard -->
+      <!-- Main play section -->
       <div id="onlinePlaySection" style="display:none;">
 
-        <!-- Matchmaking settings -->
-        <div id="onlineMatchSettings" class="settingSection" style="margin-bottom:6px;">
-          <h3 style="color:#555;font-size:9px;letter-spacing:2px;margin:0 0 8px;">MATCH SETTINGS</h3>
-
-          <!-- Time control -->
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <span style="font-size:9px;color:#666;letter-spacing:1px;">TIME CONTROL</span>
-            <select id="onlineTCSelect" style="background:#1a1a1a;border:1px solid #333;color:#aaa;
-              font-family:monospace;font-size:9px;padding:3px 6px;outline:none;cursor:pointer;">
-              <option value="none">None</option>
-              <option value="bullet">Bullet (1+0)</option>
-              <option value="blitz" selected>Blitz (5+0)</option>
-              <option value="rapid">Rapid (10+0)</option>
-              <option value="classical">Classical (30+0)</option>
-            </select>
-          </div>
-
-          <!-- Game mode -->
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <span style="font-size:9px;color:#666;letter-spacing:1px;">GAME MODE</span>
-            <select id="onlineModeSelect" style="background:#1a1a1a;border:1px solid #333;color:#aaa;
-              font-family:monospace;font-size:9px;padding:3px 6px;outline:none;cursor:pointer;">
-              <option value="standard" selected>Standard</option>
-              <option value="arcade">Arcade</option>
-              <option value="ctf">CTF</option>
-            </select>
-          </div>
-
-          <!-- ELO range -->
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <span style="font-size:9px;color:#666;letter-spacing:1px;">ELO RANGE</span>
-            <select id="onlineEloRange" style="background:#1a1a1a;border:1px solid #333;color:#aaa;
-              font-family:monospace;font-size:9px;padding:3px 6px;outline:none;cursor:pointer;">
-              <option value="100">±100</option>
-              <option value="200" selected>±200</option>
-              <option value="400">±400</option>
-              <option value="0">Any</option>
-            </select>
-          </div>
-
-          <!-- Ranked toggle -->
-          <div style="display:flex;justify-content:space-between;align-items:center;">
-            <span style="font-size:9px;color:#666;letter-spacing:1px;">RANKED</span>
-            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
-              <input type="checkbox" id="onlineRankedToggle" checked
-                style="accent-color:#00ccff;width:14px;height:14px;cursor:pointer;">
-              <span id="onlineRankedLabel" style="font-size:9px;color:#00ccff;letter-spacing:1px;">ON</span>
-            </label>
-          </div>
+        <!-- Mode tabs -->
+        <div style="display:flex;gap:3px;margin-bottom:10px;">
+          <button data-lobbymode="standard" onclick="onlineLobbySetMode('standard')" style="flex:1;padding:6px;background:#001a2a;border:1px solid #00ccff;color:#00ccff;font-family:monospace;font-size:8px;cursor:pointer;letter-spacing:1px;">STANDARD</button>
+          <button data-lobbymode="arcade"   onclick="onlineLobbySetMode('arcade')"   style="flex:1;padding:6px;background:#1a1a1a;border:1px solid #222;color:#555;font-family:monospace;font-size:8px;cursor:pointer;letter-spacing:1px;">ARCADE</button>
+          <button data-lobbymode="flag"     onclick="onlineLobbySetMode('flag')"     style="flex:1;padding:6px;background:#1a1a1a;border:1px solid #222;color:#555;font-family:monospace;font-size:8px;cursor:pointer;letter-spacing:1px;">FLAG</button>
         </div>
 
-        <div id="onlineQueueSection" class="settingSection">
-          <button id="onlineQueueBtn" style="width:100%;padding:14px;background:#1a1a1a;border:1px solid #00ff88;
-            color:#00ff88;font-family:monospace;font-size:14px;cursor:pointer;letter-spacing:3px;">
-            FIND MATCH
-          </button>
-          <div id="onlineQueueStatus" style="font-size:9px;color:#555;letter-spacing:1px;text-align:center;margin-top:8px;min-height:14px;"></div>
+        <!-- Time control grid -->
+        <div id="onlineTCGrid"></div>
+
+        <!-- Correspondence seeks board (shown when viewing corr section) -->
+        <div id="onlineSeeksSection" style="display:none;margin-top:10px;">
+          <div style="font-size:9px;color:#444;letter-spacing:2px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
+            <span>OPEN SEEKS</span>
+            <button id="onlineSeeksRefreshBtn" style="background:none;border:none;color:#333;font-family:monospace;font-size:8px;cursor:pointer;">↻ refresh</button>
+          </div>
+          <div id="onlineMySeekBar" style="background:#001a0a;border:1px solid #00ff8833;padding:6px 8px;margin-bottom:6px;font-size:8px;color:#00ff88;display:none;justify-content:space-between;align-items:center;">
+            <span>Your seek is posted</span>
+            <button id="onlineCancelSeekBtn" style="background:#1a1a1a;border:1px solid #444;color:#ff4444;font-family:monospace;font-size:8px;padding:2px 8px;cursor:pointer;">CANCEL</button>
+          </div>
+          <div id="onlineSeeksList" style="max-height:180px;overflow-y:auto;font-size:8px;"></div>
         </div>
-        <div style="display:flex;gap:4px;margin-top:4px;">
-          <button id="onlineLbBtn" style="flex:1;padding:8px;background:#1a1a1a;border:1px solid #333;
-            color:#666;font-family:monospace;font-size:9px;cursor:pointer;letter-spacing:1px;">
-            - LB
-          </button>
-          <button id="onlineHistoryBtn" style="flex:1;padding:8px;background:#1a1a1a;border:1px solid #333;
-            color:#666;font-family:monospace;font-size:9px;cursor:pointer;letter-spacing:1px;">
-            - GAMES
-          </button>
-          <button id="onlineFriendsBtn" style="flex:1;padding:8px;background:#1a1a1a;border:1px solid #333;
-            color:#666;font-family:monospace;font-size:9px;cursor:pointer;letter-spacing:1px;">
-            - FRIENDS
-          </button>
+
+        <!-- Preferences (collapsible) -->
+        <div style="margin-top:10px;border-top:1px solid #111;padding-top:8px;">
+          <button id="onlinePrefsToggle" style="background:none;border:none;color:#333;font-family:monospace;font-size:8px;cursor:pointer;letter-spacing:1px;padding:0;">Preferences ▾</button>
+          <div id="onlinePrefContent" style="display:none;margin-top:8px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+              <span style="font-size:8px;color:#555;letter-spacing:1px;">ELO RANGE</span>
+              <select id="onlineEloRangePref" style="background:#1a1a1a;border:1px solid #333;color:#aaa;font-family:monospace;font-size:9px;padding:3px 6px;outline:none;cursor:pointer;">
+                <option value="100">± 100</option>
+                <option value="150" selected>± 150 (default)</option>
+                <option value="200">± 200</option>
+                <option value="300">± 300</option>
+                <option value="0">Any</option>
+              </select>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-size:8px;color:#555;letter-spacing:1px;">RANKED</span>
+              <label style="display:flex;align-items:center;gap:5px;cursor:pointer;">
+                <input type="checkbox" id="onlineRankedToggle" checked style="accent-color:#00ccff;width:12px;height:12px;">
+                <span id="onlineRankedLabel" style="font-size:8px;color:#00ccff;letter-spacing:1px;">ON</span>
+              </label>
+            </div>
+          </div>
         </div>
+      </div>
+
+      <!-- Searching section (shown while in queue) -->
+      <div id="onlineSearchingSection" style="display:none;text-align:center;padding:20px 0;">
+        <div style="font-size:11px;color:#00ff88;letter-spacing:4px;margin-bottom:6px;">SEARCHING</div>
+        <div id="onlineSearchTC"    style="font-size:14px;color:#fff;margin-bottom:2px;"></div>
+        <div id="onlineSearchPool"  style="font-size:8px;color:#555;letter-spacing:2px;margin-bottom:14px;"></div>
+        <div id="onlineSearchRange" style="font-size:9px;color:#888;letter-spacing:1px;margin-bottom:4px;"></div>
+        <div id="onlineSearchTimer" style="font-size:22px;color:#00ff88;font-family:monospace;margin:10px 0;"></div>
+        <div id="onlineSearchCount" style="font-size:8px;color:#444;margin-bottom:16px;"></div>
+        <button id="onlineCancelSearchBtn" style="padding:8px 24px;background:#1a1a1a;border:1px solid #ff4444;color:#ff4444;font-family:monospace;font-size:10px;cursor:pointer;letter-spacing:2px;">CANCEL</button>
       </div>
 
       <!-- Leaderboard panel -->
       <div id="onlineLbSection" style="display:none;">
-        <div style="font-size:10px;color:#555;letter-spacing:2px;margin-bottom:10px;">LEADERBOARD</div>
-        <div id="onlineLbContent" style="font-size:9px;color:#aaa;line-height:2;max-height:240px;overflow-y:auto;"></div>
-        <button id="onlineLbBack" style="margin-top:10px;background:#1a1a1a;border:1px solid #333;color:#666;
-          font-family:monospace;font-size:10px;padding:6px 16px;cursor:pointer;">- Back</button>
+        <div style="font-size:9px;color:#555;letter-spacing:2px;margin-bottom:10px;">LEADERBOARD</div>
+        <div id="onlineLbContent" style="font-size:9px;color:#aaa;line-height:2;max-height:280px;overflow-y:auto;"></div>
+        <button id="onlineLbBack" style="margin-top:10px;background:#1a1a1a;border:1px solid #333;color:#666;font-family:monospace;font-size:9px;padding:5px 14px;cursor:pointer;">← Back</button>
       </div>
 
       <!-- Game history panel -->
       <div id="onlineHistorySection" style="display:none;">
-        <div style="font-size:10px;color:#555;letter-spacing:2px;margin-bottom:10px;">MY GAMES</div>
-        <div id="onlineHistoryContent" style="font-size:9px;color:#aaa;line-height:1.8;max-height:240px;overflow-y:auto;"></div>
-        <button id="onlineHistoryBack" style="margin-top:10px;background:#1a1a1a;border:1px solid #333;color:#666;
-          font-family:monospace;font-size:10px;padding:6px 16px;cursor:pointer;">- Back</button>
+        <div style="font-size:9px;color:#555;letter-spacing:2px;margin-bottom:10px;">MY GAMES</div>
+        <div id="onlineHistoryContent" style="font-size:9px;color:#aaa;line-height:1.8;max-height:280px;overflow-y:auto;"></div>
+        <button id="onlineHistoryBack" style="margin-top:10px;background:#1a1a1a;border:1px solid #333;color:#666;font-family:monospace;font-size:9px;padding:5px 14px;cursor:pointer;">← Back</button>
       </div>
 
       <!-- Friends panel -->
       <div id="onlineFriendsSection" style="display:none;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-          <div style="font-size:10px;color:#555;letter-spacing:2px;">FRIENDS</div>
-          <button id="onlineFriendsBack" style="background:#1a1a1a;border:1px solid #333;color:#666;font-family:monospace;font-size:9px;padding:3px 10px;cursor:pointer;">- Back</button>
+          <div style="font-size:9px;color:#555;letter-spacing:2px;">FRIENDS</div>
+          <button id="onlineFriendsBack" style="background:#1a1a1a;border:1px solid #333;color:#666;font-family:monospace;font-size:8px;padding:3px 10px;cursor:pointer;">← Back</button>
         </div>
         <div style="display:flex;gap:6px;margin-bottom:10px;">
           <input id="onlineFriendInput" type="text" placeholder="Add by username" maxlength="20"
@@ -17460,140 +17627,109 @@ var _onlineLobby = (function() {
         <div id="onlineFriendList" style="max-height:220px;overflow-y:auto;"></div>
       </div>
 
-      <!-- Advanced: change server address -->
-      <div style="margin-top:16px;border-top:1px solid #222;padding-top:10px;">
-        <button id="onlineAdvToggle" style="background:none;border:none;color:#333;font-family:monospace;font-size:9px;cursor:pointer;letter-spacing:1px;padding:0;">- Advanced</button>
+      <!-- Correspondence games panel -->
+      <div id="onlineCorrGamesSection" style="display:none;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <div style="font-size:9px;color:#555;letter-spacing:2px;">ACTIVE GAMES</div>
+          <button id="onlineCorrGamesBack" style="background:#1a1a1a;border:1px solid #333;color:#666;font-family:monospace;font-size:8px;padding:3px 10px;cursor:pointer;">← Back</button>
+        </div>
+        <div id="onlineCorrGamesContent" style="max-height:320px;overflow-y:auto;font-size:9px;"></div>
+      </div>
+
+      <!-- Bottom nav -->
+      <div id="onlineLobbyNav" style="display:flex;gap:3px;margin-top:12px;border-top:1px solid #111;padding-top:10px;">
+        <button id="onlineLbBtn" style="flex:1;padding:6px;background:#1a1a1a;border:1px solid #222;color:#555;font-family:monospace;font-size:8px;cursor:pointer;letter-spacing:1px;">LB</button>
+        <button id="onlineCorrGamesBtn" style="flex:1;padding:6px;background:#1a1a1a;border:1px solid #222;color:#555;font-family:monospace;font-size:8px;cursor:pointer;letter-spacing:1px;">GAMES</button>
+        <button id="onlineHistoryBtn" style="flex:1;padding:6px;background:#1a1a1a;border:1px solid #222;color:#555;font-family:monospace;font-size:8px;cursor:pointer;letter-spacing:1px;">HISTORY</button>
+        <button id="onlineFriendsBtn" style="flex:1;padding:6px;background:#1a1a1a;border:1px solid #222;color:#555;font-family:monospace;font-size:8px;cursor:pointer;letter-spacing:1px;">FRIENDS</button>
+      </div>
+
+      <!-- Advanced / server -->
+      <div style="margin-top:10px;border-top:1px solid #111;padding-top:8px;">
+        <button id="onlineAdvToggle" style="background:none;border:none;color:#2a2a2a;font-family:monospace;font-size:8px;cursor:pointer;letter-spacing:1px;padding:0;">Advanced ▾</button>
         <div id="onlineAdvSection" style="display:none;margin-top:8px;">
           <div style="display:flex;gap:6px;">
             <input id="onlineServerInput" type="text" placeholder="ws://192.168.x.x:3000"
-              style="flex:1;background:#1a1a1a;border:1px solid #333;color:#aaa;font-family:monospace;
-                     font-size:10px;padding:6px 8px;outline:none;">
-            <button id="onlineConnectBtn" style="background:#1a1a1a;border:1px solid #444;color:#00ccff;
-              font-family:monospace;font-size:10px;padding:6px 12px;cursor:pointer;white-space:nowrap;">Connect</button>
+              style="flex:1;background:#1a1a1a;border:1px solid #333;color:#aaa;font-family:monospace;font-size:9px;padding:5px 7px;outline:none;">
+            <button id="onlineConnectBtn" style="background:#1a1a1a;border:1px solid #444;color:#00ccff;font-family:monospace;font-size:9px;padding:5px 10px;cursor:pointer;white-space:nowrap;">Connect</button>
           </div>
         </div>
       </div>
 
-      <button id="onlineLobbyBack" class="modeBtn" style="margin-top:12px;width:100%;">- Back</button>
+      <button id="onlineLobbyBack" class="modeBtn" style="margin-top:10px;width:100%;">← Back</button>
     </div>
   `;
   document.body.appendChild(el);
+  // Build card grid
+  el.querySelector('#onlineTCGrid').innerHTML = _buildLobbyCardGrid();
   return el;
 })();
 
 /* -- Wire lobby buttons ---------------------------------------- */
-document.getElementById('onlineAdvToggle').onclick = function() {
-  var s = document.getElementById('onlineAdvSection');
-  var shown = s.style.display !== 'none';
-  s.style.display = shown ? 'none' : 'block';
-  this.textContent = shown ? '- Advanced' : '- Advanced (hide)';
-};
+function _lobbyShowSection(id) {
+  ['onlinePlaySection','onlineSearchingSection','onlineLbSection','onlineHistorySection',
+   'onlineFriendsSection','onlineCorrGamesSection'].forEach(function(s) {
+    var el2 = document.getElementById(s);
+    if (el2) el2.style.display = (s === id) ? 'block' : 'none';
+  });
+  var nav = document.getElementById('onlineLobbyNav');
+  if (nav) nav.style.display = (id === 'onlinePlaySection' || id === 'onlineSearchingSection') ? 'flex' : 'none';
+}
 
+document.getElementById('onlineAdvToggle').onclick = function() {
+  var s = document.getElementById('onlineAdvSection'), shown = s.style.display !== 'none';
+  s.style.display = shown ? 'none' : 'block';
+  this.textContent = shown ? 'Advanced ▾' : 'Advanced ▴';
+};
 document.getElementById('onlineConnectBtn').onclick = function() {
   var url = document.getElementById('onlineServerInput').value.trim();
   if (!url) return;
   if (!url.startsWith('ws')) url = 'ws://' + url;
   onlineConnect(url);
 };
-
 document.getElementById('onlineLoginBtn').onclick = function() {
   var u = document.getElementById('onlineUsernameInput').value.trim();
   if (!u) { onlineShowAuthError('Enter a username'); return; }
   onlineSend('login', { username: u });
 };
-
 document.getElementById('onlineRegisterBtn').onclick = function() {
   var u = document.getElementById('onlineUsernameInput').value.trim();
   if (!u) return;
-  var avatar = typeof ACC_active !== 'undefined' && ACC_active ? ACC_active.avatar : '-';
+  var avatar = typeof ACC_active !== 'undefined' && ACC_active ? ACC_active.avatar : '♟';
   onlineSend('register', { username: u, avatar: avatar });
 };
-
 document.getElementById('onlineLogoutBtn').onclick = function() {
   localStorage.removeItem('cc_online_username');
   ONLINE.loggedIn = false; ONLINE.player = null;
   ONLINE.friends = []; ONLINE.requests = []; ONLINE.pendingOut = [];
+  ONLINE.poolRatings = {}; ONLINE.corrGames = { myTurn: [], theirTurn: [] };
   onlineUpdateFriends(); onlineUpdateUI();
 };
-
-/* -- Ranked toggle label sync ---------------------------------- */
 document.getElementById('onlineRankedToggle').onchange = function() {
-  document.getElementById('onlineRankedLabel').textContent = this.checked ? 'ON' : 'OFF';
-  document.getElementById('onlineRankedLabel').style.color  = this.checked ? '#00ccff' : '#555';
+  var on = this.checked;
+  document.getElementById('onlineRankedLabel').textContent = on ? 'ON' : 'OFF';
+  document.getElementById('onlineRankedLabel').style.color = on ? '#00ccff' : '#555';
 };
-
-function onlineGetMatchSettings() {
-  return {
-    timeControl: document.getElementById('onlineTCSelect').value,
-    gameMode:    document.getElementById('onlineModeSelect').value,
-    ranked:      document.getElementById('onlineRankedToggle').checked,
-    eloRange:    parseInt(document.getElementById('onlineEloRange').value) || 0
-  };
-}
-
-var _queued = false;
-document.getElementById('onlineQueueBtn').onclick = function() {
-  if (!_queued) {
-    _queued = true;
-    this.textContent = 'CANCEL SEARCH';
-    this.style.borderColor = '#ff4444'; this.style.color = '#ff4444';
-    // Lock settings while in queue
-    document.getElementById('onlineMatchSettings').style.opacity = '0.4';
-    document.getElementById('onlineMatchSettings').style.pointerEvents = 'none';
-    onlineSend('queue_join', onlineGetMatchSettings()); onlineQueueTimer();
-  } else {
-    _queued = false;
-    this.textContent = 'FIND MATCH';
-    this.style.borderColor = '#00ff88'; this.style.color = '#00ff88';
-    document.getElementById('onlineMatchSettings').style.opacity = '';
-    document.getElementById('onlineMatchSettings').style.pointerEvents = '';
-    onlineSend('queue_leave', {});
-    document.getElementById('onlineQueueStatus').textContent = '';
-  }
+document.getElementById('onlinePrefsToggle').onclick = function() {
+  var s = document.getElementById('onlinePrefContent'), shown = s.style.display !== 'none';
+  s.style.display = shown ? 'none' : 'block';
+  this.textContent = shown ? 'Preferences ▾' : 'Preferences ▴';
 };
-
-var _queueSeconds = 0, _queueTimerRef = null, _queueHoldUntil = 0, _queueCompatible = 0;
-function onlineQueueTimer() {
-  _queueSeconds = 0; clearInterval(_queueTimerRef);
-  _queueTimerRef = setInterval(function() {
-    if (!_queued) { clearInterval(_queueTimerRef); return; }
-    _queueSeconds++;
-    if (Date.now() < _queueHoldUntil) return;
-    var m = Math.floor(_queueSeconds/60), s = _queueSeconds%60;
-    var timeStr = m + ':' + (s<10?'0':'') + s;
-    var countStr = _queueCompatible === 0 ? 'none searching'
-      : _queueCompatible === 1 ? '1 other searching'
-      : _queueCompatible + ' others searching';
-    var qs = document.getElementById('onlineQueueStatus');
-    if (qs) qs.textContent = 'Searching- ' + timeStr + '  ·  ' + countStr;
-    var pt = document.getElementById('psoLobbyTimer');
-    if (pt) pt.textContent = timeStr;
-  }, 1000);
-}
-
 document.getElementById('onlineLbBtn').onclick = function() { onlineLoadLeaderboard(); };
-document.getElementById('onlineLbBack').onclick = function() {
-  document.getElementById('onlineLbSection').style.display   = 'none';
-  document.getElementById('onlinePlaySection').style.display = 'block';
-};
+document.getElementById('onlineLbBack').onclick = function() { _lobbyShowSection('onlinePlaySection'); };
 document.getElementById('onlineHistoryBtn').onclick = function() { onlineLoadHistory(); };
-document.getElementById('onlineHistoryBack').onclick = function() {
-  document.getElementById('onlineHistorySection').style.display = 'none';
-  document.getElementById('onlinePlaySection').style.display    = 'block';
-};
+document.getElementById('onlineHistoryBack').onclick = function() { _lobbyShowSection('onlinePlaySection'); };
 document.getElementById('onlineFriendsBtn').onclick = function() {
-  document.getElementById('onlinePlaySection').style.display    = 'none';
-  document.getElementById('onlineFriendsSection').style.display = 'block';
-  onlineUpdateFriends();
+  _lobbyShowSection('onlineFriendsSection'); onlineUpdateFriends();
 };
-document.getElementById('onlineFriendsBack').onclick = function() {
-  document.getElementById('onlineFriendsSection').style.display = 'none';
-  document.getElementById('onlinePlaySection').style.display    = 'block';
+document.getElementById('onlineFriendsBack').onclick = function() { _lobbyShowSection('onlinePlaySection'); };
+document.getElementById('onlineCorrGamesBtn').onclick = function() {
+  _lobbyShowSection('onlineCorrGamesSection'); onlineLobbyUpdateGamesPanel();
 };
+document.getElementById('onlineCorrGamesBack').onclick = function() { _lobbyShowSection('onlinePlaySection'); };
 document.getElementById('onlineFriendAddBtn').onclick = function() {
   var u = document.getElementById('onlineFriendInput').value.trim();
-  if (!u) return;
-  onlineSend('friend_add', { username: u });
+  if (!u) return; onlineSend('friend_add', { username: u });
   document.getElementById('onlineFriendInput').value = '';
 };
 document.getElementById('onlineFriendInput').addEventListener('keydown', function(e) {
@@ -17608,13 +17744,352 @@ document.getElementById('onlinePlayerName').onclick = function() {
 document.getElementById('onlineLobbyBack').onclick = function() {
   _onlineLobby.style.display = 'none';
   document.getElementById('mainMenu').style.display = 'flex';
-  if (_queued) { _queued = false; onlineSend('queue_leave', {}); }
+  if (_queued) { _queued = false; onlineSend('match:leave', {}); }
+};
+document.getElementById('onlineCancelSearchBtn').onclick = function() {
+  _queued = false; _queuedPool = null; _queuedTc = null;
+  clearInterval(_queueTimerRef);
+  onlineSend('match:leave', {});
+  _lobbyShowSection('onlinePlaySection');
+};
+document.getElementById('onlineSeeksRefreshBtn').onclick = function() {
+  onlineSend('corr:seeks_list', {});
+};
+document.getElementById('onlineCancelSeekBtn').onclick = function() {
+  onlineSend('corr:seek_cancel', {}); ONLINE.mySeek = null;
+  var bar = document.getElementById('onlineMySeekBar');
+  if (bar) bar.style.display = 'none';
 };
 
 (function() {
   var stored = localStorage.getItem('cc_server_url') || ONLINE_SERVER;
   if (stored) document.getElementById('onlineServerInput').value = stored;
 })();
+
+// ── Lobby functions ──────────────────────────────────────────
+function onlineLobbySetMode(mode) {
+  _lobbyActiveMode = mode;
+  document.querySelectorAll('[data-lobbymode]').forEach(function(b) {
+    var active = b.dataset.lobbymode === mode;
+    b.style.borderColor = active ? '#00ccff' : '#222';
+    b.style.color       = active ? '#00ccff' : '#555';
+    b.style.background  = active ? '#001a2a' : '#1a1a1a';
+  });
+  onlineLobbyUpdateCards();
+}
+
+function onlineLobbyUpdateCards() {
+  var mode = _lobbyActiveMode || 'standard';
+  LOBBY_TCS.forEach(function(sec) {
+    sec.cards.forEach(function(card) {
+      var pool  = mode + '_' + card.cat;
+      var tcKey = _tcId(card.tc);
+      // Rating element
+      var ratEl = document.getElementById('cr_' + tcKey);
+      if (ratEl) {
+        var pr = ONLINE.poolRatings[pool];
+        if (pr && pr.games !== undefined) {
+          var prov = (pr.games || 0) < 10;
+          ratEl.textContent = (pr.rating || 1200) + (prov ? '?' : '');
+          ratEl.style.color = '#00ccff';
+        } else {
+          ratEl.textContent = '—';
+          ratEl.style.color = '#333';
+        }
+      }
+      // Count element — per pool (same for all TCs in same category)
+      var cntEl = document.getElementById('cc_' + card.cat + '_' + tcKey);
+      if (cntEl) {
+        if (card.cat === 'correspondence') {
+          var totalCorr = (ONLINE.corrGames.myTurn.length || 0) + (ONLINE.corrGames.theirTurn.length || 0);
+          if (totalCorr > 0) {
+            cntEl.textContent = totalCorr + ' active game' + (totalCorr > 1 ? 's' : '');
+            cntEl.style.color = '#00ff8844';
+          } else {
+            cntEl.textContent = 'no active games';
+            cntEl.style.color = '#2a2a2a';
+          }
+        } else {
+          var cnt = (ONLINE.poolCounts || {})[pool] || 0;
+          cntEl.textContent = cnt > 0 ? '~ ' + cnt + ' searching' : 'no one searching';
+          cntEl.style.color = cnt > 0 ? '#00ff8844' : '#2a2a2a';
+        }
+      }
+    });
+  });
+}
+
+function onlineJoinPool(cat, tc) {
+  if (!ONLINE.loggedIn) { onlineShowToast('Login first', 0xff4444); return; }
+  if (_queued) return;
+  var mode     = _lobbyActiveMode || 'standard';
+  var pool     = mode + '_' + cat;
+  var eloRange = parseInt(document.getElementById('onlineEloRangePref').value) || 150;
+  var ranked   = document.getElementById('onlineRankedToggle').checked;
+  // Block bullet (under 3 min no increment)
+  if (tc !== 'none') {
+    var parts = tc.split('+'), base = parseInt(parts[0]), inc = parseInt(parts[1]||'0');
+    if (base < 3 || (base === 3 && inc === 0 && cat === 'blitz')) {
+      if (base + 30 * inc / 60 < 3) {
+        onlineShowToast('Bullet not supported — too fast for 3D chess', 0xff4444); return;
+      }
+    }
+  }
+  _queued = true; _queuedPool = pool; _queuedTc = tc;
+  onlineSend('match:join', { timeControl: tc, gameMode: mode === 'flag' ? 'ctf' : mode, ranked: ranked, eloRange: eloRange });
+  _lobbyShowSection('onlineSearchingSection');
+  // Display what we're searching for
+  var tcLabel = tc.replace('+','|');
+  document.getElementById('onlineSearchTC').textContent   = tcLabel;
+  document.getElementById('onlineSearchPool').textContent = mode.toUpperCase() + ' · ' + cat.toUpperCase();
+  _queuedEloRange = eloRange;
+  onlineQueueTimer();
+}
+
+function onlineCorrCardClick(tc) {
+  if (!ONLINE.loggedIn) { onlineShowToast('Login first', 0xff4444); return; }
+  var secsMap = { '1d': 86400, '2d': 172800, '3d': 259200, '7d': 604800 };
+  var secs = secsMap[tc] || 86400;
+  var mode = _lobbyActiveMode || 'standard';
+  // Show seeks section for this TC
+  var seeksEl = document.getElementById('onlineSeeksSection');
+  if (seeksEl) seeksEl.style.display = 'block';
+  // If user has no seek, offer to post one
+  if (!ONLINE.mySeek) {
+    onlineSend('corr:seek_post', { timePerMove: secs, colorPref: 'random', gameMode: mode === 'flag' ? 'ctf' : mode });
+  }
+  onlineSend('corr:seeks_list', {});
+}
+
+function onlineLobbyUpdateSeeks(seeks) {
+  var seeksEl = document.getElementById('onlineSeeksSection');
+  if (!seeksEl || seeksEl.style.display === 'none') return;
+  var myBar = document.getElementById('onlineMySeekBar');
+  if (myBar) myBar.style.display = ONLINE.mySeek ? 'flex' : 'none';
+  var listEl = document.getElementById('onlineSeeksList');
+  if (!listEl) return;
+  if (!seeks.length) {
+    listEl.innerHTML = '<div style="color:#2a2a2a;padding:8px 0;">No open seeks — your seek has been posted, waiting for an opponent.</div>';
+    return;
+  }
+  listEl.innerHTML = '<table style="width:100%;border-collapse:collapse;">'
+    + '<tr style="color:#333;font-size:7px;letter-spacing:1px;border-bottom:1px solid #111;">'
+    + '<td style="padding:4px 2px;">PLAYER</td><td style="padding:4px 2px;">RATING</td>'
+    + '<td style="padding:4px 2px;">TIME/MOVE</td><td style="padding:4px 2px;">COLOR</td><td></td></tr>'
+    + seeks.map(function(s) {
+        var dayLabel = Math.round(s.timePerMove / 86400) + 'd';
+        var prov = (s.games || 0) < 10;
+        return '<tr style="border-bottom:1px solid #0a0a0a;font-size:8px;color:#888;">'
+          + '<td style="padding:5px 2px;">' + _esc(s.avatar || '♟') + ' ' + _esc(s.username) + '</td>'
+          + '<td style="padding:5px 2px;color:#00ccff;">' + (s.rating||1200) + (prov?'?':'') + '</td>'
+          + '<td style="padding:5px 2px;">' + dayLabel + '</td>'
+          + '<td style="padding:5px 2px;color:#555;">' + (s.colorPref||'random') + '</td>'
+          + '<td style="padding:5px 2px;"><button onclick="onlineSend(\'corr:seek_accept\',{seekId:\'' + s.seekId + '\'})" style="background:#001a0a;border:1px solid #00ff88;color:#00ff88;font-family:monospace;font-size:7px;padding:2px 6px;cursor:pointer;">ACCEPT</button></td>'
+          + '</tr>';
+      }).join('')
+    + '</table>';
+}
+
+function onlineUpdateGamesBadge() {
+  var n = ONLINE.corrGames.myTurn.length;
+  var btn = document.getElementById('onlineCorrGamesBtn');
+  if (btn) {
+    btn.textContent = n > 0 ? 'GAMES (' + n + ')' : 'GAMES';
+    btn.style.color = n > 0 ? '#00ff88' : '#555';
+    btn.style.borderColor = n > 0 ? '#00ff8844' : '#222';
+  }
+}
+
+function onlineLobbyUpdateGamesPanel() {
+  var el = document.getElementById('onlineCorrGamesContent');
+  if (!el) return;
+  var myT  = ONLINE.corrGames.myTurn  || [];
+  var theirT = ONLINE.corrGames.theirTurn || [];
+  if (!myT.length && !theirT.length) {
+    el.innerHTML = '<div style="color:#2a2a2a;padding:16px 0;text-align:center;">No active correspondence games</div>';
+    return;
+  }
+  var secStyle = 'font-size:8px;color:#444;letter-spacing:2px;margin:10px 0 6px;';
+  var html = '';
+  if (myT.length) {
+    html += '<div style="' + secStyle + '">YOUR TURN (' + myT.length + ')</div>';
+    html += myT.map(function(g) { return _corrGameRow(g, true); }).join('');
+  }
+  if (theirT.length) {
+    html += '<div style="' + secStyle + ';margin-top:14px;">WAITING (' + theirT.length + ')</div>';
+    html += theirT.map(function(g) { return _corrGameRow(g, false); }).join('');
+  }
+  el.innerHTML = html;
+}
+
+function _corrGameRow(g, myTurn) {
+  var opp    = g.myColor === 'white' ? g.blackUser : g.whiteUser;
+  var rem    = g.isMyTurn ? g.whiteClockRemaining : g.blackClockRemaining;
+  var days   = Math.max(0, Math.floor(rem / 86400000));
+  var hrs    = Math.max(0, Math.floor((rem % 86400000) / 3600000));
+  var remStr = days > 0 ? days + 'd ' + hrs + 'h' : hrs + 'h';
+  var modeStr = (g.gameMode !== 'standard' && g.gameMode) ? ' [' + g.gameMode.toUpperCase() + ']' : '';
+  var borderCol = myTurn ? '#00ff88' : '#1a1a1a';
+  return '<div style="border:1px solid ' + borderCol + ';padding:8px;margin-bottom:5px;border-radius:2px;">'
+    + '<div style="display:flex;justify-content:space-between;align-items:center;">'
+    + '<div>'
+    + '<div style="font-size:9px;color:#fff;">' + _esc(opp) + modeStr + '</div>'
+    + '<div style="font-size:8px;color:#555;">Move ' + (g.moveCount||0) + ' · ' + (g.timePerMoveSeconds/86400|0) + 'd/move</div>'
+    + '</div>'
+    + '<div style="text-align:right;">'
+    + '<div style="font-size:8px;color:' + (myTurn ? '#00ff88' : '#555') + ';">' + (myTurn ? 'YOUR TURN' : 'THEIR TURN') + '</div>'
+    + '<div style="font-size:8px;color:#666;">' + remStr + ' left</div>'
+    + '</div>'
+    + '</div>'
+    + (myTurn ? '<button onclick="onlineSend(\'corr:game_load\',{gameId:\'' + g.gameId + '\'})" style="width:100%;margin-top:6px;padding:4px;background:#001a0a;border:1px solid #00ff88;color:#00ff88;font-family:monospace;font-size:8px;cursor:pointer;letter-spacing:1px;">OPEN GAME</button>' : '')
+    + '</div>';
+}
+
+/* ── openCorrGame: restore board and enter correspondence mode ── */
+function openCorrGame(game) {
+  ONLINE.corrGame = game;
+  // Close all overlays
+  _onlineLobby.style.display = 'none';
+  document.getElementById('mainMenu').style.display = 'none';
+  var _pso = document.getElementById('playStepOnline'); if (_pso) _pso.style.display = 'none';
+  // Set up game state
+  playerColor = game.myColor;
+  botColor     = null;
+  ONLINE.inMatch = false; // not a real-time match
+  ONLINE.gameMode = game.gameMode || 'standard';
+  arcadeSettings.enabled = (ONLINE.gameMode === 'arcade');
+  ctfMode = (ONLINE.gameMode === 'ctf' || ONLINE.gameMode === 'flag');
+  timeEnabled = false; // correspondence uses server-side clock only
+  // Restore board
+  resetBoard(true);
+  if (game.snapshot) {
+    try {
+      var state = JSON.parse(game.snapshot);
+      pieces.forEach(function(p) { if (p.parent) p.parent.remove(p); }); pieces.length = 0;
+      for (var k in boardMap) delete boardMap[k];
+      state.forEach(function(s) { var p = buildPiece(s.type, s.color); place(p, s.x, s.y, s.z); p.userData.moved = s.moved; });
+    } catch(e) { console.warn('[corr] snapshot restore failed:', e); }
+  }
+  // Set turn from game data
+  turn = game.turn || 'white';
+  document.getElementById('hud').textContent = turn.charAt(0).toUpperCase() + turn.slice(1) + ' to move';
+  update(); coords(); setPOV();
+  // Enable/disable input
+  setGameInputEnabled(game.isMyTurn);
+  // Show corr game HUD
+  _onlineCorrShowHUD(game);
+  var rb = document.getElementById('rotateBoardBtn'); if (rb) rb.style.display = 'block';
+  var lv = document.getElementById('layerVisToggle');  if (lv) lv.style.display = 'block';
+  var pb = document.getElementById('panBoardBtn');     if (pb) pb.style.display = 'block';
+  var gb = document.getElementById('hudGearBtn');      if (gb) gb.style.display = 'block';
+  document.getElementById('modeMenu').style.display  = 'none';
+  document.getElementById('botMenu').style.display   = 'none';
+  document.getElementById('puzzleBar').style.display = 'none';
+  onlineLog('Opened corr game ' + game.gameId + ' as ' + game.myColor + (game.isMyTurn ? ' — your turn' : ' — waiting'));
+}
+
+/* ── Correspondence HUD indicator ── */
+var _corrHUDEl = null;
+function _onlineCorrShowHUD(game) {
+  if (_corrHUDEl) _corrHUDEl.remove();
+  var opp = game.myColor === 'white' ? game.blackUser : game.whiteUser;
+  var rem = game.isMyTurn
+    ? (game.myColor === 'white' ? game.whiteClockRemaining : game.blackClockRemaining)
+    : (game.myColor === 'white' ? game.blackClockRemaining : game.whiteClockRemaining);
+  var days = Math.max(0, Math.floor(rem / 86400000));
+  var hrs  = Math.max(0, Math.floor((rem % 86400000) / 3600000));
+  var remStr = days > 0 ? days + 'd ' + hrs + 'h' : hrs + 'h';
+  var el = document.createElement('div');
+  el.id = 'corrHUD';
+  el.style.cssText = 'position:fixed;top:calc(8px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:22;'
+    + 'background:rgba(0,0,0,0.82);border:1px solid #333;border-radius:2px;'
+    + 'font-family:monospace;font-size:9px;letter-spacing:1px;padding:4px 12px;'
+    + 'pointer-events:auto;white-space:nowrap;display:flex;align-items:center;gap:10px;';
+  var turnCol = game.isMyTurn ? '#00ff88' : '#555';
+  el.innerHTML = '<span style="color:#444">CORRESPONDENCE</span>'
+    + '<span style="color:' + turnCol + '">' + (game.isMyTurn ? 'YOUR TURN' : _esc(opp) + '\'s turn') + '</span>'
+    + '<span style="color:#333">|</span>'
+    + '<span style="color:#666">' + remStr + ' left</span>'
+    + '<span style="color:#333">|</span>'
+    + '<button id="_corrBackBtn" style="background:none;border:1px solid #222;color:#555;font-family:monospace;font-size:8px;padding:2px 8px;cursor:pointer;letter-spacing:1px;">GAMES</button>';
+  document.body.appendChild(el);
+  _corrHUDEl = el;
+  el.querySelector('#_corrBackBtn').onclick = function() {
+    if (_corrHUDEl) { _corrHUDEl.remove(); _corrHUDEl = null; }
+    ONLINE.corrGame = null;
+    document.getElementById('mainMenu').style.display = 'flex';
+  };
+}
+
+/* ── Return-to-site banner: "It's your turn in X games" ── */
+function onlineShowCorrTurnBanner(count) {
+  var existing = document.getElementById('corrTurnBanner');
+  if (existing) existing.remove();
+  // Only show if a menu or lobby is visible (not during gameplay)
+  var menuVis = document.getElementById('mainMenu').style.display !== 'none'
+    || _onlineLobby.style.display !== 'none';
+  if (!menuVis) return;
+  var banner = document.createElement('div');
+  banner.id = 'corrTurnBanner';
+  banner.style.cssText = 'position:fixed;top:calc(48px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);'
+    + 'background:#001a0a;border:1px solid #00ff88;font-family:monospace;font-size:10px;'
+    + 'color:#00ff88;padding:7px 16px;z-index:55;letter-spacing:1px;display:flex;align-items:center;gap:10px;'
+    + 'white-space:nowrap;border-radius:2px;';
+  banner.innerHTML = 'It\'s your turn in <b>' + count + '</b> game' + (count > 1 ? 's' : '')
+    + '<button id="_corrBannerView" style="background:#002a14;border:1px solid #00ff88;color:#00ff88;font-family:monospace;font-size:9px;padding:2px 10px;cursor:pointer;">VIEW GAMES</button>'
+    + '<button id="_corrBannerClose" style="background:none;border:none;color:#005530;font-family:monospace;font-size:11px;cursor:pointer;padding:0 2px;">✕</button>';
+  document.body.appendChild(banner);
+  banner.querySelector('#_corrBannerView').onclick = function() {
+    banner.remove();
+    onlineOpenLobby();
+    setTimeout(function() { _lobbyShowSection('onlineCorrGamesSection'); onlineLobbyUpdateGamesPanel(); }, 100);
+  };
+  banner.querySelector('#_corrBannerClose').onclick = function() { banner.remove(); };
+  setTimeout(function() { if (banner.parentNode) banner.remove(); }, 12000);
+}
+
+var _queued = false;
+var _queueSeconds = 0, _queueTimerRef = null, _queueHoldUntil = 0, _queueCompatible = 0, _queuedEloRange = 150;
+
+function onlineQueueTimer() {
+  _queueSeconds = 0; clearInterval(_queueTimerRef);
+  _queueTimerRef = setInterval(function() {
+    if (!_queued) { clearInterval(_queueTimerRef); return; }
+    _queueSeconds++;
+    var m = Math.floor(_queueSeconds/60), s = _queueSeconds%60;
+    var timeStr = m + ':' + (s < 10 ? '0' : '') + s;
+    var timerEl = document.getElementById('onlineSearchTimer');
+    if (timerEl) timerEl.textContent = timeStr;
+    var pt = document.getElementById('psoLobbyTimer');
+    if (pt) pt.textContent = timeStr;
+    // Update range display
+    var elapsed = _queueSeconds, expansions = Math.floor(elapsed / 30);
+    var curRange = _queuedEloRange > 0 ? _queuedEloRange + expansions * 25 : 0;
+    var nextIn   = 30 - (elapsed % 30);
+    var pr = ONLINE.player && _queuedPool ? (ONLINE.poolRatings[_queuedPool] || {}) : {};
+    var myRat = pr.rating || 1200;
+    var rangeStr = curRange > 0 ? (myRat - curRange) + ' – ' + (myRat + curRange) : 'Any';
+    if (curRange > 0) rangeStr += '  · widening in ' + nextIn + 's';
+    var rangeEl = document.getElementById('onlineSearchRange');
+    if (rangeEl) rangeEl.textContent = 'Searching: ' + rangeStr;
+    var cntEl = document.getElementById('onlineSearchCount');
+    if (cntEl) cntEl.textContent = _queueCompatible === 0 ? 'no one matching yet'
+      : _queueCompatible === 1 ? '1 potential match'
+      : _queueCompatible + ' potential matches';
+  }, 1000);
+}
+
+// Restore queue timer display on lobby re-open if still searching
+function _lobbyRestoreSearchState() {
+  if (_queued) {
+    _lobbyShowSection('onlineSearchingSection');
+    var tc2 = _queuedTc || 'none';
+    var pool2 = _queuedPool || '';
+    document.getElementById('onlineSearchTC').textContent = tc2.replace('+','|');
+    var parts2 = pool2.split('_');
+    document.getElementById('onlineSearchPool').textContent = (parts2[0]||'').toUpperCase() + ' · ' + (parts2[1]||'').toUpperCase();
+  }
+}
 
 function onlineOpenLobby() {
   _onlineLobby.style.display = 'flex';
@@ -17696,9 +18171,11 @@ function onlineShowMatchBanner(matchInfo) {
   var _pso = document.getElementById('playStepOnline'); if (_pso) _pso.style.display = 'none';
   var _fp  = document.getElementById('friendPanel');    if (_fp)  _fp.style.display  = 'none';
   _queued = false; clearInterval(_queueTimerRef);
+  // Return searching section to play section (new lobby has no legacy queueBtn)
+  _lobbyShowSection('onlinePlaySection');
   var qb = document.getElementById('onlineQueueBtn');
-  qb.textContent = 'FIND MATCH'; qb.style.borderColor = '#00ff88'; qb.style.color = '#00ff88';
-  document.getElementById('onlineQueueStatus').textContent = '';
+  if (qb) { qb.textContent = 'FIND MATCH'; qb.style.borderColor = '#00ff88'; qb.style.color = '#00ff88'; }
+  var qs = document.getElementById('onlineQueueStatus'); if (qs) qs.textContent = '';
   // Unlock match settings
   var ms = document.getElementById('onlineMatchSettings');
   if (ms) { ms.style.opacity = ''; ms.style.pointerEvents = ''; }
@@ -17827,6 +18304,15 @@ var _onlineProfileOverlay = (function() {
     + '<div id="profileStats" style="display:flex;gap:16px;font-size:10px;letter-spacing:1px;margin-bottom:16px;"></div>'
     + '<canvas id="profileEloGraph" width="272" height="56" style="display:none;width:100%;margin-bottom:16px;border:1px solid #0f0f0f;"></canvas>'
     + '<div id="profileAvatarPicker" style="display:none;margin-bottom:16px;"></div>'
+    + '<div id="profileRatingsSection" style="display:none;margin-bottom:16px;">'
+    +   '<div style="font-size:8px;color:#444;letter-spacing:2px;margin-bottom:8px;">RATINGS BY FORMAT</div>'
+    +   '<div style="display:flex;gap:2px;margin-bottom:8px;">'
+    +     '<button data-ratmode="standard" onclick="onlineProfileRatingsSetMode(\'standard\')" style="flex:1;padding:4px;background:#001a2a;border:1px solid #00ccff;color:#00ccff;font-family:monospace;font-size:7px;cursor:pointer;letter-spacing:1px;">STANDARD</button>'
+    +     '<button data-ratmode="arcade"   onclick="onlineProfileRatingsSetMode(\'arcade\')"   style="flex:1;padding:4px;background:#1a1a1a;border:1px solid #222;color:#555;font-family:monospace;font-size:7px;cursor:pointer;letter-spacing:1px;">ARCADE</button>'
+    +     '<button data-ratmode="flag"     onclick="onlineProfileRatingsSetMode(\'flag\')"     style="flex:1;padding:4px;background:#1a1a1a;border:1px solid #222;color:#555;font-family:monospace;font-size:7px;cursor:pointer;letter-spacing:1px;">FLAG</button>'
+    +   '</div>'
+    +   '<div id="profileRatingsGrid"></div>'
+    + '</div>'
     + '<div id="profileHistory"></div>'
     + '</div>';
   document.body.appendChild(el);
@@ -17849,6 +18335,11 @@ function onlineOpenProfile(username) {
   document.getElementById('profileEloGraph').style.display    = 'none';
   document.getElementById('profileAvatarPicker').style.display = 'none';
   document.getElementById('profileEditAvatar').style.display   = isOwn ? 'block' : 'none';
+  // Reset ratings section
+  _profileRatingsData = {};
+  _profileRatingsMode = 'standard';
+  var ratSec = document.getElementById('profileRatingsSection');
+  if (ratSec) ratSec.style.display = 'none';
   var base = (localStorage.getItem('cc_server_url')||'').replace('ws://','http://').replace('wss://','https://');
   fetch(base + '/player/' + encodeURIComponent(username))
     .then(function(r) { return r.json(); })
@@ -17882,6 +18373,17 @@ function onlineOpenProfile(username) {
               + '<div style="text-align:right;font-size:9px;">'+(elo?'<span style="color:'+col+';">'+elo+'</span>  ':'')+' <span style="color:#333;">'+date+'</span></div></div>';
           }).join('');
     }).catch(function() { document.getElementById('profileHistory').innerHTML = '<div style="color:#333;font-size:9px;">No history available</div>'; });
+  // Fetch per-pool ratings
+  fetch(base + '/player/' + encodeURIComponent(username) + '/ratings')
+    .then(function(r) { return r.json(); })
+    .then(function(arr) {
+      if (!arr || !arr.length) return;
+      _profileRatingsData = {};
+      arr.forEach(function(r) { if (r.pool) _profileRatingsData[r.pool] = r; });
+      var ratSec2 = document.getElementById('profileRatingsSection');
+      if (ratSec2) { ratSec2.style.display = 'block'; }
+      onlineProfileRatingsSetMode('standard');
+    }).catch(function() {});
 }
 
 function onlineDrawEloGraph(canvas, points) {
@@ -17931,6 +18433,55 @@ function onlineSetAvatar(avatar) {
   onlineUpdateUI();
 }
 
+/* -- Per-pool ratings in profile --------------------------------- */
+var _profileRatingsData = {};  // pool → {rating, games, wins, losses, draws}
+var _profileRatingsMode = 'standard';
+
+function onlineProfileRatingsSetMode(mode) {
+  _profileRatingsMode = mode;
+  document.querySelectorAll('[data-ratmode]').forEach(function(b) {
+    var active = b.dataset.ratmode === mode;
+    b.style.borderColor = active ? '#00ccff' : '#222';
+    b.style.color       = active ? '#00ccff' : '#555';
+    b.style.background  = active ? '#001a2a' : '#1a1a1a';
+  });
+  _renderProfileRatingsGrid();
+}
+
+function _renderProfileRatingsGrid() {
+  var grid = document.getElementById('profileRatingsGrid');
+  if (!grid) return;
+  var cats = ['blitz', 'rapid', 'classical', 'correspondence'];
+  var catLabels = { blitz: 'Blitz', rapid: 'Rapid', classical: 'Classical', correspondence: 'Corr.' };
+  var catColors = { blitz: '#ffaa00', rapid: '#00ccff', classical: '#ce93d8', correspondence: '#00ff88' };
+  grid.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:8px;">'
+    + '<tr style="color:#333;letter-spacing:1px;border-bottom:1px solid #111;">'
+    + '<td style="padding:3px 4px;">FORMAT</td><td style="padding:3px 4px;text-align:right;">RATING</td>'
+    + '<td style="padding:3px 4px;text-align:right;">GAMES</td>'
+    + '<td style="padding:3px 4px;text-align:right;color:#00ff88;">W</td>'
+    + '<td style="padding:3px 4px;text-align:right;color:#ffaa00;">D</td>'
+    + '<td style="padding:3px 4px;text-align:right;color:#ff4444;">L</td></tr>'
+    + cats.map(function(cat) {
+        var pool = _profileRatingsMode + '_' + cat;
+        var r = _profileRatingsData[pool];
+        var ratingStr = r ? (r.rating || 1200) + ((r.games||0) < 10 ? '<span style="color:#555">?</span>' : '') : '—';
+        var games  = r ? (r.games || 0) : 0;
+        var wins   = r ? (r.wins || 0) : 0;
+        var draws  = r ? (r.draws || 0) : 0;
+        var losses = r ? (r.losses || 0) : 0;
+        var col = catColors[cat];
+        return '<tr style="border-bottom:1px solid #0a0a0a;">'
+          + '<td style="padding:5px 4px;color:' + col + ';">' + catLabels[cat] + '</td>'
+          + '<td style="padding:5px 4px;text-align:right;color:' + (r ? '#fff' : '#333') + ';">' + ratingStr + '</td>'
+          + '<td style="padding:5px 4px;text-align:right;color:#444;">' + (r ? games : '—') + '</td>'
+          + '<td style="padding:5px 4px;text-align:right;color:#00ff88;">' + (r ? wins : '—') + '</td>'
+          + '<td style="padding:5px 4px;text-align:right;color:#ffaa00;">' + (r ? draws : '—') + '</td>'
+          + '<td style="padding:5px 4px;text-align:right;color:#ff4444;">' + (r ? losses : '—') + '</td>'
+          + '</tr>';
+      }).join('')
+    + '</table>';
+}
+
 /* -- Friends UI ------------------------------------------------ */
 function onlineUpdateFriends() {
   // Update main menu profile badge
@@ -17943,7 +18494,7 @@ function onlineUpdateFriends() {
   var btn = document.getElementById('onlineFriendsBtn');
   if (btn) {
     var n = ONLINE.requests.length;
-    btn.textContent = '- FRIENDS' + (n ? ' ('+n+')' : '');
+    btn.textContent = 'FRIENDS' + (n ? ' ('+n+')' : '');
     btn.style.color = n ? '#ffaa00' : '#666';
     btn.style.borderColor = n ? '#ffaa00' : '#333';
   }
