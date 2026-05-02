@@ -1489,6 +1489,59 @@ function _fmtKey(k) {
   var _l2WasHeld = false;
   var _gpAllLayers = false;
 
+  // ── Menu navigation state ──
+  var _menuFocusIdx = 0;
+  var _lastMenuId   = '';
+  var _menuNavCD    = 0;
+
+  function handleMenuNav(gp, now) {
+    var menuIds = ["pauseMenu","endMenu","mainMenu","modeMenu","botMenu",
+                   "gameModesMenu","arcadeMenu","ctfMenu",
+                   "settingsOverlay","tutorialOverlay","puzzleSelectOverlay"];
+    var activeMenu = null, activeId = '';
+    for (var mi = 0; mi < menuIds.length; mi++) {
+      var mel = document.getElementById(menuIds[mi]);
+      if (mel && mel.style.display !== 'none') { activeMenu = mel; activeId = menuIds[mi]; break; }
+    }
+    if (!activeMenu) return;
+
+    if (activeId !== _lastMenuId) { _menuFocusIdx = 0; _lastMenuId = activeId; }
+
+    var items = Array.from(activeMenu.querySelectorAll('button')).filter(function(b) {
+      return !b.disabled && b.offsetParent !== null;
+    });
+    if (!items.length) return;
+    _menuFocusIdx = Math.min(_menuFocusIdx, items.length - 1);
+
+    var stickY = axisVal(gp, 1), stickX = axisVal(gp, 0);
+    var stickTick = (stickY || stickX) && now - _menuNavCD > 220;
+    if (stickTick) _menuNavCD = now;
+
+    var up    = btnPressed(gp, 12) || (stickTick && stickY < 0);
+    var down  = btnPressed(gp, 13) || (stickTick && stickY > 0);
+    var left  = btnPressed(gp, 14) || (stickTick && stickX < 0);
+    var right = btnPressed(gp, 15) || (stickTick && stickX > 0);
+    var aBtn  = btnPressed(gp, 0);
+    var bBtn  = btnPressed(gp, 1);
+    var startBtn = btnPressed(gp, 9);
+
+    if (up || left)   { _menuFocusIdx = (_menuFocusIdx - 1 + items.length) % items.length; }
+    if (down || right) { _menuFocusIdx = (_menuFocusIdx + 1) % items.length; }
+    items[_menuFocusIdx].focus();
+
+    if (aBtn) items[_menuFocusIdx].click();
+
+    if (bBtn) {
+      var backBtn = activeMenu.querySelector(
+        '#ctfBackBtn, #gameModesBackBtn, #arcadeBackBtn, #closeSettings, [id$="BackBtn"], [id$="CloseBtn"]'
+      );
+      if (backBtn) backBtn.click();
+      else if (activeId === 'pauseMenu') activeMenu.style.display = 'none';
+    }
+
+    if (startBtn && activeId === 'pauseMenu') activeMenu.style.display = 'none';
+  }
+
   // Main gamepad poll loop
   function pollGamepad() {
     requestAnimationFrame(pollGamepad);
@@ -1499,16 +1552,15 @@ function _fmtKey(k) {
     if (!gp) { if (_gpConnected) updateGamepadStatus(false); return; }
     if (!_gpConnected) updateGamepadStatus(true);
 
-    // Don't process input when menus are open
-    var menus = ["mainMenu","modeMenu","botMenu","pauseMenu","endMenu",
-                 "settingsOverlay","tutorialOverlay","puzzleSelectOverlay",
-                 "gameModesMenu","arcadeMenu","ctfMenu"];
-    var anyMenuOpen = menus.some(function(id) {
+    var now = performance.now();
+
+    var menuIds = ["mainMenu","modeMenu","botMenu","pauseMenu","endMenu",
+                   "settingsOverlay","tutorialOverlay","puzzleSelectOverlay",
+                   "gameModesMenu","arcadeMenu","ctfMenu"];
+    var anyMenuOpen = menuIds.some(function(id) {
       var el = document.getElementById(id); return el && el.style.display !== 'none';
     });
-    if (anyMenuOpen) return;
-
-    var now = performance.now();
+    if (anyMenuOpen) { handleMenuNav(gp, now); return; }
 
     // ── L-stick: move cursor ──
     var lx = axisVal(gp, 0), ly = axisVal(gp, 1);

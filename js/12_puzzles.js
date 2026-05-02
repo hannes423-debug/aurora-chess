@@ -244,8 +244,7 @@ const PUZZLES = [
       {type:"pawn",  color:"black", x:0,y:1,z:0, moved:true},
       {type:"pawn",  color:"black", x:0,y:0,z:1, moved:true},
       {type:"pawn",  color:"black", x:1,y:0,z:1, moved:true},
-      {type:"pawn",  color:"black", x:1,y:1,z:1, moved:true},
-      {type:"pawn",  color:"black", x:0,y:1,z:1, moved:true}
+      {type:"pawn",  color:"black", x:1,y:1,z:1, moved:true}
     ]
   },
 
@@ -345,6 +344,150 @@ const PUZZLES = [
 
   // ── Add more puzzles here. Fields required: id, name, difficulty,
   //    category, objective, hint, solution, turn, goal, movesAllowed, pieces
+
+  // ──────────────── 3D LAYER TACTICS (15-22) ────────────────
+
+  // Discovered check through Z-axis — move knight off z-column to reveal rook's vertical attack
+  {
+    id:15, name:"3D Discovery", difficulty:"intermediate", category:"layer",
+    objective:"White to move — Check! Move the knight to uncover a hidden attack through the layers!",
+    hint:"The knight is blocking the rook's Z-axis line. Any knight move off that column reveals the attack",
+    solution:[{from:{x:4,y:3,z:2},to:{x:6,y:4,z:2}}],
+    turn:"white", goal:"check", movesAllowed:1,
+    pieces:[
+      {type:"king",   color:"white", x:0,y:7,z:0, moved:true},
+      {type:"rook",   color:"white", x:4,y:3,z:0, moved:true},
+      {type:"knight", color:"white", x:4,y:3,z:2, moved:true},
+      {type:"king",   color:"black", x:4,y:3,z:3, moved:true},
+      {type:"rook",   color:"black", x:7,y:0,z:3, moved:true}
+    ]
+  },
+
+  // Bishop uses the unique 3D diagonal (±1,±1,±1) that only bishops have
+  {
+    id:16, name:"Bishop's 3D Diagonal", difficulty:"intermediate", category:"bishop",
+    objective:"White to move — Check! The bishop has a secret weapon: the true 3D diagonal!",
+    hint:"Capture the pawn to open the 3D diagonal line (+1,+1,+1) — it cuts through all three dimensions at once",
+    solution:[{from:{x:2,y:2,z:0},to:{x:3,y:3,z:1}}],
+    turn:"white", goal:"check", movesAllowed:1,
+    pieces:[
+      {type:"king",   color:"white", x:7,y:0,z:0, moved:true},
+      {type:"bishop", color:"white", x:2,y:2,z:0, moved:true},
+      {type:"king",   color:"black", x:5,y:5,z:3, moved:true},
+      {type:"pawn",   color:"black", x:3,y:3,z:1, moved:true},
+      {type:"rook",   color:"black", x:0,y:7,z:3, moved:true}
+    ]
+  },
+
+  // Queen delivers checkmate via Z-axis from below — king trapped by own rooks and pawns on top layer
+  // Inspired by the Epaulette Mate: king flanked by own rooks, unable to escape
+  {
+    id:17, name:"Epaulette Mate 3D", difficulty:"intermediate", category:"queen",
+    objective:"White to move — Checkmate! The king is flanked by its own rooks — strike from below!",
+    hint:"Slide the queen up the file to layer 3. She'll check straight up through the Z-axis — the rook below guards her",
+    solution:[{from:{x:4,y:3,z:2},to:{x:4,y:7,z:2}}],
+    turn:"white", goal:"checkmate", movesAllowed:1,
+    pieces:[
+      {type:"king",  color:"white", x:0,y:0,z:0, moved:true},
+      {type:"queen", color:"white", x:4,y:3,z:2, moved:true},
+      {type:"rook",  color:"white", x:4,y:0,z:2, moved:true},
+      {type:"king",  color:"black", x:4,y:7,z:3, moved:true},
+      {type:"rook",  color:"black", x:3,y:7,z:3, moved:true},
+      {type:"rook",  color:"black", x:5,y:7,z:3, moved:true},
+      {type:"pawn",  color:"black", x:3,y:6,z:3, moved:true},
+      {type:"pawn",  color:"black", x:4,y:6,z:3, moved:true},
+      {type:"pawn",  color:"black", x:5,y:6,z:3, moved:true}
+    ]
+  },
+
+  // Knight delivers checkmate from layer 2 via cross-layer L-shape (+2,0,+1) to king on layer 3
+  // King is smothered in corner by own rook and pawns — a 3D twist on the classic smothered mate
+  {
+    id:18, name:"Cross-Layer Knight Mate", difficulty:"intermediate", category:"smothered",
+    objective:"White to move — Checkmate! The knight can reach through layers — find the cross-dimensional L-shape!",
+    hint:"The knight jumps (+2,+1,0) to a square on layer 2 from which it attacks the king on layer 3 via (+2,0,+1)",
+    solution:[{from:{x:3,y:6,z:2},to:{x:5,y:7,z:2}}],
+    turn:"white", goal:"checkmate", movesAllowed:1,
+    pieces:[
+      {type:"king",   color:"white", x:0,y:0,z:0, moved:true},
+      {type:"knight", color:"white", x:3,y:6,z:2, moved:true},
+      {type:"king",   color:"black", x:7,y:7,z:3, moved:true},
+      {type:"rook",   color:"black", x:6,y:7,z:3, moved:true},
+      {type:"pawn",   color:"black", x:7,y:6,z:3, moved:true},
+      {type:"pawn",   color:"black", x:6,y:6,z:3, moved:true},
+      {type:"pawn",   color:"black", x:7,y:7,z:2, moved:true}
+    ]
+  },
+
+  // Knight forks king on layer 2 and queen on layer 0 using cross-layer L-shapes
+  // Exploits the knight's unique ability to attack across two layers with (+1,0,-2)
+  {
+    id:19, name:"3D Knight Fork", difficulty:"intermediate", category:"fork",
+    objective:"White to move — Fork! One knight leap threatens both the king AND the queen across layers!",
+    hint:"Jump to the square that attacks the king via (-1,+2,0) and the queen below via (+1,0,-2)",
+    solution:[{from:{x:2,y:4,z:2},to:{x:4,y:3,z:2}}],
+    turn:"white", goal:"check", movesAllowed:1,
+    pieces:[
+      {type:"king",   color:"white", x:7,y:0,z:0, moved:true},
+      {type:"knight", color:"white", x:2,y:4,z:2, moved:true},
+      {type:"king",   color:"black", x:3,y:5,z:2, moved:true},
+      {type:"queen",  color:"black", x:5,y:3,z:0, moved:true},
+      {type:"rook",   color:"black", x:0,y:7,z:3, moved:true}
+    ]
+  },
+
+  // Rook captures bishop to reveal Z-axis pin/check — vertical pin through layers
+  {
+    id:20, name:"Vertical Pin", difficulty:"intermediate", category:"rook",
+    objective:"White to move — Check! Punch through the bishop to pin down the Z-axis!",
+    hint:"The rook can capture the bishop and open a vertical line straight to the king above",
+    solution:[{from:{x:3,y:3,z:0},to:{x:3,y:3,z:1}}],
+    turn:"white", goal:"check", movesAllowed:1,
+    pieces:[
+      {type:"king",  color:"white", x:0,y:0,z:0, moved:true},
+      {type:"rook",  color:"white", x:3,y:3,z:0, moved:true},
+      {type:"king",   color:"black", x:3,y:3,z:3, moved:true},
+      {type:"bishop", color:"black", x:3,y:3,z:1, moved:true},
+      {type:"rook",   color:"black", x:7,y:7,z:3, moved:true}
+    ]
+  },
+
+  // Moving bishop off Z-column reveals rook discovered check AND bishop delivers its own check
+  // Double check — king MUST move, inspired by the Windmill/Discovery pattern
+  {
+    id:21, name:"Double Discovery", difficulty:"advanced", category:"layer",
+    objective:"White to move — Double check! One move, two check lines through different dimensions!",
+    hint:"Move the bishop to deliver check on layer 4 — it also uncovers the rook's Z-axis attack from below",
+    solution:[{from:{x:4,y:4,z:2},to:{x:5,y:5,z:3}}],
+    turn:"white", goal:"check", movesAllowed:1,
+    pieces:[
+      {type:"king",   color:"white", x:0,y:0,z:0, moved:true},
+      {type:"rook",   color:"white", x:4,y:4,z:0, moved:true},
+      {type:"bishop", color:"white", x:4,y:4,z:2, moved:true},
+      {type:"king",   color:"black", x:4,y:4,z:3, moved:true},
+      {type:"rook",   color:"black", x:7,y:0,z:3, moved:true}
+    ]
+  },
+
+  // Queen uses the plus-diagonal — the cross-layer move unique to queens (0,±1,±1)
+  // King is trapped on layer 4 corner by own pieces, queen mates from the layer below
+  // Inspired by Philidor's suffocation theme adapted for 3D geometry
+  {
+    id:22, name:"Queen's Plus-Diagonal", difficulty:"advanced", category:"queen",
+    objective:"White to move — Checkmate! The queen has a cross-layer diagonal that even bishops can't use!",
+    hint:"Slide the queen up the file to a square where the plus-diagonal (0,+1,+1) strikes the king diagonally through layers",
+    solution:[{from:{x:0,y:2,z:2},to:{x:0,y:6,z:2}}],
+    turn:"white", goal:"checkmate", movesAllowed:1,
+    pieces:[
+      {type:"king",  color:"white", x:7,y:0,z:0, moved:true},
+      {type:"queen", color:"white", x:0,y:2,z:2, moved:true},
+      {type:"king",  color:"black", x:0,y:7,z:3, moved:true},
+      {type:"rook",  color:"black", x:1,y:7,z:3, moved:true},
+      {type:"pawn",  color:"black", x:0,y:6,z:3, moved:true},
+      {type:"rook",  color:"black", x:1,y:6,z:3, moved:true},
+      {type:"pawn",  color:"black", x:0,y:7,z:2, moved:true}
+    ]
+  },
 ];
 
 /* ======================================================
@@ -1047,10 +1190,22 @@ document.querySelectorAll('[data-ctf-diff]').forEach(btn => {
     });
   };
 });
+var _ctfPts = 1;
+document.querySelectorAll('[data-ctf-pts]').forEach(btn => {
+  btn.onclick = () => {
+    SND.ui(); _ctfPts = parseInt(btn.dataset.ctfPts);
+    document.querySelectorAll('[data-ctf-pts]').forEach(b => {
+      const on = parseInt(b.dataset.ctfPts) === _ctfPts;
+      b.style.borderColor = on ? '#ff6600' : '#1a1a1a';
+      b.style.color       = on ? '#ff6600' : '#555';
+    });
+  };
+});
 document.querySelectorAll('[data-ctf-start]').forEach(btn => {
   btn.onclick = () => {
     SND.confirm();
     document.getElementById('ctfMenu').style.display = 'none';
+    CTF.pointTarget = _ctfPts;
     if (btn.dataset.ctfStart === 'local') {
       botColor = null; playerColor = 'white';
     } else {
