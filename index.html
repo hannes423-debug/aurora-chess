@@ -119,16 +119,6 @@ body { min-height: -webkit-fill-available; -webkit-touch-callout: none; -webkit-
     right: 12px !important;
   }
 }
-/* On very narrow screens move HUD buttons to corners so they don't block the board.
-   Must reset the opposing edge (top/left) to auto — otherwise both edges are constrained
-   and the browser stretches the element to fill the gap, creating a huge black box. */
-@media (max-width: 390px) {
-  #menuBtn       { top: auto !important; bottom: 10px; left: 10px; }
-  #hudGearBtn    { bottom: 52px; left: 10px; }
-  #rotateBoardBtn{ top: auto !important; left: auto !important; bottom: 10px; right: 10px; }
-  #layerVisToggle{ top: auto !important; left: auto !important; bottom: 52px; right: 10px; }
-  #hud           { font-size: 11px; left: 50%; transform: translateX(-50%); }
-}
 
 /* ── Pawn promotion popup ── */
 #promotionPopup {
