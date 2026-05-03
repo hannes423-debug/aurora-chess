@@ -893,8 +893,8 @@ let _puzzleFilterDiff = 'all';
 
 function showPuzzleSelect() {
   document.getElementById('puzzleSelectOverlay').style.display = 'flex';
-  // Defer render until after browser processes the display change so grid layout is stable
-  requestAnimationFrame(_renderPuzzleList);
+  // Double-RAF: first frame processes display:flex, second frame has stable grid width
+  requestAnimationFrame(() => requestAnimationFrame(_renderPuzzleList));
 }
 
 function _renderPuzzleList() {

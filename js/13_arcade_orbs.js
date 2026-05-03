@@ -260,14 +260,8 @@ function applyOrbEffect(piece, orbType, orbX, orbY, orbZ) {
       if (typeof botColor !== 'undefined' && piece.userData.color === botColor) {
         setTimeout(() => { if (promotionActive) resolvePromotion('queen'); }, 400);
       } else {
-        const overlay = new THREE.Mesh(new THREE.PlaneGeometry(40,40), new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:0.7,depthTest:false}));
-        overlay.rotation.x = -Math.PI/2; overlay.position.set(0, camera.position.y-1, 0); overlay.renderOrder = 1;
-        promotionGroup.add(overlay);
-        ['queen','rook','bishop','knight'].forEach((type,i) => {
-          const pm = buildPiece(type, piece.userData.color);
-          pm.userData.promotionChoice = type; pm.position.set(-3+i*2,0,0); pm.scale.set(2.5,2.5,2.5); pm.renderOrder = 2;
-          promotionGroup.add(pm);
-        });
+        var _pp = document.getElementById('promotionPopup');
+        if (_pp) _pp.style.display = 'flex';
       }
       arcadeAnnounce('⭐ POWER ORB — PROMOTE!', 0xff9900);
     } else {
