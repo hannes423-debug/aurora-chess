@@ -668,12 +668,19 @@ function startLocalGame(){
   var _panBoardBtnGame=document.getElementById('panBoardBtn'); if(_panBoardBtnGame) _panBoardBtnGame.style.display='block';
   var _gear=document.getElementById('hudGearBtn'); if(_gear) _gear.style.display='block';
   // Steam rich presence
-  if (window.Steam && window.Steam.isAvailable) {
+  if (window.electronAPI && window.electronAPI.setRichPresence) {
     const mode = botColor ? 'vs Bot' : (typeof ONLINE !== 'undefined' && ONLINE.inMatch) ? 'Online' : 'Local';
-    window.Steam.setRichPresence('steam_display', '#Status_Playing');
-    window.Steam.setRichPresence('status', mode + ' – Move 0');
+    window.electronAPI.setRichPresence(mode + ' – Move 0');
   }
 }
+
+// Wire promotion popup buttons
+document.querySelectorAll('[data-promote]').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    SND.confirm();
+    resolvePromotion(btn.dataset.promote);
+  });
+});
 
 /* ======================================================
    RENDER LOOP

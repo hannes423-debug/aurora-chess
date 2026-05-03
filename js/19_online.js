@@ -456,17 +456,26 @@ function onlineWireDataChannel(dc, matchInfo) {
       onlineUpdateThinking();
       onlineShowToast('Reconnected! Game resumed.', 0x00ff88);
     } else if (msg.type === 'promotion') {
-      var promoted = pieces.find(function(q) { return q.userData.x===msg.x && q.userData.y===msg.y && q.userData.z===msg.z; });
-      if (promoted && promoted.userData.type !== msg.pieceType) {
-        var pc=promoted.userData.color,px=promoted.userData.x,py=promoted.userData.y,pz=promoted.userData.z;
-        var np=buildPiece(msg.pieceType,pc);
-        np.userData.type=msg.pieceType; np.userData.x=px; np.userData.y=py; np.userData.z=pz; np.userData.moved=true;
-        layers[pz].add(np);
-        np.position.set(-half+(px+0.5)*SPACING,0,-half+(py+0.5)*SPACING);
-        var idx=pieces.indexOf(promoted); if(idx!==-1)pieces.splice(idx,1);
-        if(promoted.parent)promoted.parent.remove(promoted);
-        pieces.push(np); boardMap[key(px,py,pz)]=np;
+      // Hide wait overlay shown while opponent chose their piece
+      var _pw2=document.getElementById('promotionWait'); if(_pw2)_pw2.style.display='none';
+      if (promotionActive) {
+        // resolvePromotion handles the piece swap when triggered from our own promotePawn wait path
+        resolvePromotion(msg.pieceType);
+      } else {
+        // Opponent promoted a pawn we've already moved (rare re-sync path)
+        var promoted = pieces.find(function(q) { return q.userData.x===msg.x && q.userData.y===msg.y && q.userData.z===msg.z; });
+        if (promoted && promoted.userData.type !== msg.pieceType) {
+          var pc=promoted.userData.color,px=promoted.userData.x,py=promoted.userData.y,pz=promoted.userData.z;
+          var np=buildPiece(msg.pieceType,pc);
+          np.userData.type=msg.pieceType; np.userData.x=px; np.userData.y=py; np.userData.z=pz; np.userData.moved=true;
+          layers[pz].add(np);
+          np.position.set(-half+(px+0.5)*SPACING,0,-half+(py+0.5)*SPACING);
+          var idx=pieces.indexOf(promoted); if(idx!==-1)pieces.splice(idx,1);
+          if(promoted.parent)promoted.parent.remove(promoted);
+          pieces.push(np); boardMap[key(px,py,pz)]=np;
+        }
       }
+      onlineShowToast('Opponent promoted to ' + msg.pieceType + '.', 0xce93d8);
     } else if (msg.type === 'clock_sync') {
       // Snap local clock to sender's authoritative remaining times
       if (timeEnabled && typeof timers !== 'undefined') {

@@ -119,6 +119,81 @@ body { min-height: -webkit-fill-available; -webkit-touch-callout: none; -webkit-
     right: 12px !important;
   }
 }
+/* On very narrow screens stack the bottom HUD buttons so they don't overlap */
+@media (max-width: 390px) {
+  #menuBtn { bottom: 10px; left: 10px; }
+  #hudGearBtn { bottom: 52px; left: 10px; }
+  #rotateBoardBtn { bottom: 10px; right: 10px; }
+  #layerVisToggle { bottom: 52px; right: 10px; }
+  #hud { font-size: 11px; left: 50%; transform: translateX(-50%); }
+}
+
+/* ── Pawn promotion popup ── */
+#promotionPopup {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 200;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: monospace;
+  color: #fff;
+}
+#promotionPopup h2 {
+  margin: 0 0 24px;
+  font-size: 18px;
+  letter-spacing: 2px;
+  color: #ce93d8;
+  text-shadow: 0 0 14px rgba(206,147,216,0.6);
+}
+.promoRow {
+  display: flex;
+  gap: 16px;
+}
+.promoBtn {
+  width: 80px;
+  height: 80px;
+  background: #12001e;
+  border: 2px solid #6b2a80;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 38px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+}
+.promoBtn span.promoLabel {
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: #9b8fa8;
+}
+.promoBtn:hover, .promoBtn:focus {
+  background: #2d0a4e;
+  border-color: #ce93d8;
+  transform: scale(1.06);
+  outline: none;
+}
+#promotionWait {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  z-index: 200;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: monospace;
+  color: #ce93d8;
+  font-size: 15px;
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px rgba(206,147,216,0.5);
+}
 
 #zSlider {
   position: fixed;
@@ -2024,6 +2099,22 @@ button, [role="button"], input[type="range"], label.toggle, select { touch-actio
     <div id="friendPanelRequests" style="flex-shrink:0;"></div>
     <div id="friendPanelList" style="flex:1;overflow-y:auto;"></div>
   </div>
+</div>
+
+<!-- ======================================================
+     UI: PAWN PROMOTION POPUP
+====================================================== -->
+<div id="promotionPopup">
+  <h2>PROMOTE PAWN</h2>
+  <div class="promoRow">
+    <button class="promoBtn" data-promote="queen">♛<span class="promoLabel">QUEEN</span></button>
+    <button class="promoBtn" data-promote="rook">♜<span class="promoLabel">ROOK</span></button>
+    <button class="promoBtn" data-promote="bishop">♝<span class="promoLabel">BISHOP</span></button>
+    <button class="promoBtn" data-promote="knight">♞<span class="promoLabel">KNIGHT</span></button>
+  </div>
+</div>
+<div id="promotionWait">
+  ♟ OPPONENT IS PROMOTING…
 </div>
 
 <!-- ======================================================

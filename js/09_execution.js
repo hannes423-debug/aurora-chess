@@ -105,10 +105,13 @@ function executeCastle(move,kingPiece){const row=kingPiece.userData.y,layer=king
    PROMOTION SYSTEM
 ====================================================== */
 function promotePawn(p){if(p.userData.type!=="pawn")return false;const pw=p.userData.color==="white"&&p.userData.y===7;const pb=p.userData.color==="black"&&p.userData.y===0;if(!pw&&!pb)return false;
-  // Bot auto-promotes to queen — no UI needed
-  if(p.userData.color===botColor||(typeof ONLINE!=="undefined"&&ONLINE&&ONLINE._receivingRemoteMove)){promotionActive=true;promotionGroup.userData.pawn=p;setTimeout(function(){if(promotionActive)resolvePromotion('queen');},50);return true;}
-  promotionActive=true;const overlay=new THREE.Mesh(new THREE.PlaneGeometry(40,40),new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:0.7,depthTest:false}));overlay.rotation.x=-Math.PI/2;overlay.position.set(0,camera.position.y-1,0);overlay.renderOrder=1;promotionGroup.add(overlay);["queen","rook","bishop","knight"].forEach((type,i)=>{let piece=buildPiece(type,p.userData.color);piece.userData.promotionChoice=type;piece.position.set(-3+i*2,0,0);piece.scale.set(2.5,2.5,2.5);piece.renderOrder=2;promotionGroup.add(piece);});promotionGroup.userData.pawn=p;return true;}
-function resolvePromotion(type){const pawn=promotionGroup.userData.pawn;const newPiece=buildPiece(type,pawn.userData.color);newPiece.userData.type=type;layers[pawn.userData.z].add(newPiece);
+  // Bot or receiving opponent's move: auto-queen, no UI
+  if(p.userData.color===botColor){promotionActive=true;promotionGroup.userData.pawn=p;setTimeout(function(){if(promotionActive)resolvePromotion('queen');},50);return true;}
+  // Receiving opponent's promotion via DataChannel: show wait overlay until promotion message arrives
+  if(typeof ONLINE!=="undefined"&&ONLINE&&ONLINE._receivingRemoteMove){promotionActive=true;promotionGroup.userData.pawn=p;var _pw=document.getElementById('promotionWait');if(_pw)_pw.style.display='flex';return true;}
+  // Local player promotion: show HTML popup
+  promotionActive=true;promotionGroup.userData.pawn=p;var _pp=document.getElementById('promotionPopup');if(_pp)_pp.style.display='flex';return true;}
+function resolvePromotion(type){var _pp=document.getElementById('promotionPopup');if(_pp)_pp.style.display='none';var _pw=document.getElementById('promotionWait');if(_pw)_pw.style.display='none';const pawn=promotionGroup.userData.pawn;const newPiece=buildPiece(type,pawn.userData.color);newPiece.userData.type=type;layers[pawn.userData.z].add(newPiece);
 
 newPiece.position.set(
   -half + (pawn.userData.x + 0.5) * SPACING,
@@ -141,19 +144,7 @@ renderer.domElement.addEventListener("touchstart",function(e){
   mv.y=-((e.touches[0].clientY-r.top)/r.height)*2+1;
   rc.setFromCamera(mv,camera);
 
-  if(promotionActive){
-    const hits=rc.intersectObjects(promotionGroup.children,true);
-    if(hits.length){
-      let chosen=null;
-      for(const h of hits){
-        let obj=h.object;
-        while(obj){if(obj.userData.promotionChoice){chosen=obj;break;}obj=obj.parent;}
-        if(chosen)break;
-      }
-      if(chosen)resolvePromotion(chosen.userData.promotionChoice);
-    }
-    return;
-  }
+  if(promotionActive) return;
 
   // In review mode: allow touch for board rotation (handled in touchmove) but block piece interaction
   if(reviewing) return;
