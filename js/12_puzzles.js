@@ -893,7 +893,8 @@ let _puzzleFilterDiff = 'all';
 
 function showPuzzleSelect() {
   document.getElementById('puzzleSelectOverlay').style.display = 'flex';
-  _renderPuzzleList();
+  // Defer render until after browser processes the display change so grid layout is stable
+  requestAnimationFrame(_renderPuzzleList);
 }
 
 function _renderPuzzleList() {
@@ -926,24 +927,36 @@ function _renderPuzzleList() {
     return;
   }
 
+  // Find first unsolved puzzle in the filtered list for progress indicator
+  const firstUnsolved = filtered.find(p => !PUZZLE_SOLVED.has('m' + p.id));
+  let nextCard = null;
+
   filtered.forEach(p => {
-    const solved = PUZZLE_SOLVED.has('m' + p.id);
+    const solved  = PUZZLE_SOLVED.has('m' + p.id);
+    const isNext  = firstUnsolved && p.id === firstUnsolved.id;
+    const borderCol = solved ? '#335533' : isNext ? '#ce93d8' : '#252525';
     const card   = document.createElement('div');
-    card.style.cssText = 'background:#0e0e0e;border:1px solid ' + (solved ? '#335533' : '#252525') + ';padding:12px 10px;cursor:pointer;border-radius:2px;transition:border-color 0.15s;';
+    card.style.cssText = 'background:#0e0e0e;border:1px solid ' + borderCol + ';padding:12px 10px;cursor:pointer;border-radius:2px;transition:border-color 0.15s;position:relative;';
     const diffColor = {beginner:'#44ff88', intermediate:'#ffaa00', advanced:'#ff6644'}[p.difficulty] || '#555';
+    const badge = isNext ? '<div style="position:absolute;top:6px;right:6px;font-size:8px;color:#ce93d8;letter-spacing:1px;">▶ NEXT</div>' : '';
     card.innerHTML =
-      `<div style="font-size:9px;color:${solved ? '#44ff88' : '#555'};letter-spacing:1px;margin-bottom:4px;">${solved ? '✓ SOLVED' : '#' + (p.id + 1)}</div>`
+      badge
+      + `<div style="font-size:9px;color:${solved ? '#44ff88' : isNext ? '#ce93d8' : '#555'};letter-spacing:1px;margin-bottom:4px;">${solved ? '✓ SOLVED' : '#' + (p.id + 1)}</div>`
       + `<div style="font-size:13px;margin-bottom:4px;">${p.name}</div>`
       + `<div style="font-size:9px;color:${diffColor};letter-spacing:1px;margin-bottom:4px;">${(p.difficulty || '').toUpperCase()}</div>`
       + `<div style="font-size:10px;color:#555;line-height:1.5;">${p.objective}</div>`;
-    card.onmouseenter = () => { card.style.borderColor = solved ? '#44ff88' : '#555'; };
-    card.onmouseleave = () => { card.style.borderColor = solved ? '#335533' : '#252525'; };
+    card.onmouseenter = () => { card.style.borderColor = solved ? '#44ff88' : isNext ? '#e0b0ff' : '#555'; };
+    card.onmouseleave = () => { card.style.borderColor = borderCol; };
     card.onclick = () => {
       document.getElementById('puzzleSelectOverlay').style.display = 'none';
       startPuzzle(p.id);
     };
     list.appendChild(card);
+    if (isNext) nextCard = card;
   });
+
+  // Scroll the next puzzle into view
+  if (nextCard) nextCard.scrollIntoView({ block: 'center', behavior: 'smooth' });
 }
 
 document.getElementById('closePuzzleSelect').onclick = () => {

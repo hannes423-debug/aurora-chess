@@ -127,6 +127,7 @@ function loadHistory(index){if(index<0||index>=snapshots.length)return;pieces.fo
 ====================================================== */
 const rc=new THREE.Raycaster();
 const mv=new THREE.Vector2();
+var _lastMoveAt = 0;
 
 renderer.domElement.addEventListener("touchstart",function(e){
   const menus=["mainMenu","modeMenu","botMenu","pauseMenu","endMenu","settingsOverlay","tutorialOverlay","puzzleSelectOverlay","gameModesMenu","arcadeMenu","ctfMenu"];
@@ -209,6 +210,7 @@ renderer.domElement.addEventListener("touchstart",function(e){
   }
   if(!move) return;
   if(botThinking) return; // view-only during bot thinking — don't execute
+  var _now = Date.now(); if(_now - _lastMoveAt < 300) return; _lastMoveAt = _now;
 
   SND.ui();
   if(selectedPawn.userData.type==="king"&&move.castle) executeCastle(move,selectedPawn);

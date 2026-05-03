@@ -155,6 +155,7 @@ function onlineHandle(msg) {
     }
     case 'queue_left': ONLINE.setStatus('idle'); break;
     case 'match_found':
+      _dcSendSeq = 0; _dcExpectedSeq = 0; _dcLastMoveAt = 0;
       ONLINE.roomId = payload.roomId; ONLINE.myColor = payload.color;
       ONLINE.opponent = payload.opponent; ONLINE.inMatch = true;
       ONLINE.rated = payload.rated !== false;
@@ -373,7 +374,7 @@ async function onlineHandleSignal(signal, from) {
   var pc = ONLINE.pc;
   try {
     if (signal.sdp) {
-      await pc.setRemoteDescription(new RTCSessionDescription(signal.sdp));
+      await pc.setRemoteDescription(signal.sdp);
       if (signal.sdp.type === 'offer') {
         var answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
@@ -415,6 +416,11 @@ function onlineWireDataChannel(dc, matchInfo) {
   dc.onmessage = function(ev) {
     var msg; try { msg = JSON.parse(ev.data); } catch { return; }
     if (msg.type === 'move') {
+      var now = Date.now();
+      if (now - _dcLastMoveAt < 50) return; // rate-limit: ignore moves faster than 50ms
+      if (msg.seq !== undefined && msg.seq !== _dcExpectedSeq + 1) return; // reject out-of-order
+      _dcLastMoveAt = now;
+      if (msg.seq !== undefined) _dcExpectedSeq = msg.seq;
       var p = pieces.find(function(p) { return p.userData.x===msg.from.x && p.userData.y===msg.from.y && p.userData.z===msg.from.z; });
       if (p) { ONLINE._receivingRemoteMove=true; executeMove(p, msg.to); ONLINE._receivingRemoteMove=false; document.getElementById('hud').textContent = turn.charAt(0).toUpperCase()+turn.slice(1)+' to move'; }
     } else if (msg.type === 'resign') {
@@ -473,9 +479,16 @@ function onlineWireDataChannel(dc, matchInfo) {
   dc.onclose = function() { onlineLog('DataChannel closed'); updateSignalIndicator(); };
 }
 
+var _dcSendSeq = 0;
+var _dcExpectedSeq = 0;
+var _dcLastMoveAt = 0;
+
 function onlineDCSend(type, payload) {
-  if (ONLINE.dc && ONLINE.dc.readyState === 'open')
-    ONLINE.dc.send(JSON.stringify(Object.assign({ type: type }, payload || {})));
+  if (ONLINE.dc && ONLINE.dc.readyState === 'open') {
+    var msg = Object.assign({ type: type }, payload || {});
+    if (type === 'move') msg.seq = ++_dcSendSeq;
+    ONLINE.dc.send(JSON.stringify(msg));
+  }
 }
 
 var _onlineBaseExec = executeMove;
