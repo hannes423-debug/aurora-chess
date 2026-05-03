@@ -596,12 +596,56 @@ body.ui-hidden #minimap,
 body.ui-hidden #offlineBanner { display:none !important; }
 /* ── Prevent 300ms iOS tap delay on all interactive elements ── */
 button, [role="button"], input[type="range"], label.toggle, select { touch-action: manipulation; }
+
+/* ── Gamepad mode ── */
+body.gamepad-mode,
+body.gamepad-mode * { cursor: none !important; }
+
+/* ── Gamepad menu selection highlight (replaces .focus()) ── */
+.gp-selected {
+  outline: 2px solid #00ccff !important;
+  outline-offset: 1px;
+  box-shadow: 0 0 10px rgba(0,204,255,0.35), inset 0 0 6px rgba(0,204,255,0.08) !important;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Gamepad hint bar (shown only in gamepad mode) ── */
+#gpHintBar {
+  position: fixed;
+  bottom: 0; left: 50%; transform: translateX(-50%);
+  z-index: 90;
+  background: rgba(0,0,0,0.78);
+  border-top: 1px solid #1a1a2e;
+  font-family: monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: #555;
+  padding: 4px 18px;
+  white-space: nowrap;
+  pointer-events: none;
+  display: none;
+  gap: 14px;
+  align-items: center;
+}
+body.gamepad-mode #gpHintBar { display: flex; }
+.gph-icon { color: #00ccff; margin-right: 2px; font-weight: bold; }
 </style>
 </head>
 <body>
 
 <!-- GLOBAL GRID PULSE BACKGROUND — sits behind everything -->
 <canvas id="globalBg" style="position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:10;"></canvas>
+
+<!-- GAMEPAD HINT BAR — visible only in body.gamepad-mode -->
+<div id="gpHintBar">
+  <span><span class="gph-icon" data-gp="confirm">A</span>SELECT</span>
+  <span><span class="gph-icon" data-gp="cancel">B</span>CANCEL</span>
+  <span><span class="gph-icon" data-gp="l1">LB</span><span class="gph-icon" data-gp="r1">RB</span>PREVIEW</span>
+  <span><span class="gph-icon" data-gp="r2">RT</span>LAYER</span>
+  <span><span class="gph-icon" data-gp="action2">Y</span>LIVE</span>
+  <span><span class="gph-icon" data-gp="start">☰</span>PAUSE</span>
+</div>
 
 <!-- ======================================================
      ACCOUNT SYSTEM — Login / Register screen

@@ -1318,235 +1318,388 @@ function _fmtKey(k) {
 })();
 
 /* ================================================================
-   GAMEPAD SUPPORT
+   GAMEPAD SUPPORT — GAMEPAD-FIRST REDESIGN
 ================================================================ */
 (function initGamepad() {
-  var _gpConnected = false;
-  var _gpPieceIdx  = 0;  // index into selectable pieces on current layer
 
-  function getSelectable() {
-    return pieces.filter(function(p) {
-      return p.userData.z === activeZ &&
-             p.userData.color === turn &&
-             (!botColor || p.userData.color === playerColor);
-    });
-  }
+  /* ── State ── */
+  var _gpConnected     = false;
+  var _gpActive        = false;   // gamepad is the active input device
+  var _gpCursorX       = 3;
+  var _gpCursorY       = 3;
+  var _layerModeActive = false;
+  var _r2WasHeld       = false;
+  var _l2WasHeld       = false;
+  var _gpAllLayers     = false;
+  var _inPreview       = false;
+  var _btnPrev         = {};
+  var _stickCursorCD   = 0;
+  var _stickBoardCD    = 0;
+  var _menuNavCD       = 0;
+  var _menuFocusEl     = null;
+  var _lastMenuId      = '';
 
-  function updateGamepadStatus(connected) {
-    _gpConnected = connected;
-    var el = document.getElementById('gamepadStatus');
-    if (el) {
-      el.textContent = connected ? '✓ CONNECTED' : 'NOT CONNECTED';
-      el.style.color  = connected ? '#00ccff' : '#444';
-    }
-  }
-
-  window.addEventListener('gamepadconnected', function(e) {
-    updateGamepadStatus(true);
-    arcadeAnnounce && arcadeAnnounce('🎮 Gamepad connected', 0x00ccff);
-  });
-  window.addEventListener('gamepaddisconnected', function() { updateGamepadStatus(false); });
-
-  // Check on settings open
-  var _origSync = typeof syncAllSettingsUI === 'function' ? syncAllSettingsUI : null;
-  if (_origSync) {
-    var _prevSyncForGP = syncAllSettingsUI;
-    syncAllSettingsUI = function() {
-      _prevSyncForGP();
-      var gps = []; try { gps = navigator.getGamepads ? navigator.getGamepads() : []; } catch(e) { return; }
-      var connected = Array.from(gps).some(function(g) { return g && g.connected; });
-      updateGamepadStatus(connected);
-    };
-  }
-
-  // Button state tracking (avoid repeat)
-  var _btnPrev = {};
+  /* ── Button edge detection + helpers ── */
   function btnPressed(gp, idx) {
-    var val = gp.buttons[idx] ? (gp.buttons[idx].pressed || gp.buttons[idx].value > 0.5) : false;
-    var prev = _btnPrev[idx] || false;
+    var val  = !!(gp.buttons[idx] && (gp.buttons[idx].pressed || gp.buttons[idx].value > 0.5));
+    var prev = !!_btnPrev[idx];
     _btnPrev[idx] = val;
     return val && !prev;
   }
   function btnHeld(gp, idx) {
-    return gp.buttons[idx] ? (gp.buttons[idx].pressed || gp.buttons[idx].value > 0.5) : false;
+    return !!(gp.buttons[idx] && (gp.buttons[idx].pressed || gp.buttons[idx].value > 0.5));
   }
   function axisVal(gp, idx) {
     var v = gp.axes[idx] || 0;
     return Math.abs(v) > INPUT_CFG.gamepadDeadzone ? v : 0;
   }
 
-  // Cooldowns for stick-based actions
-  var _stickLayerCD  = 0;
-  var _stickBoardCD  = 0;
-  var _stickCursorCD = 0;
-  // Cursor position on the board (0-7 x/y)
-  var _gpCursorX = 3, _gpCursorY = 3;
+  /* ── Input mode switching ── */
+  function setGamepadMode(on) {
+    if (_gpActive === on) return;
+    _gpActive = on;
+    document.body.classList.toggle('gamepad-mode', on);
+    document.body.style.cursor = on ? 'none' : '';
+    if (_gpCursorMesh) _gpCursorMesh.visible = on && !_layerModeActive;
+    _injectGPIcons();
+  }
+  ['mousemove', 'mousedown', 'keydown', 'touchstart'].forEach(function(ev) {
+    document.addEventListener(ev, function() { if (_gpActive) setGamepadMode(false); }, { passive: true });
+  });
 
-  // Gamepad cursor mesh
-  var _gpCursorMesh = (function() {
-    var mesh = new THREE.Mesh(
-      new THREE.PlaneGeometry(0.9, 0.9),
-      new THREE.MeshBasicMaterial({ color:0x00ccff, transparent:true, opacity:0.35, side:THREE.DoubleSide })
-    );
-    mesh.rotation.x = -Math.PI/2;
-    mesh.userData.isGPCursor = true;
-    mesh.visible = false;
-    pivot.add(mesh);
-    return mesh;
-  })();
+  /* ── Controller type detection ── */
+  function getGamepadLayout() {
+    var gps = []; try { gps = Array.from(navigator.getGamepads ? navigator.getGamepads() : []); } catch(e) {}
+    for (var i = 0; i < gps.length; i++) {
+      if (!gps[i] || !gps[i].connected) continue;
+      var id = (gps[i].id || '').toLowerCase();
+      if (id.indexOf('sony') !== -1 || id.indexOf('playstation') !== -1 ||
+          id.indexOf('dualshock') !== -1 || id.indexOf('dualsense') !== -1 ||
+          id.indexOf('054c') !== -1) return 'ps';
+      return 'xbox';
+    }
+    return 'xbox';
+  }
+  window.getGamepadLayout = getGamepadLayout;
 
-  function updateGPCursor() {
-    _gpCursorMesh.position.set(
-      -half + (_gpCursorX + 0.5) * SPACING,
-      layers[activeZ].position.y + 0.01,
-      -half + (_gpCursorY + 0.5) * SPACING
-    );
-    _gpCursorMesh.visible = _gpConnected;
+  /* ── Button icon injection ── */
+  var _GP_ICONS = {
+    xbox: { confirm:'A',  cancel:'B',  action1:'X',  action2:'Y',  l1:'LB', r1:'RB', l2:'LT', r2:'RT', start:'☰',       select:'⧉'     },
+    ps:   { confirm:'✕', cancel:'◯', action1:'□', action2:'△', l1:'L1', r1:'R1', l2:'L2', r2:'R2', start:'OPTIONS', select:'SHARE' }
+  };
+  function _injectGPIcons() {
+    var icons = _GP_ICONS[getGamepadLayout()] || _GP_ICONS.xbox;
+    document.querySelectorAll('[data-gp]').forEach(function(el) {
+      var role = el.dataset.gp;
+      if (role in icons) el.textContent = icons[role];
+    });
   }
 
-  function gpConfirm() {
-    // Confirm/select at cursor position
-    var p = occ(_gpCursorX, _gpCursorY, activeZ);
+  /* ── Gamepad cursor mesh ── */
+  var _gpCursorMesh = (function() {
+    var m = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.9, 0.9),
+      new THREE.MeshBasicMaterial({ color: 0x00ccff, transparent: true, opacity: 0.38, side: THREE.DoubleSide })
+    );
+    m.rotation.x = -Math.PI / 2;
+    m.userData.isGPCursor = true;
+    m.visible = false;
+    pivot.add(m);
+    return m;
+  })();
+
+  function _placeCursorMesh() {
+    if (!_gpCursorMesh || !layers[activeZ]) return;
+    _gpCursorMesh.position.set(
+      -half + (_gpCursorX + 0.5) * SPACING,
+      layers[activeZ].position.y + 0.015,
+      -half + (_gpCursorY + 0.5) * SPACING
+    );
+  }
+
+  function updateGamepadCursor(x, y) {
+    _gpCursorX = Math.max(0, Math.min(7, x));
+    _gpCursorY = Math.max(0, Math.min(7, y));
+    _placeCursorMesh();
+    if (_gpCursorMesh) _gpCursorMesh.visible = _gpActive && !_layerModeActive;
+  }
+  window.updateGamepadCursor = updateGamepadCursor;
+
+  /* ── Layer mode overlay (MGS-style: hold R2) ── */
+  var _layerOverlayEl = document.createElement('div');
+  _layerOverlayEl.id = 'gpLayerOverlay';
+  _layerOverlayEl.style.cssText =
+    'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:200;' +
+    'background:rgba(0,0,0,0.9);border:1px solid #00ccff;color:#00ccff;' +
+    'font-family:monospace;font-size:20px;letter-spacing:4px;padding:20px 40px;' +
+    'text-align:center;pointer-events:none;display:none;' +
+    'box-shadow:0 0 30px rgba(0,204,255,0.25);';
+  document.body.appendChild(_layerOverlayEl);
+
+  function showLayerOverlay() {
+    _layerOverlayEl.innerHTML =
+      'LAYER &nbsp;<span style="font-size:38px;color:#fff;">' + (activeZ + 1) + '</span>' +
+      '<br><span style="font-size:9px;color:#555;letter-spacing:2px;">' +
+      '&#x2191;&#x2193;&nbsp; CHANGE &nbsp;&middot;&nbsp; RELEASE R2 TO CONFIRM</span>';
+    _layerOverlayEl.style.display = 'block';
+  }
+  function hideLayerOverlay() { _layerOverlayEl.style.display = 'none'; }
+  window.showLayerOverlay = showLayerOverlay;
+  window.hideLayerOverlay = hideLayerOverlay;
+
+  function changeLayer(dir) {
+    var nz = Math.max(0, Math.min(LAYERS - 1, activeZ + dir));
+    if (nz === activeZ) return;
+    activeZ = nz;
+    var sl = document.getElementById('zSlider'); if (sl) sl.value = nz;
+    update(); coords();
+    SND.layer(nz); HAP.vib('layer'); flashLayerIndicator(nz); camOnLayerChange();
+    _placeCursorMesh();
+    if (_layerModeActive) showLayerOverlay();
+  }
+  window.changeLayer = changeLayer;
+
+  /* ── Move preview system ── */
+  function enterPreview() {
+    if (!history || !history.length) return;
+    _inPreview = true;
+    if (!reviewing) {
+      setReviewing(true);
+      reviewIndex = history.length - 1;
+      loadHistory(reviewIndex);
+      if (typeof updateReviewUI === 'function') updateReviewUI();
+    }
+  }
+  function exitPreview() {
+    _inPreview = false;
+    if (reviewing) {
+      setReviewing(false);
+      reviewIndex = history.length - 1;
+      loadHistory(reviewIndex);
+      if (typeof reviewArrows !== 'undefined') { reviewArrows.forEach(function(a) { pivot.remove(a); }); reviewArrows = []; }
+      if (typeof syncMoveNumBar === 'function') syncMoveNumBar();
+    }
+  }
+  function prevMove()       { var e = document.getElementById('prevMove'); if (e) e.click(); }
+  function nextMove()       { var e = document.getElementById('nextMove'); if (e) e.click(); }
+  function goToLatestMove() { exitPreview(); }
+  window.enterPreview   = enterPreview;
+  window.exitPreview    = exitPreview;
+  window.prevMove       = prevMove;
+  window.nextMove       = nextMove;
+  window.goToLatestMove = goToLatestMove;
+
+  /* ── Gameplay confirm / cancel ── */
+  function handleGamepadSelect(x, y) {
+    if (reviewing) return;
+    if (typeof ONLINE !== 'undefined' && ONLINE.inMatch && turn !== ONLINE.myColor) return;
+    if (promotionActive) return; // promotion requires mouse/touch UI
+
+    var p = occ(x, y, activeZ);
+
     if (selectedPawn) {
-      // Try to move
       var legal = getLegalMoves(selectedPawn);
-      var move = legal.find(function(mv2) {
-        return mv2.x === _gpCursorX && mv2.y === _gpCursorY && mv2.z === activeZ;
-      });
+      var move  = legal.find(function(mv2) { return mv2.x === x && mv2.y === y && mv2.z === activeZ; });
       if (move) {
-        if (botThinking) return; // view-only during bot thinking
+        if (botThinking) return;
         var prev = selectedPawn;
-        // Deselect via clearSelection-equivalent
-        if (selectedPawn) {
-          var pCfg = selectedPawn.userData.color==='white' ? CFG.pieces.white : CFG.pieces.black;
-          setOutlineColor(selectedPawn, pCfg.outlineColor);
-          selectedPawn = null;
-        }
-        movePlates.forEach(function(mp) { pivot.remove(mp); });
-        movePlates = []; pulsePlates = [];
+        var pCfg = prev.userData.color === 'white' ? CFG.pieces.white : CFG.pieces.black;
+        setOutlineColor(prev, pCfg.outlineColor);
+        selectedPawn = null; notifySelectionChanged();
+        movePlates.forEach(function(mp) { pivot.remove(mp); }); movePlates = []; pulsePlates = [];
         if (selPlate) { pivot.remove(selPlate); selPlate = null; }
-        if (prev.userData.type==='king' && move.castle) executeCastle(move, prev);
+        if (prev.userData.type === 'king' && move.castle) executeCastle(move, prev);
         executeMove(prev, move);
         fadeHighlight(move.x, move.y, move.z, prev);
         if (!gameStarted) gameStarted = true;
-        document.getElementById('hud').textContent = turn.charAt(0).toUpperCase()+turn.slice(1)+' to move';
+        document.getElementById('hud').textContent = turn.charAt(0).toUpperCase() + turn.slice(1) + ' to move';
         return;
       }
-      // Clicking own piece switches selection
-      if (p && p.userData.color===turn && ((!botColor&&!ONLINE.inMatch)||p.userData.color===playerColor)) {
-        var pCfg2 = selectedPawn.userData.color==='white' ? CFG.pieces.white : CFG.pieces.black;
+      // Switch to another friendly piece at cursor
+      if (p && p.userData.color === turn && ((!botColor && !ONLINE.inMatch) || p.userData.color === playerColor)) {
+        var pCfg2 = selectedPawn.userData.color === 'white' ? CFG.pieces.white : CFG.pieces.black;
         setOutlineColor(selectedPawn, pCfg2.outlineColor);
         if (selPlate) { pivot.remove(selPlate); selPlate = null; }
-        movePlates.forEach(function(mp) { pivot.remove(mp); }); movePlates=[]; pulsePlates=[];
-        selectedPawn = p;
-        SND.select();
-        var cfg4 = p.userData.color==='white' ? CFG.pieces.white : CFG.pieces.black;
+        movePlates.forEach(function(mp) { pivot.remove(mp); }); movePlates = []; pulsePlates = [];
+        selectedPawn = p; notifySelectionChanged(); SND.select();
+        var cfg4 = p.userData.color === 'white' ? CFG.pieces.white : CFG.pieces.black;
         setOutlineColor(p, cfg4.outlineSelColor);
         selPlate = square(p.userData.x, p.userData.y, p.userData.z, true, cfg4.outlineSelColor, CFG.hl.selection.opacity);
         var legal2 = getLegalMoves(p); legalMoves = legal2;
-        if (CFG.hl.legal.on) { legal2.forEach(function(mv2){ movePlates.push(square(mv2.x,mv2.y,mv2.z,false,CFG.hl.legal.color,CFG.hl.legal.opacity)); }); }
+        if (CFG.hl.legal.on) { legal2.forEach(function(mv2) { movePlates.push(square(mv2.x, mv2.y, mv2.z, false, CFG.hl.legal.color, CFG.hl.legal.opacity)); }); }
         return;
       }
-      // Empty / wrong square: deselect
-      var pCfg3 = selectedPawn.userData.color==='white' ? CFG.pieces.white : CFG.pieces.black;
+      // Deselect
+      var pCfg3 = selectedPawn.userData.color === 'white' ? CFG.pieces.white : CFG.pieces.black;
       setOutlineColor(selectedPawn, pCfg3.outlineColor);
-      selectedPawn = null;
-      movePlates.forEach(function(mp) { pivot.remove(mp); }); movePlates=[]; pulsePlates=[];
+      selectedPawn = null; notifySelectionChanged();
+      movePlates.forEach(function(mp) { pivot.remove(mp); }); movePlates = []; pulsePlates = [];
       if (selPlate) { pivot.remove(selPlate); selPlate = null; }
       return;
     }
-    // No piece selected — try to select (allow viewing own pieces even during bot thinking)
-    if (p && p.userData.z===activeZ &&
-        ((!botThinking&&p.userData.color===turn&&((!botColor&&!ONLINE.inMatch)||p.userData.color===playerColor))||(botThinking&&botColor&&p.userData.color===playerColor))) {
-      selectedPawn = p;
-      SND.select();
-      var cfg5 = p.userData.color==='white' ? CFG.pieces.white : CFG.pieces.black;
+
+    // No selection — try to pick a piece
+    var canPick = p && p.userData.z === activeZ &&
+      ((!botThinking && p.userData.color === turn && ((!botColor && !ONLINE.inMatch) || p.userData.color === playerColor)) ||
+       (botThinking && botColor && p.userData.color === playerColor));
+    if (canPick) {
+      selectedPawn = p; notifySelectionChanged(); SND.select();
+      var cfg5 = p.userData.color === 'white' ? CFG.pieces.white : CFG.pieces.black;
       setOutlineColor(p, cfg5.outlineSelColor);
       if (selPlate) { pivot.remove(selPlate); selPlate = null; }
       selPlate = square(p.userData.x, p.userData.y, p.userData.z, true, cfg5.outlineSelColor, CFG.hl.selection.opacity);
       var legal3 = getLegalMoves(p); legalMoves = legal3;
-      movePlates.forEach(function(mp){ pivot.remove(mp); }); movePlates=[]; pulsePlates=[];
-      if (CFG.hl.legal.on) { legal3.forEach(function(mv2){ movePlates.push(square(mv2.x,mv2.y,mv2.z,false,CFG.hl.legal.color,CFG.hl.legal.opacity)); }); }
+      movePlates.forEach(function(mp) { pivot.remove(mp); }); movePlates = []; pulsePlates = [];
+      if (CFG.hl.legal.on) { legal3.forEach(function(mv2) { movePlates.push(square(mv2.x, mv2.y, mv2.z, false, CFG.hl.legal.color, CFG.hl.legal.opacity)); }); }
     }
   }
 
-  // L1/R1: cycle selectable pieces
-  var _gpPieceDir = 0;
-  function cyclePiece(dir) {
-    var sel = getSelectable(); if (!sel.length) return;
-    _gpPieceIdx = (_gpPieceIdx + dir + sel.length) % sel.length;
-    var p = sel[_gpPieceIdx];
-    _gpCursorX = p.userData.x; _gpCursorY = p.userData.y;
-    if (p.userData.z !== activeZ) {
-      activeZ = p.userData.z;
-      var sl = document.getElementById('zSlider'); if (sl) sl.value = activeZ;
-      update(); coords(); camOnLayerChange();
-    }
-    updateGPCursor();
-    SND.ui();
+  function handleGamepadCancel() {
+    if (!selectedPawn) return;
+    var pCfg = selectedPawn.userData.color === 'white' ? CFG.pieces.white : CFG.pieces.black;
+    setOutlineColor(selectedPawn, pCfg.outlineColor);
+    selectedPawn = null; notifySelectionChanged();
+    movePlates.forEach(function(mp) { pivot.remove(mp); }); movePlates = []; pulsePlates = [];
+    if (selPlate) { pivot.remove(selPlate); selPlate = null; }
+  }
+  window.handleGamepadSelect = handleGamepadSelect;
+  window.handleGamepadCancel = handleGamepadCancel;
+
+  /* ── Menu navigation (.gp-selected, no .focus()) ── */
+  var _ALL_MENU_IDS = [
+    'mainMenu', 'playStep1', 'playStep2', 'playStep3',
+    'pauseMenu', 'endMenu',
+    'modeMenu', 'botMenu',
+    'gameModesMenu', 'arcadeMenu', 'ctfMenu',
+    'settingsOverlay', 'tutorialOverlay', 'puzzleSelectOverlay', 'helpOverlay'
+  ];
+
+  function _getMenuItems(container) {
+    return Array.from(container.querySelectorAll('button, [role="button"]')).filter(function(b) {
+      return !b.disabled && b.offsetParent !== null && b.offsetHeight > 0;
+    });
   }
 
-  var _l2WasHeld = false;
-  var _gpAllLayers = false;
+  function _setMenuFocus(el) {
+    if (_menuFocusEl) _menuFocusEl.classList.remove('gp-selected');
+    _menuFocusEl = el;
+    if (el) {
+      el.classList.add('gp-selected');
+      if (el.scrollIntoView) el.scrollIntoView({ block: 'nearest' });
+    }
+  }
 
-  // ── Menu navigation state ──
-  var _menuFocusIdx = 0;
-  var _lastMenuId   = '';
-  var _menuNavCD    = 0;
+  function initMenuFocus(container) {
+    var items = _getMenuItems(container);
+    _setMenuFocus(items.length ? items[0] : null);
+  }
+
+  function updateMenuSelection() {
+    if (_menuFocusEl && (!document.body.contains(_menuFocusEl) || _menuFocusEl.offsetParent === null)) {
+      _menuFocusEl.classList.remove('gp-selected');
+      _menuFocusEl = null;
+    }
+  }
+  window.initMenuFocus       = initMenuFocus;
+  window.updateMenuSelection = updateMenuSelection;
+
+  function _getActiveMenu() {
+    for (var i = 0; i < _ALL_MENU_IDS.length; i++) {
+      var el = document.getElementById(_ALL_MENU_IDS[i]);
+      if (el && el.style.display !== 'none') return { el: el, id: _ALL_MENU_IDS[i] };
+    }
+    return null;
+  }
 
   function handleMenuNav(gp, now) {
-    var menuIds = ["pauseMenu","endMenu","mainMenu","modeMenu","botMenu",
-                   "gameModesMenu","arcadeMenu","ctfMenu",
-                   "settingsOverlay","tutorialOverlay","puzzleSelectOverlay"];
-    var activeMenu = null, activeId = '';
-    for (var mi = 0; mi < menuIds.length; mi++) {
-      var mel = document.getElementById(menuIds[mi]);
-      if (mel && mel.style.display !== 'none') { activeMenu = mel; activeId = menuIds[mi]; break; }
+    var menu = _getActiveMenu();
+    if (!menu) {
+      if (_menuFocusEl) _menuFocusEl.classList.remove('gp-selected');
+      _menuFocusEl = null; _lastMenuId = '';
+      return;
     }
-    if (!activeMenu) return;
+    if (menu.id !== _lastMenuId) { _lastMenuId = menu.id; initMenuFocus(menu.el); }
+    updateMenuSelection();
+    if (!_menuFocusEl) initMenuFocus(menu.el);
 
-    if (activeId !== _lastMenuId) { _menuFocusIdx = 0; _lastMenuId = activeId; }
-
-    var items = Array.from(activeMenu.querySelectorAll('button')).filter(function(b) {
-      return !b.disabled && b.offsetParent !== null;
-    });
+    var items  = _getMenuItems(menu.el);
     if (!items.length) return;
-    _menuFocusIdx = Math.min(_menuFocusIdx, items.length - 1);
+    var curIdx = items.indexOf(_menuFocusEl);
+    if (curIdx === -1) { curIdx = 0; _setMenuFocus(items[0]); }
 
-    var stickY = axisVal(gp, 1), stickX = axisVal(gp, 0);
-    var stickTick = (stickY || stickX) && now - _menuNavCD > 220;
+    var stickY    = axisVal(gp, 1);
+    var stickX    = axisVal(gp, 0);
+    var stickTick = (stickY !== 0 || stickX !== 0) && now - _menuNavCD > 200;
     if (stickTick) _menuNavCD = now;
 
-    var up    = btnPressed(gp, 12) || (stickTick && stickY < 0);
-    var down  = btnPressed(gp, 13) || (stickTick && stickY > 0);
-    var left  = btnPressed(gp, 14) || (stickTick && stickX < 0);
-    var right = btnPressed(gp, 15) || (stickTick && stickX > 0);
+    var up    = btnPressed(gp, 12) || (stickTick && stickY < -0.3);
+    var down  = btnPressed(gp, 13) || (stickTick && stickY >  0.3);
+    var left  = btnPressed(gp, 14) || (stickTick && stickX < -0.3);
+    var right = btnPressed(gp, 15) || (stickTick && stickX >  0.3);
+    var l1tab = btnPressed(gp, 4);
+    var r1tab = btnPressed(gp, 5);
     var aBtn  = btnPressed(gp, 0);
     var bBtn  = btnPressed(gp, 1);
     var startBtn = btnPressed(gp, 9);
 
-    if (up || left)   { _menuFocusIdx = (_menuFocusIdx - 1 + items.length) % items.length; }
-    if (down || right) { _menuFocusIdx = (_menuFocusIdx + 1) % items.length; }
-    items[_menuFocusIdx].focus();
+    if (up || left)    { curIdx = (curIdx - 1 + items.length) % items.length; _setMenuFocus(items[curIdx]); SND.ui && SND.ui(); }
+    if (down || right) { curIdx = (curIdx + 1) % items.length;                 _setMenuFocus(items[curIdx]); SND.ui && SND.ui(); }
 
-    if (aBtn) items[_menuFocusIdx].click();
-
-    if (bBtn) {
-      var backBtn = activeMenu.querySelector(
-        '#ctfBackBtn, #gameModesBackBtn, #arcadeBackBtn, #closeSettings, [id$="BackBtn"], [id$="CloseBtn"]'
-      );
-      if (backBtn) backBtn.click();
-      else if (activeId === 'pauseMenu') activeMenu.style.display = 'none';
+    // L1/R1 switch tabs when present
+    if (l1tab || r1tab) {
+      var tabs = Array.from(menu.el.querySelectorAll('.stTab, .advTab'));
+      if (tabs.length) {
+        var aIdx = tabs.findIndex(function(t) { return t.classList.contains('active'); });
+        if (aIdx === -1) aIdx = 0;
+        var nextIdx = l1tab ? (aIdx - 1 + tabs.length) % tabs.length : (aIdx + 1) % tabs.length;
+        tabs[nextIdx].click();
+        _setMenuFocus(tabs[nextIdx]);
+        SND.ui && SND.ui();
+      }
     }
 
-    if (startBtn && activeId === 'pauseMenu') activeMenu.style.display = 'none';
+    if (aBtn && _menuFocusEl) _menuFocusEl.click();
+
+    if (bBtn) {
+      var backBtn = menu.el.querySelector(
+        '#helpBackBtn, #closeSettings, #ps1Back, #ps2Back, #ps3Back, [id$="BackBtn"], [id$="CloseBtn"]'
+      );
+      if (backBtn) backBtn.click();
+      else if (menu.id === 'pauseMenu') menu.el.style.display = 'none';
+    }
+
+    if (startBtn && menu.id === 'pauseMenu') menu.el.style.display = 'none';
   }
 
-  // Main gamepad poll loop
+  /* ── Connection status ── */
+  function updateGamepadStatus(connected) {
+    _gpConnected = connected;
+    var el = document.getElementById('gamepadStatus');
+    if (el) { el.textContent = connected ? '✓ CONNECTED' : 'NOT CONNECTED'; el.style.color = connected ? '#00ccff' : '#444'; }
+    if (!connected) setGamepadMode(false);
+  }
+
+  window.addEventListener('gamepadconnected', function() {
+    updateGamepadStatus(true);
+    typeof arcadeAnnounce === 'function' && arcadeAnnounce('🎮 Gamepad connected', 0x00ccff);
+    _injectGPIcons();
+  });
+  window.addEventListener('gamepaddisconnected', function() { updateGamepadStatus(false); });
+
+  if (typeof syncAllSettingsUI === 'function') {
+    var _prevSyncForGP = syncAllSettingsUI;
+    syncAllSettingsUI = function() {
+      _prevSyncForGP();
+      var gps2 = []; try { gps2 = Array.from(navigator.getGamepads ? navigator.getGamepads() : []); } catch(e2) {}
+      updateGamepadStatus(gps2.some(function(g) { return g && g.connected; }));
+    };
+  }
+
+  /* ── Main poll loop ── */
   function pollGamepad() {
     requestAnimationFrame(pollGamepad);
     if (!INPUT_CFG.gamepadEnabled) return;
-    var gps = []; try { gps = navigator.getGamepads ? navigator.getGamepads() : []; } catch(e) { return; }
+    var gps = []; try { gps = Array.from(navigator.getGamepads ? navigator.getGamepads() : []); } catch(e) { return; }
     var gp = null;
     for (var i = 0; i < gps.length; i++) { if (gps[i] && gps[i].connected) { gp = gps[i]; break; } }
     if (!gp) { if (_gpConnected) updateGamepadStatus(false); return; }
@@ -1554,26 +1707,77 @@ function _fmtKey(k) {
 
     var now = performance.now();
 
-    var menuIds = ["mainMenu","modeMenu","botMenu","pauseMenu","endMenu",
-                   "settingsOverlay","tutorialOverlay","puzzleSelectOverlay",
-                   "gameModesMenu","arcadeMenu","ctfMenu"];
-    var anyMenuOpen = menuIds.some(function(id) {
+    // Any controller activity → activate gamepad mode
+    var anyInput = gp.buttons.some(function(b) { return b && (b.pressed || b.value > 0.1); }) ||
+                   gp.axes.some(function(a) { return Math.abs(a) > 0.1; });
+    if (anyInput) setGamepadMode(true);
+
+    // ── Menu mode ──
+    var anyMenuOpen = _ALL_MENU_IDS.some(function(id) {
       var el = document.getElementById(id); return el && el.style.display !== 'none';
     });
     if (anyMenuOpen) { handleMenuNav(gp, now); return; }
 
-    // ── L-stick: move cursor ──
-    var lx = axisVal(gp, 0), ly = axisVal(gp, 1);
-    if ((lx || ly) && now - _stickCursorCD > 180) {
-      _stickCursorCD = now;
-      _gpCursorX = Math.max(0, Math.min(7, _gpCursorX + (lx > 0 ? 1 : lx < 0 ? -1 : 0)));
-      _gpCursorY = Math.max(0, Math.min(7, _gpCursorY + (ly > 0 ? 1 : ly < 0 ? -1 : 0)));
-      updateGPCursor();
+    // ── R2 (7): hold for layer mode ──
+    var r2now = btnHeld(gp, 7);
+    if (r2now && !_r2WasHeld) {
+      _layerModeActive = true;
+      if (_gpCursorMesh) _gpCursorMesh.visible = false;
+      showLayerOverlay();
+    }
+    if (!r2now && _r2WasHeld) {
+      _layerModeActive = false;
+      hideLayerOverlay();
+      if (_gpCursorMesh) _gpCursorMesh.visible = _gpActive;
+    }
+    _r2WasHeld = r2now;
+
+    if (_layerModeActive) {
+      var lyL  = axisVal(gp, 1);
+      var lmUp = btnPressed(gp, 12);
+      var lmDn = btnPressed(gp, 13);
+      btnPressed(gp, 14); btnPressed(gp, 15); // consume to prevent cursor leaking
+      if (lmUp) changeLayer(1);
+      if (lmDn) changeLayer(-1);
+      if (lyL !== 0 && now - _stickCursorCD > 250) { _stickCursorCD = now; changeLayer(lyL < 0 ? 1 : -1); }
+      return;
     }
 
-    // ── R-stick: rotate board ──
+    // ── L1 (4) / R1 (5): move preview ──
+    var l1p = btnPressed(gp, 4);
+    var r1p = btnPressed(gp, 5);
+
+    if (!_inPreview && (l1p || r1p)) { enterPreview(); return; }
+    if (_inPreview) {
+      if (l1p) prevMove();
+      if (r1p) nextMove();
+      if (btnPressed(gp, 1)) exitPreview();    // B / Circle — exit preview
+      if (btnPressed(gp, 3)) goToLatestMove(); // Y / Triangle — jump to live
+      // Consume remaining buttons to prevent state leaking on exit
+      btnPressed(gp, 0); btnPressed(gp, 2);
+      btnPressed(gp, 12); btnPressed(gp, 13); btnPressed(gp, 14); btnPressed(gp, 15);
+      return;
+    }
+
+    // ── D-pad: cursor movement (1 square per press) ──
+    if (btnPressed(gp, 12)) updateGamepadCursor(_gpCursorX, _gpCursorY - 1);
+    if (btnPressed(gp, 13)) updateGamepadCursor(_gpCursorX, _gpCursorY + 1);
+    if (btnPressed(gp, 14)) updateGamepadCursor(_gpCursorX - 1, _gpCursorY);
+    if (btnPressed(gp, 15)) updateGamepadCursor(_gpCursorX + 1, _gpCursorY);
+
+    // ── Left stick: cursor with repeat cooldown ──
+    var lx = axisVal(gp, 0), ly = axisVal(gp, 1);
+    if ((lx !== 0 || ly !== 0) && now - _stickCursorCD > 160) {
+      _stickCursorCD = now;
+      updateGamepadCursor(
+        _gpCursorX + (lx > 0 ? 1 : lx < 0 ? -1 : 0),
+        _gpCursorY + (ly > 0 ? 1 : ly < 0 ? -1 : 0)
+      );
+    }
+
+    // ── Right stick: rotate board ──
     var rx = axisVal(gp, 2), ry = axisVal(gp, 3);
-    if ((rx || ry) && now - _stickBoardCD > 16) {
+    if ((rx !== 0 || ry !== 0) && now - _stickBoardCD > 16) {
       _stickBoardCD = now;
       var sens = INPUT_CFG.gamepadSens * 0.002;
       pivot.rotation.y += rx * sens;
@@ -1581,62 +1785,34 @@ function _fmtKey(k) {
       coords();
     }
 
-    // ── D-pad ↑↓: layer ──
-    var dpadUp   = btnPressed(gp, 12);
-    var dpadDown = btnPressed(gp, 13);
-    if (dpadUp   && now - _stickLayerCD > 200) { _stickLayerCD=now; var nz=Math.min(LAYERS-1,activeZ+1); if(nz!==activeZ){activeZ=nz;var sl=document.getElementById('zSlider');if(sl)sl.value=nz;update();coords();SND.layer(nz);flashLayerIndicator(nz);camOnLayerChange();} }
-    if (dpadDown && now - _stickLayerCD > 200) { _stickLayerCD=now; var nz2=Math.max(0,activeZ-1); if(nz2!==activeZ){activeZ=nz2;var sl2=document.getElementById('zSlider');if(sl2)sl2.value=nz2;update();coords();SND.layer(nz2);flashLayerIndicator(nz2);camOnLayerChange();} }
+    // ── Face buttons ──
+    if (btnPressed(gp, 0)) handleGamepadSelect(_gpCursorX, _gpCursorY); // South: confirm/select
+    if (btnPressed(gp, 1)) handleGamepadCancel();                        // East:  cancel/deselect
+    if (btnPressed(gp, 2)) { var rb=document.getElementById('rotateBoardBtn'); if(rb&&rb.style.display!=='none')rb.click(); } // West: flip board
+    if (btnPressed(gp, 3)) { var ml=document.getElementById('movePanel'); if(ml)ml.style.display=ml.style.display==='none'?'block':'none'; } // North: move list
 
-    // ── D-pad ←→: review ──
-    if (btnPressed(gp, 14)) { var pm=document.getElementById('prevMove'); if(pm)pm.click(); }
-    if (btnPressed(gp, 15)) { var nm=document.getElementById('nextMove'); if(nm)nm.click(); }
-
-    // ── South (0): confirm/select ──
-    if (btnPressed(gp, 0)) gpConfirm();
-
-    // ── East (1): cancel ──
-    if (btnPressed(gp, 1)) {
-      if (selectedPawn) {
-        var pCfg = selectedPawn.userData.color==='white'?CFG.pieces.white:CFG.pieces.black;
-        setOutlineColor(selectedPawn,pCfg.outlineColor); selectedPawn=null;
-        movePlates.forEach(function(mp){pivot.remove(mp);}); movePlates=[]; pulsePlates=[];
-        if(selPlate){pivot.remove(selPlate);selPlate=null;}
-      }
-    }
-
-    // ── North (3): toggle move list ──
-    if (btnPressed(gp, 3)) { var ml=document.getElementById('movePanel'); if(ml)ml.style.display=ml.style.display==='none'?'block':'none'; }
-
-    // ── West (2): flip board ──
-    if (btnPressed(gp, 2)) { var rb=document.getElementById('rotateBoardBtn'); if(rb&&rb.style.display!=='none')rb.click(); }
-
-    // ── L1(4)/R1(5): cycle selectable pieces ──
-    if (btnPressed(gp, 4)) cyclePiece(-1);
-    if (btnPressed(gp, 5)) cyclePiece( 1);
-
-    // ── L2(6): hold → cycle camera mode on press ──
+    // ── L2 (6): press to cycle camera mode ──
     var l2now = btnHeld(gp, 6);
     if (l2now && !_l2WasHeld) { var vt=document.getElementById('viewToggle'); if(vt)vt.click(); }
     _l2WasHeld = l2now;
 
-    // ── Select(8): all-layers view ──
+    // ── Select (8): hold for all-layers ghost view ──
     var selHeld = btnHeld(gp, 8);
     if (selHeld !== _gpAllLayers) {
       _gpAllLayers = selHeld;
-      // Mirror Tab key behaviour
-      if (typeof applyAllLayersView === 'function') applyAllLayersView(selHeld);
+      typeof applyAllLayersView === 'function' && applyAllLayersView(selHeld);
     }
 
-    // ── Start(9): pause ──
+    // ── Start (9): pause ──
     if (btnPressed(gp, 9)) {
-      if (gameStarted || reviewing) document.getElementById('pauseMenu').style.display='flex';
+      if (gameStarted || reviewing) document.getElementById('pauseMenu').style.display = 'flex';
     }
 
-    // Update cursor layer position
-    updateGPCursor();
+    _placeCursorMesh();
   }
 
   pollGamepad();
+
 })(); // end initGamepad
 
 

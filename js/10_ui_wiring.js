@@ -1,8 +1,8 @@
 /* ======================================================
    UI WIRING
 ====================================================== */
-document.getElementById("menuBtn").onclick=()=>{SND.ui();HAP.vib('ui');document.getElementById("pauseMenu").style.display="flex";};
-document.getElementById("resumeBtn").onclick=()=>{SND.confirm();document.getElementById("pauseMenu").style.display="none";};
+document.getElementById("menuBtn").onclick=()=>{SND.ui();HAP.vib('ui');const _pm=document.getElementById("pauseMenu");_pm.style.display="flex";if(typeof initMenuFocus==='function')initMenuFocus(_pm);};
+document.getElementById("resumeBtn").onclick=()=>{SND.confirm();document.getElementById("pauseMenu").style.display="none";if(typeof updateMenuSelection==='function')updateMenuSelection();};
 document.getElementById("pauseResignBtn").onclick=()=>{
   SND.confirm(); document.getElementById("pauseMenu").style.display="none";
   if(ONLINE.inMatch){
@@ -43,7 +43,8 @@ function _doExit() {
   var _rbtn=document.getElementById("rotateBoardBtn"); if(_rbtn)_rbtn.style.display="none";
   var _pbn=document.getElementById("panBoardBtn"); if(_pbn)_pbn.style.display="none";
   var _gear=document.getElementById("hudGearBtn"); if(_gear){_gear.style.display="none";var _qp=document.getElementById("hudQuickPanel");if(_qp)_qp.style.display="none";}
-  document.getElementById("mainMenu").style.display="flex";
+  const _mm=document.getElementById("mainMenu");_mm.style.display="flex";
+  if(typeof initMenuFocus==='function')initMenuFocus(_mm);
 }
 document.getElementById("exitBtn").onclick=()=>{
   if (ONLINE.inMatch) {
@@ -53,7 +54,7 @@ document.getElementById("exitBtn").onclick=()=>{
   }
 };
 let _settingsOrigin = 'pauseMenu';
-document.getElementById("settingsBtn").onclick=()=>{SND.ui();_settingsOrigin="pauseMenu";document.getElementById("pauseMenu").style.display="none";document.getElementById("settingsOverlay").style.display="flex";};
+document.getElementById("settingsBtn").onclick=()=>{SND.ui();_settingsOrigin="pauseMenu";document.getElementById("pauseMenu").style.display="none";const _so=document.getElementById("settingsOverlay");_so.style.display="flex";if(typeof initMenuFocus==='function')initMenuFocus(_so);};
 document.getElementById("closeSettings").onclick=()=>{
   SND.ui();
   // Close = cancel (restore snapshot)
@@ -269,7 +270,7 @@ document.getElementById("reviewBtn").onclick=()=>{
   // Keep pointer events active so board rotation still works in review mode
   // Piece selection is blocked by the `reviewing` flag in the touchstart handler
 };
-document.getElementById("endBackMenu").onclick=()=>{SND.confirm();document.getElementById("endMenu").style.display="none";onlineHideColorIndicator();localStorage.removeItem('cc_pending_match');var _rb=document.getElementById('rematchBtn');if(_rb){_rb.textContent='↺ Rematch';_rb.disabled=false;}botColor=null;exitPuzzleMode();resetBoard();turn="white";document.getElementById("hud").textContent="White to move";renderer.domElement.style.pointerEvents="none";var _rbtn=document.getElementById("rotateBoardBtn");if(_rbtn)_rbtn.style.display="none";var _pbn=document.getElementById("panBoardBtn");if(_pbn)_pbn.style.display="none";document.getElementById("mainMenu").style.display="flex";};
+document.getElementById("endBackMenu").onclick=()=>{SND.confirm();document.getElementById("endMenu").style.display="none";if(typeof updateMenuSelection==='function')updateMenuSelection();onlineHideColorIndicator();localStorage.removeItem('cc_pending_match');var _rb=document.getElementById('rematchBtn');if(_rb){_rb.textContent='↺ Rematch';_rb.disabled=false;}botColor=null;exitPuzzleMode();resetBoard();turn="white";document.getElementById("hud").textContent="White to move";renderer.domElement.style.pointerEvents="none";var _rbtn=document.getElementById("rotateBoardBtn");if(_rbtn)_rbtn.style.display="none";var _pbn=document.getElementById("panBoardBtn");if(_pbn)_pbn.style.display="none";document.getElementById("mainMenu").style.display="flex";};
 
 document.getElementById("zSlider").oninput=e=>{
   const prev=activeZ; activeZ=parseInt(e.target.value);
@@ -305,7 +306,9 @@ document.getElementById("liveMove").onclick=()=>{
 document.getElementById('mainPlayBtn').onclick = () => {
   SND.ui();
   document.getElementById('mainMenu').style.display = 'none';
-  document.getElementById('playStep1').style.display = 'flex';
+  const _ps1 = document.getElementById('playStep1');
+  _ps1.style.display = 'flex';
+  if (typeof initMenuFocus === 'function') initMenuFocus(_ps1);
 };
 document.getElementById('mainPuzzlesBtn').onclick = () => {
   SND.ui();
@@ -317,8 +320,10 @@ document.getElementById('mainSettingsBtn').onclick = () => {
   SND.ui();
   document.getElementById('mainMenu').style.display = 'none';
   _settingsOrigin = 'mainMenu';
-  document.getElementById('settingsOverlay').style.display = 'flex';
+  const _so2 = document.getElementById('settingsOverlay');
+  _so2.style.display = 'flex';
   if (typeof drawSettingsPreview === 'function') drawSettingsPreview();
+  if (typeof initMenuFocus === 'function') initMenuFocus(_so2);
 };
 document.getElementById('mainProfileBtn').onclick = () => {
   SND.ui();
@@ -328,23 +333,29 @@ document.getElementById('mainProfileBtn').onclick = () => {
 document.getElementById('mainHelpBtn').onclick = () => {
   SND.ui();
   document.getElementById('mainMenu').style.display = 'none';
-  document.getElementById('helpOverlay').style.display = 'flex';
+  const _ho = document.getElementById('helpOverlay');
+  _ho.style.display = 'flex';
+  if (typeof initMenuFocus === 'function') initMenuFocus(_ho);
 };
 document.getElementById('helpClose').onclick = () => {
   SND.ui();
   document.getElementById('helpOverlay').style.display = 'none';
-  document.getElementById('mainMenu').style.display = 'flex';
+  const _mm2 = document.getElementById('mainMenu'); _mm2.style.display = 'flex';
+  if (typeof initMenuFocus === 'function') initMenuFocus(_mm2);
 };
 document.getElementById('helpBackBtn').onclick = () => {
   SND.ui();
   document.getElementById('helpOverlay').style.display = 'none';
-  document.getElementById('mainMenu').style.display = 'flex';
+  const _mm3 = document.getElementById('mainMenu'); _mm3.style.display = 'flex';
+  if (typeof initMenuFocus === 'function') initMenuFocus(_mm3);
 };
 document.getElementById('helpTutorialBtn').onclick = () => {
   SND.ui();
   document.getElementById('helpOverlay').style.display = 'none';
-  document.getElementById('tutorialOverlay').style.display = 'flex';
+  const _to = document.getElementById('tutorialOverlay');
+  _to.style.display = 'flex';
   if (typeof startTutorial === 'function') startTutorial();
+  if (typeof initMenuFocus === 'function') initMenuFocus(_to);
 };
 
 // ── PLAY STEP 1 ─────────────────────────────────────────────────────────────
@@ -368,7 +379,9 @@ function _goToPlayStep2() {
     onlineSub.textContent = isOnl ? 'Quick match · Friends · Private game' : 'Server offline — try again later';
     onlineSub.style.color = isOnl ? '#5e2750' : '#553322';
   }
-  document.getElementById('playStep2').style.display = 'flex';
+  const _ps2 = document.getElementById('playStep2');
+  _ps2.style.display = 'flex';
+  if (typeof initMenuFocus === 'function') initMenuFocus(_ps2);
 }
 
 // ── PLAY STEP 2 ─────────────────────────────────────────────────────────────
@@ -389,7 +402,9 @@ function _goToPlayStep3() {
   document.getElementById('ps3CTFSection').style.display   = (_playMode === 'ctf')    ? 'block' : 'none';
   const modeNames = { standard: 'CONFIGURE', arcade: 'ARCADE — CONFIGURE', ctf: 'CTF — CONFIGURE' };
   document.getElementById('ps3Title').textContent = modeNames[_playMode] || 'CONFIGURE';
-  document.getElementById('playStep3').style.display = 'flex';
+  const _ps3 = document.getElementById('playStep3');
+  _ps3.style.display = 'flex';
+  if (typeof initMenuFocus === 'function') initMenuFocus(_ps3);
 }
 
 // ── PLAY STEP 3 ─────────────────────────────────────────────────────────────
