@@ -15,7 +15,7 @@ function ray(lm, piece, dx, dy, dz) {
 function getKnightMoves(p) {
   const moves = [], { x, y, z } = p.userData;
   [[2,1,0],[2,-1,0],[-2,1,0],[-2,-1,0],[2,0,1],[2,0,-1],[-2,0,1],[-2,0,-1],[1,2,0],[1,-2,0],[-1,2,0],[-1,-2,0],[0,2,1],[0,2,-1],[0,-2,1],[0,-2,-1],[1,0,2],[1,0,-2],[-1,0,2],[-1,0,-2],[0,1,2],[0,1,-2],[0,-1,2],[0,-1,-2]]
-  .forEach(([dx,dy,dz]) => { const tx=x+dx,ty=y+dy,tz=z+dz; if(tx<0||tx>7||ty<0||ty>7||tz<0||tz>=LAYERS)return; const t=occ(tx,ty,tz); if(!t||t.userData.color!==p.userData.color)moves.push({x:tx,y:ty,z:tz}); });
+  .forEach(([dx,dy,dz]) => { const tx=x+dx,ty=y+dy,tz=z+dz; if(tx<0||tx>7||ty<0||ty>7||tz<0||tz>=LAYERS)return; if(isHole(tx,ty,tz))return; const t=occ(tx,ty,tz); if(!t||t.userData.color!==p.userData.color)moves.push({x:tx,y:ty,z:tz}); });
   return moves;
 }
 function getRookMoves(p)   { const m=[]; ray(m,p,1,0,0);ray(m,p,-1,0,0);ray(m,p,0,1,0);ray(m,p,0,-1,0);ray(m,p,0,0,1);ray(m,p,0,0,-1); return m; }
@@ -37,9 +37,9 @@ function getQueenMoves(p)  { const m=[];
 
 function getKingMoves(p) {
   const moves = [], { x, y, z } = p.userData;
-  for (let dx=-1;dx<=1;dx++) { for (let dy=-1;dy<=1;dy++) { if(dx===0&&dy===0)continue; const tx=x+dx,ty=y+dy; if(tx<0||tx>7||ty<0||ty>7)continue; const t=occ(tx,ty,z); if(!t||t.userData.color!==p.userData.color)moves.push({x:tx,y:ty,z}); } }
-  [[0,0,1],[0,0,-1]].forEach(([,,dz]) => { const tz=z+dz; if(tz<0||tz>=LAYERS)return; const t=occ(x,y,tz); if(!t||t.userData.color!==p.userData.color)moves.push({x,y,z:tz}); });
-  if (!p.userData.moved) { const row=y,layer=z; let r=occ(7,row,layer); if(r&&r.userData.type==="rook"&&!r.userData.moved&&!occ(5,row,layer)&&!occ(6,row,layer))moves.push({x:6,y:row,z:layer,castle:"kingside"}); r=occ(0,row,layer); if(r&&r.userData.type==="rook"&&!r.userData.moved&&!occ(1,row,layer)&&!occ(2,row,layer)&&!occ(3,row,layer))moves.push({x:2,y:row,z:layer,castle:"queenside"}); }
+  for (let dx=-1;dx<=1;dx++) { for (let dy=-1;dy<=1;dy++) { if(dx===0&&dy===0)continue; const tx=x+dx,ty=y+dy; if(tx<0||tx>7||ty<0||ty>7)continue; if(isHole(tx,ty,z))continue; const t=occ(tx,ty,z); if(!t||t.userData.color!==p.userData.color)moves.push({x:tx,y:ty,z}); } }
+  [[0,0,1],[0,0,-1]].forEach(([,,dz]) => { const tz=z+dz; if(tz<0||tz>=LAYERS)return; if(isHole(x,y,tz))return; const t=occ(x,y,tz); if(!t||t.userData.color!==p.userData.color)moves.push({x,y,z:tz}); });
+  if (!p.userData.moved) { const row=y,layer=z; let r=occ(7,row,layer); if(r&&r.userData.type==="rook"&&!r.userData.moved&&!occ(5,row,layer)&&!occ(6,row,layer)&&!isHole(5,row,layer)&&!isHole(6,row,layer))moves.push({x:6,y:row,z:layer,castle:"kingside"}); r=occ(0,row,layer); if(r&&r.userData.type==="rook"&&!r.userData.moved&&!occ(1,row,layer)&&!occ(2,row,layer)&&!occ(3,row,layer)&&!isHole(1,row,layer)&&!isHole(2,row,layer)&&!isHole(3,row,layer))moves.push({x:2,y:row,z:layer,castle:"queenside"}); }
   return moves;
 }
 function getPawnMoves(p) {

@@ -84,13 +84,14 @@ function buildBoard() {
 buildBoard();
 
 // Shared geometry/material for hole void meshes
-const _holeVoidGeo = new THREE.PlaneGeometry(SPACING + 0.04, SPACING + 0.04);
-// Solid opaque plane matching CSS background #120020.
-// Grid lines at 5% opacity are invisible on this dark surface.
-// depthTest:true prevents bleed through other layers.
+// Slightly oversized to cover grid line endpoints at square edges
+const _holeVoidGeo = new THREE.PlaneGeometry(SPACING + 0.10, SPACING + 0.10);
+// transparent:true puts this in the same render pass as grid lines (which are also transparent).
+// renderOrder:999 (set per-mesh) ensures it draws LAST, covering any grid lines beneath.
+// opacity:1 makes it fully opaque visually while still being in the transparent pass.
 const _holeVoidMat = new THREE.MeshBasicMaterial({
-  color: 0x120020, transparent: false, depthWrite: true, depthTest: true,
-  side: THREE.DoubleSide
+  color: 0x120020, transparent: true, opacity: 1.0,
+  depthWrite: true, depthTest: true, side: THREE.DoubleSide
 });
 
 // Rebuild grid for layer z, removing line segments that border or touch hole squares.
