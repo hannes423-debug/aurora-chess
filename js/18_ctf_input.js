@@ -1323,23 +1323,19 @@ function _fmtKey(k) {
 (function initGamepad() {
 
   /* ── State ── */
-  var _gpConnected     = false;
-  var _gpActive        = false;   // gamepad is the active input device
-  var _gpCursorX       = 3;
-  var _gpCursorY       = 3;
-  var _layerModeActive = false;
-  var _r2WasHeld       = false;
-  var _l2WasHeld       = false;
-  var _gpAllLayers     = false;
-  var _inPreview       = false;
-  var _btnPrev         = {};
-  var _stickCursorCD   = 0;
-  var _stickBoardCD    = 0;
-  var _menuNavCD       = 0;
-  var _menuFocusEl     = null;
-  var _lastMenuId      = '';
+  var _gpConnected   = false;
+  var _gpActive      = false;
+  var _gpCursorX     = 3;
+  var _gpCursorY     = 3;
+  var _reviewMode    = false;   // true while in move-review (View button)
+  var _r3WasHeld     = false;
+  var _btnPrev       = {};
+  var _stickCursorCD = 0;
+  var _menuNavCD     = 0;
+  var _menuFocusEl   = null;
+  var _lastMenuId    = '';
 
-  /* ── Button edge detection + helpers ── */
+  /* ── Button helpers ── */
   function btnPressed(gp, idx) {
     var val  = !!(gp.buttons[idx] && (gp.buttons[idx].pressed || gp.buttons[idx].value > 0.5));
     var prev = !!_btnPrev[idx];
@@ -1348,6 +1344,9 @@ function _fmtKey(k) {
   }
   function btnHeld(gp, idx) {
     return !!(gp.buttons[idx] && (gp.buttons[idx].pressed || gp.buttons[idx].value > 0.5));
+  }
+  function triggerVal(gp, idx) {
+    return gp.buttons[idx] ? (gp.buttons[idx].value || 0) : 0;
   }
   function axisVal(gp, idx) {
     var v = gp.axes[idx] || 0;
@@ -1421,32 +1420,11 @@ function _fmtKey(k) {
     _gpCursorX = Math.max(0, Math.min(7, x));
     _gpCursorY = Math.max(0, Math.min(7, y));
     _placeCursorMesh();
-    if (_gpCursorMesh) _gpCursorMesh.visible = _gpActive && !_layerModeActive;
+    if (_gpCursorMesh) _gpCursorMesh.visible = _gpActive;
   }
   window.updateGamepadCursor = updateGamepadCursor;
 
-  /* ── Layer mode overlay (MGS-style: hold R2) ── */
-  var _layerOverlayEl = document.createElement('div');
-  _layerOverlayEl.id = 'gpLayerOverlay';
-  _layerOverlayEl.style.cssText =
-    'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:200;' +
-    'background:rgba(0,0,0,0.9);border:1px solid #00ccff;color:#00ccff;' +
-    'font-family:monospace;font-size:20px;letter-spacing:4px;padding:20px 40px;' +
-    'text-align:center;pointer-events:none;display:none;' +
-    'box-shadow:0 0 30px rgba(0,204,255,0.25);';
-  document.body.appendChild(_layerOverlayEl);
-
-  function showLayerOverlay() {
-    _layerOverlayEl.innerHTML =
-      'LAYER &nbsp;<span style="font-size:38px;color:#fff;">' + (activeZ + 1) + '</span>' +
-      '<br><span style="font-size:9px;color:#555;letter-spacing:2px;">' +
-      '&#x2191;&#x2193;&nbsp; CHANGE &nbsp;&middot;&nbsp; RELEASE R2 TO CONFIRM</span>';
-    _layerOverlayEl.style.display = 'block';
-  }
-  function hideLayerOverlay() { _layerOverlayEl.style.display = 'none'; }
-  window.showLayerOverlay = showLayerOverlay;
-  window.hideLayerOverlay = hideLayerOverlay;
-
+  /* ── Layer change (LB = down, RB = up) ── */
   function changeLayer(dir) {
     var nz = Math.max(0, Math.min(LAYERS - 1, activeZ + dir));
     if (nz === activeZ) return;
@@ -1455,14 +1433,13 @@ function _fmtKey(k) {
     update(); coords();
     SND.layer(nz); HAP.vib('layer'); flashLayerIndicator(nz); camOnLayerChange();
     _placeCursorMesh();
-    if (_layerModeActive) showLayerOverlay();
   }
   window.changeLayer = changeLayer;
 
-  /* ── Move preview system ── */
-  function enterPreview() {
+  /* ── Review mode (View button toggle) ── */
+  function _enterReview() {
     if (!history || !history.length) return;
-    _inPreview = true;
+    _reviewMode = true;
     if (!reviewing) {
       setReviewing(true);
       reviewIndex = history.length - 1;
@@ -1470,8 +1447,8 @@ function _fmtKey(k) {
       if (typeof updateReviewUI === 'function') updateReviewUI();
     }
   }
-  function exitPreview() {
-    _inPreview = false;
+  function _exitReview() {
+    _reviewMode = false;
     if (reviewing) {
       setReviewing(false);
       reviewIndex = history.length - 1;
@@ -1480,20 +1457,17 @@ function _fmtKey(k) {
       if (typeof syncMoveNumBar === 'function') syncMoveNumBar();
     }
   }
-  function prevMove()       { var e = document.getElementById('prevMove'); if (e) e.click(); }
-  function nextMove()       { var e = document.getElementById('nextMove'); if (e) e.click(); }
-  function goToLatestMove() { exitPreview(); }
-  window.enterPreview   = enterPreview;
-  window.exitPreview    = exitPreview;
-  window.prevMove       = prevMove;
-  window.nextMove       = nextMove;
-  window.goToLatestMove = goToLatestMove;
+  window.enterPreview   = _enterReview;
+  window.exitPreview    = _exitReview;
+  window.prevMove       = function() { var e = document.getElementById('prevMove'); if (e) e.click(); };
+  window.nextMove       = function() { var e = document.getElementById('nextMove'); if (e) e.click(); };
+  window.goToLatestMove = _exitReview;
 
   /* ── Gameplay confirm / cancel ── */
   function handleGamepadSelect(x, y) {
     if (reviewing) return;
     if (typeof ONLINE !== 'undefined' && ONLINE.inMatch && turn !== ONLINE.myColor) return;
-    if (promotionActive) return; // promotion requires mouse/touch UI
+    if (typeof promotionActive !== 'undefined' && promotionActive) return; // handled via menu nav
 
     var p = occ(x, y, activeZ);
 
@@ -1571,7 +1545,8 @@ function _fmtKey(k) {
     'pauseMenu', 'endMenu',
     'modeMenu', 'botMenu',
     'gameModesMenu', 'arcadeMenu', 'ctfMenu',
-    'settingsOverlay', 'tutorialOverlay', 'puzzleSelectOverlay', 'helpOverlay'
+    'settingsOverlay', 'tutorialOverlay', 'puzzleSelectOverlay', 'helpOverlay',
+    'promotionPopup'
   ];
 
   function _getMenuItems(container) {
@@ -1658,6 +1633,19 @@ function _fmtKey(k) {
       }
     }
 
+    // ── Promotion popup: 2×2 grid navigation ──
+    if (menu.id === 'promotionPopup') {
+      var pu = btnPressed(gp, 12)|0, pd = btnPressed(gp, 13)|0;
+      var pl = btnPressed(gp, 14)|0, pr = btnPressed(gp, 15)|0;
+      var lb = btnPressed(gp, 4)|0,  rb = btnPressed(gp, 5)|0;
+      if (pl || lb) { curIdx = (curIdx - 1 + items.length) % items.length; _setMenuFocus(items[curIdx]); SND.ui && SND.ui(); }
+      if (pr || rb) { curIdx = (curIdx + 1) % items.length;                _setMenuFocus(items[curIdx]); SND.ui && SND.ui(); }
+      if (pu) { curIdx = (curIdx - 2 + items.length) % items.length; _setMenuFocus(items[curIdx]); SND.ui && SND.ui(); }
+      if (pd) { curIdx = (curIdx + 2) % items.length;                _setMenuFocus(items[curIdx]); SND.ui && SND.ui(); }
+      if (aBtn && _menuFocusEl) _menuFocusEl.click();
+      return;
+    }
+
     if (aBtn && _menuFocusEl) _menuFocusEl.click();
 
     if (bBtn) {
@@ -1707,65 +1695,60 @@ function _fmtKey(k) {
 
     var now = performance.now();
 
-    // Any controller activity → activate gamepad mode
     var anyInput = gp.buttons.some(function(b) { return b && (b.pressed || b.value > 0.1); }) ||
                    gp.axes.some(function(a) { return Math.abs(a) > 0.1; });
     if (anyInput) setGamepadMode(true);
 
-    // ── Menu mode ──
+    // ── Menu / promotion ──
     var anyMenuOpen = _ALL_MENU_IDS.some(function(id) {
       var el = document.getElementById(id); return el && el.style.display !== 'none';
     });
     if (anyMenuOpen) { handleMenuNav(gp, now); return; }
 
-    // ── R2 (7): hold for layer mode ──
-    var r2now = btnHeld(gp, 7);
-    if (r2now && !_r2WasHeld) {
-      _layerModeActive = true;
-      if (_gpCursorMesh) _gpCursorMesh.visible = false;
-      showLayerOverlay();
+    // ── Analog zoom: LT (6) = zoom out, RT (7) = zoom in ──
+    var ltVal = triggerVal(gp, 6);
+    var rtVal = triggerVal(gp, 7);
+    if (ltVal > 0.05 || rtVal > 0.05) {
+      var zf = 1 + (ltVal - rtVal) * 0.012;
+      if (cameraMode === CAMERA_MODES.FREE) {
+        camera.position.multiplyScalar(zf);
+      } else {
+        var _zd = new THREE.Vector3().subVectors(camera.position, _camLookAt).multiplyScalar(zf);
+        var _zl = _zd.length();
+        if (_zl < 5) _zd.setLength(5); if (_zl > 80) _zd.setLength(80);
+        camera.position.copy(_camLookAt).add(_zd);
+      }
     }
-    if (!r2now && _r2WasHeld) {
-      _layerModeActive = false;
-      hideLayerOverlay();
-      if (_gpCursorMesh) _gpCursorMesh.visible = _gpActive;
-    }
-    _r2WasHeld = r2now;
 
-    if (_layerModeActive) {
-      var lyL  = axisVal(gp, 1);
-      var lmUp = btnPressed(gp, 12);
-      var lmDn = btnPressed(gp, 13);
-      btnPressed(gp, 14); btnPressed(gp, 15); // consume to prevent cursor leaking
-      if (lmUp) changeLayer(1);
-      if (lmDn) changeLayer(-1);
-      if (lyL !== 0 && now - _stickCursorCD > 250) { _stickCursorCD = now; changeLayer(lyL < 0 ? 1 : -1); }
+    // ── View/Back (8): toggle review mode ──
+    if (btnPressed(gp, 8)) {
+      if (_reviewMode) _exitReview(); else _enterReview();
+    }
+
+    // ── Review mode: LB/RB + D-pad navigate moves; B/Y exit ──
+    if (_reviewMode) {
+      var rv_back    = (btnPressed(gp,4)|0) | (btnPressed(gp,12)|0) | (btnPressed(gp,14)|0);
+      var rv_forward = (btnPressed(gp,5)|0) | (btnPressed(gp,13)|0) | (btnPressed(gp,15)|0);
+      if (rv_back)    { var ep=document.getElementById('prevMove'); if(ep)ep.click(); }
+      if (rv_forward) { var en=document.getElementById('nextMove'); if(en)en.click(); }
+      if (btnPressed(gp,1) || btnPressed(gp,3)) _exitReview(); // B or Y
+      btnPressed(gp,0); btnPressed(gp,2);                      // consume A/X
+      if (btnPressed(gp,9)) { var rpm=document.getElementById('pauseMenu'); if(rpm){rpm.style.display='flex';if(typeof initMenuFocus==='function')initMenuFocus(rpm);} }
+      _placeCursorMesh();
       return;
     }
 
-    // ── L1 (4) / R1 (5): move preview ──
-    var l1p = btnPressed(gp, 4);
-    var r1p = btnPressed(gp, 5);
+    // ── LB (4): layer down   RB (5): layer up ──
+    if (btnPressed(gp, 4)) changeLayer(-1);
+    if (btnPressed(gp, 5)) changeLayer(1);
 
-    if (!_inPreview && (l1p || r1p)) { enterPreview(); return; }
-    if (_inPreview) {
-      if (l1p) prevMove();
-      if (r1p) nextMove();
-      if (btnPressed(gp, 1)) exitPreview();    // B / Circle — exit preview
-      if (btnPressed(gp, 3)) goToLatestMove(); // Y / Triangle — jump to live
-      // Consume remaining buttons to prevent state leaking on exit
-      btnPressed(gp, 0); btnPressed(gp, 2);
-      btnPressed(gp, 12); btnPressed(gp, 13); btnPressed(gp, 14); btnPressed(gp, 15);
-      return;
-    }
-
-    // ── D-pad: cursor movement (1 square per press) ──
+    // ── D-pad: cursor ──
     if (btnPressed(gp, 12)) updateGamepadCursor(_gpCursorX, _gpCursorY - 1);
     if (btnPressed(gp, 13)) updateGamepadCursor(_gpCursorX, _gpCursorY + 1);
     if (btnPressed(gp, 14)) updateGamepadCursor(_gpCursorX - 1, _gpCursorY);
     if (btnPressed(gp, 15)) updateGamepadCursor(_gpCursorX + 1, _gpCursorY);
 
-    // ── Left stick: cursor with repeat cooldown ──
+    // ── Left stick: cursor (continuous, 160ms repeat) ──
     var lx = axisVal(gp, 0), ly = axisVal(gp, 1);
     if ((lx !== 0 || ly !== 0) && now - _stickCursorCD > 160) {
       _stickCursorCD = now;
@@ -1775,10 +1758,9 @@ function _fmtKey(k) {
       );
     }
 
-    // ── Right stick: rotate board ──
+    // ── Right stick: rotate / tilt board ──
     var rx = axisVal(gp, 2), ry = axisVal(gp, 3);
-    if ((rx !== 0 || ry !== 0) && now - _stickBoardCD > 16) {
-      _stickBoardCD = now;
+    if (rx !== 0 || ry !== 0) {
       var sens = INPUT_CFG.gamepadSens * 0.002;
       pivot.rotation.y += rx * sens;
       pivot.rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, pivot.rotation.x + ry * sens));
@@ -1786,26 +1768,30 @@ function _fmtKey(k) {
     }
 
     // ── Face buttons ──
-    if (btnPressed(gp, 0)) handleGamepadSelect(_gpCursorX, _gpCursorY); // South: confirm/select
-    if (btnPressed(gp, 1)) handleGamepadCancel();                        // East:  cancel/deselect
-    if (btnPressed(gp, 2)) { var rb=document.getElementById('rotateBoardBtn'); if(rb&&rb.style.display!=='none')rb.click(); } // West: flip board
-    if (btnPressed(gp, 3)) { var ml=document.getElementById('movePanel'); if(ml)ml.style.display=ml.style.display==='none'?'block':'none'; } // North: move list
-
-    // ── L2 (6): press to cycle camera mode ──
-    var l2now = btnHeld(gp, 6);
-    if (l2now && !_l2WasHeld) { var vt=document.getElementById('viewToggle'); if(vt)vt.click(); }
-    _l2WasHeld = l2now;
-
-    // ── Select (8): hold for all-layers ghost view ──
-    var selHeld = btnHeld(gp, 8);
-    if (selHeld !== _gpAllLayers) {
-      _gpAllLayers = selHeld;
-      typeof applyAllLayersView === 'function' && applyAllLayersView(selHeld);
+    if (btnPressed(gp, 0)) handleGamepadSelect(_gpCursorX, _gpCursorY); // A: select/confirm
+    if (btnPressed(gp, 1)) {
+      if (selectedPawn) { handleGamepadCancel(); }
+      else if (gameStarted) {                                            // B: cancel or open pause
+        var bpm=document.getElementById('pauseMenu');
+        if(bpm){bpm.style.display='flex';if(typeof initMenuFocus==='function')initMenuFocus(bpm);SND.ui&&SND.ui();}
+      }
     }
+    if (btnPressed(gp, 2)) { var fbrb=document.getElementById('rotateBoardBtn'); if(fbrb&&fbrb.style.display!=='none')fbrb.click(); } // X: flip 180°
+    if (btnPressed(gp, 3)) { var ml=document.getElementById('movePanel'); if(ml)ml.style.display=ml.style.display==='none'?'block':'none'; } // Y: move list
 
-    // ── Start (9): pause ──
+    // ── L3 (10): cycle camera mode ──
+    if (btnPressed(gp, 10)) { var vt=document.getElementById('viewToggle'); if(vt)vt.click(); }
+
+    // ── R3 (11): all-layers ghost view (hold) ──
+    var r3now = btnHeld(gp, 11);
+    if (r3now !== _r3WasHeld) { _r3WasHeld = r3now; typeof applyAllLayersView === 'function' && applyAllLayersView(r3now); }
+
+    // ── Start (9): pause menu ──
     if (btnPressed(gp, 9)) {
-      if (gameStarted || reviewing) document.getElementById('pauseMenu').style.display = 'flex';
+      if (gameStarted || reviewing) {
+        var spm=document.getElementById('pauseMenu');
+        if(spm){spm.style.display='flex';if(typeof initMenuFocus==='function')initMenuFocus(spm);SND.ui&&SND.ui();}
+      }
     }
 
     _placeCursorMesh();

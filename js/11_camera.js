@@ -278,8 +278,9 @@ function animOpponentLayerSequence(startZ, botDestZ, returnZ) {
 }
 
 let _animLastT = performance.now();
+let _animId    = null;
 function anim(){
-  requestAnimationFrame(anim);
+  _animId = requestAnimationFrame(anim);
   const now = performance.now();
   const dt  = Math.min(now - _animLastT, 100); // cap at 100ms (tab hidden etc)
   _animLastT = now;
@@ -346,14 +347,26 @@ syncMsgUI();
 ====================================================== */
 renderer.domElement.addEventListener('webglcontextlost', e => {
   e.preventDefault();
-  cancelAnimationFrame(BG.aid);
-  BG.aid = null;
+  cancelAnimationFrame(_animId); _animId = null;  // stop loop cleanly
+  cancelAnimationFrame(BG.aid); BG.aid = null;
 }, false);
 renderer.domElement.addEventListener('webglcontextrestored', () => {
-  // Restart render loop AND background animation
-  anim();
+  if (_animId === null) anim();     // restart only once
   if (BG.type) BG.apply(BG.type);
 }, false);
+
+// ── Xbox / Edge: page hidden (Guide button) then visible again can blank the canvas.
+//    Force a render on refocus so the frame is not left black.
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) {
+    if (_animId === null) anim();
+    else renderer.render(scene, camera);
+  }
+});
+window.addEventListener('focus', () => {
+  if (_animId === null) anim();
+  else renderer.render(scene, camera);
+});
 
 /* ======================================================
    ── LANDSCAPE MODE — orientation handler
