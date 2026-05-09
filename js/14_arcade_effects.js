@@ -249,6 +249,13 @@ function fireLaser(targets, beam) {
     const i=pieces.indexOf(piece); if(i!==-1) pieces.splice(i,1);
   });
 
+  // Screen flash — brief red vignette
+  (function(){
+    var fl=document.createElement('div');
+    fl.style.cssText='position:fixed;inset:0;background:radial-gradient(ellipse at center,rgba(255,20,0,0.0) 40%,rgba(255,20,0,0.55) 100%);pointer-events:none;z-index:9999;opacity:1;transition:opacity 0.7s ease-out';
+    document.body.appendChild(fl);
+    requestAnimationFrame(function(){ fl.style.opacity='0'; setTimeout(function(){ if(fl.parentNode) fl.parentNode.removeChild(fl); },800); });
+  })();
   // Beam flash — two-layer glow: bright core + soft outer bloom
   if(beam){
     const coreGeo = new THREE.BoxGeometry(beam.bx*0.6, beam.by, beam.bz*0.6);

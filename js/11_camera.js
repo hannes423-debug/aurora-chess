@@ -336,6 +336,31 @@ function anim(){
       });
     });
   })();
+  // ── Animate arcade orbs: float/bob, tesseract 4D rotation, laser cross spin
+  if (typeof activeOrbs !== 'undefined' && activeOrbs.length) {
+    var _ot = performance.now() * 0.001;
+    var _orbAngle = _ot * 0.65;
+    activeOrbs.forEach(function(orb) {
+      if (!orb.mesh || !orb.mesh.parent) return;
+      var baseY = layers[orb.z].position.y + (orb.type === 'power' ? 0.5 : 0.45);
+      orb.mesh.position.y = baseY + Math.sin(_ot * 1.8 + orb.t) * 0.07;
+      if (orb.type === 'gravity_tesseract' && orb._verts4d) {
+        var _tpts = _tesseractProject(orb._verts4d, orb._edges4d, _orbAngle + orb.t);
+        var _ln0 = orb.mesh.children[0], _ln1 = orb.mesh.children[1];
+        if (_ln0 && _ln0.geometry) { _ln0.geometry.attributes.position.set(_tpts); _ln0.geometry.attributes.position.needsUpdate = true; }
+        if (_ln1 && _ln1.geometry) { _ln1.geometry.attributes.position.set(_tpts); _ln1.geometry.attributes.position.needsUpdate = true; }
+      } else if (orb.type === 'laser_instant') {
+        orb.mesh.rotation.y = _ot * 2.2 + orb.t;
+      }
+    });
+  }
+  // ── Pulse laser warning squares
+  if (typeof laserWarning !== 'undefined' && laserWarning && laserWarning.warningMeshes) {
+    var _lpt = performance.now() * 0.006;
+    laserWarning.warningMeshes.forEach(function(group) {
+      if (group._warningPlane) group._warningPlane.material.opacity = 0.25 + Math.abs(Math.sin(_lpt)) * 0.5;
+    });
+  }
   renderer.render(scene,camera);
 }
 
