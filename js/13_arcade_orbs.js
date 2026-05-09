@@ -241,7 +241,10 @@ function applyOrbEffect(piece, orbType, orbX, orbY, orbZ) {
     const ox = orbX ?? piece.userData.x;
     const oy = orbY ?? piece.userData.y;
     const oz = orbZ ?? piece.userData.z;
-    evGravityTesseract(ox, oy, oz, piece); return;
+    // Delay so the capturing piece's move animation finishes before the gravity slide starts.
+    // animateSlide(speed=0.05) takes ~330ms; 400ms clears it with margin.
+    setTimeout(()=>evGravityTesseract(ox, oy, oz, piece), 400);
+    return;
   }
   if (orbType==='laser_instant') {
     if (arcadeSettings.laserMode !== 'off') evLaserInstant(); return;

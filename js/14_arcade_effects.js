@@ -1,7 +1,7 @@
 /* ================================================================
    GRAVITY TESSERACT EVENT
 ================================================================ */
-function evGravityTesseract(ox, oy, oz, excludePiece) {
+function evGravityTesseract(ox, oy, oz, _capturingPiece) {
   const DIRS=[
     {dx:1,dy:0,dz:0,lab:'+X →'},{dx:-1,dy:0,dz:0,lab:'-X ←'},
     {dx:0,dy:1,dz:0,lab:'+Y ↗'},{dx:0,dy:-1,dz:0,lab:'-Y ↙'},
