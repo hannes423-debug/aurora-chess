@@ -2058,3 +2058,87 @@ tickLayerHighlight = function(dt) {
   } catch(e) {}
 })();
 
+/* ================================================================
+   KEYBOARD MENU NAVIGATION
+   Standalone — uses getComputedStyle so CSS-hidden elements are
+   never mistaken for visible menus (unlike el.style.display checks).
+================================================================ */
+(function() {
+  var _kbFocusEl    = null;
+  var _kbLastMenuId = '';
+  var _kbNavLast    = 0;
+
+  var MENU_IDS = [
+    'mainMenu', 'playStep1', 'playStep2', 'playStep3',
+    'pauseMenu', 'endMenu', 'modeMenu', 'botMenu',
+    'gameModesMenu', 'arcadeMenu', 'ctfMenu',
+    'settingsOverlay', 'tutorialOverlay', 'puzzleSelectOverlay', 'helpOverlay',
+    'promotionPopup'
+  ];
+
+  function getActiveMenu() {
+    for (var i = 0; i < MENU_IDS.length; i++) {
+      var el = document.getElementById(MENU_IDS[i]);
+      if (el && window.getComputedStyle(el).display !== 'none') return { el: el, id: MENU_IDS[i] };
+    }
+    return null;
+  }
+
+  function getItems(container) {
+    return Array.from(container.querySelectorAll('button, [role="button"]')).filter(function(b) {
+      return !b.disabled && b.offsetHeight > 0 && window.getComputedStyle(b).display !== 'none';
+    });
+  }
+
+  function setFocus(el) {
+    if (_kbFocusEl) _kbFocusEl.classList.remove('gp-selected');
+    _kbFocusEl = el;
+    if (el) { el.classList.add('gp-selected'); el.scrollIntoView && el.scrollIntoView({ block: 'nearest' }); }
+  }
+
+  function initFocus(container) {
+    var items = getItems(container);
+    setFocus(items.length ? items[0] : null);
+  }
+
+  document.addEventListener('keydown', function(e) {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+    var k = e.key;
+    if (k !== 'ArrowUp' && k !== 'ArrowDown' && k !== 'ArrowLeft' && k !== 'ArrowRight' && k !== 'Enter' && k !== 'Escape') return;
+    var menu = getActiveMenu();
+    if (!menu) {
+      if (_kbFocusEl) { _kbFocusEl.classList.remove('gp-selected'); _kbFocusEl = null; }
+      _kbLastMenuId = '';
+      return;
+    }
+    e.preventDefault();
+    if (menu.id !== _kbLastMenuId) { _kbLastMenuId = menu.id; initFocus(menu.el); }
+    if (_kbFocusEl && (!menu.el.contains(_kbFocusEl) || _kbFocusEl.offsetHeight === 0)) initFocus(menu.el);
+    if (!_kbFocusEl) initFocus(menu.el);
+    var items = getItems(menu.el);
+    if (!items.length) return;
+    var idx = items.indexOf(_kbFocusEl);
+    if (idx === -1) { idx = 0; setFocus(items[0]); }
+    var now = performance.now();
+    if (k === 'ArrowUp' || k === 'ArrowLeft') {
+      if (now - _kbNavLast < 150) return;
+      _kbNavLast = now;
+      setFocus(items[(idx - 1 + items.length) % items.length]);
+      typeof SND !== 'undefined' && SND.ui && SND.ui();
+    } else if (k === 'ArrowDown' || k === 'ArrowRight') {
+      if (now - _kbNavLast < 150) return;
+      _kbNavLast = now;
+      setFocus(items[(idx + 1) % items.length]);
+      typeof SND !== 'undefined' && SND.ui && SND.ui();
+    } else if (k === 'Enter') {
+      if (_kbFocusEl) _kbFocusEl.click();
+    } else if (k === 'Escape') {
+      var back = menu.el.querySelector(
+        '#helpBackBtn, #closeSettings, #ps1Back, #ps2Back, #ps3Back, [id$="BackBtn"], [id$="CloseBtn"]'
+      );
+      if (back) back.click();
+      else if (menu.id === 'pauseMenu') menu.el.style.display = 'none';
+    }
+  });
+})();
+

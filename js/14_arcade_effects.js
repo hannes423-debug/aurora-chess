@@ -1,97 +1,17 @@
 /* ================================================================
-   BOARD MORPH EVENTS
-================================================================ */
-function triggerBoardMorph() {
-  morphLayerCollapse();
-}
-
-function morphLayerCollapse() {
-  if (collapsedLayer!==null) return;
-  const z = Math.floor(Math.random()*LAYERS);
-  // Displace pieces on that layer to nearest valid layer
-  [...pieces].forEach(p => {
-    if (p.userData.z!==z) return;
-    const nz = z>0 ? z-1 : 1;
-    if (!occ(p.userData.x,p.userData.y,nz)) {
-      const from={x:p.userData.x,y:p.userData.y,z};
-      delete boardMap[key(from.x,from.y,z)];
-      p.userData.z=nz; boardMap[key(from.x,from.y,nz)]=p;
-      animateSlide(p,from,{x:from.x,y:from.y,z:nz},0.04);
-      const orbHere=activeOrbs.find(o=>o.x===from.x&&o.y===from.y&&o.z===nz);
-      if(orbHere){const rem=removeOrbAt(from.x,from.y,nz);if(rem)setTimeout(()=>applyOrbEffect(p,rem.type,from.x,from.y,nz),300);}
-    }
-  });
-  layers[z].visible = false;
-  collapsedLayer = { z, turnsLeft: 3+Math.floor(Math.random()*4) };
-  arcadeAnnounce('⚡ LAYER '+(z+1)+' COLLAPSED!', 0xff6600);
-  updateArcadeBar();
-}
-function tickCollapsedLayer() {
-  if (!collapsedLayer) return;
-  if (--collapsedLayer.turnsLeft <= 0) {
-    layers[collapsedLayer.z].visible = true;
-    arcadeAnnounce('LAYER '+(collapsedLayer.z+1)+' RESTORED', 0x666666);
-    collapsedLayer = null;
-  }
-}
-
-function morphBoardSplit() {
-  if (boardSplit) return;
-  const pos = 2 + Math.floor(Math.random()*4);
-  const meshes = [];
-  for (let z=0;z<LAYERS;z++) {
-    const m = new THREE.Mesh(
-      new THREE.PlaneGeometry(8*SPACING, 0.08),
-      new THREE.MeshBasicMaterial({color:0xff0066, transparent:true, opacity:0.5})
-    );
-    m.rotation.x = -Math.PI/2;
-    m.position.set(0, layers[z].position.y+0.02, -half+pos*SPACING);
-    pivot.add(m); meshes.push(m);
-  }
-  boardSplit = { pos, turnsLeft:4+Math.floor(Math.random()*4), meshes };
-  arcadeAnnounce('⚡ BOARD SPLIT at rank '+(pos+1)+'!', 0xff0066);
-  updateArcadeBar();
-}
-function tickBoardSplit() {
-  if (!boardSplit) return;
-  if (--boardSplit.turnsLeft <= 0) {
-    boardSplit.meshes.forEach(m=>pivot.remove(m));
-    boardSplit = null;
-    arcadeAnnounce('Board reconnected', 0x444444);
-  }
-}
-
-function morphLayerRotation() {
-  const z = Math.floor(Math.random()*LAYERS);
-  arcadeAnnounce('🔄 LAYER '+(z+1)+' ROTATING 90°!', 0x00ffff);
-  const onLayer = pieces.filter(p=>p.userData.z===z);
-  // Remove from boardMap first
-  onLayer.forEach(p=>delete boardMap[key(p.userData.x,p.userData.y,z)]);
-  // 90° clockwise: (x,y) → (7-y, x)
-  onLayer.forEach(p=>{
-    const nx=7-p.userData.y, ny=p.userData.x;
-    if (!boardMap[key(nx,ny,z)]) {
-      p.userData.x=nx; p.userData.y=ny;
-      p.position.set(-half+(nx+0.5)*SPACING, 0, -half+(ny+0.5)*SPACING);
-    }
-    boardMap[key(p.userData.x,p.userData.y,z)]=p;
-  });
-  update();
-}
-
-/* ================================================================
    GRAVITY TESSERACT EVENT
 ================================================================ */
-function evGravityTesseract(ox, oy, oz) {
+function evGravityTesseract(ox, oy, oz, excludePiece) {
   const DIRS=[
     {dx:1,dy:0,dz:0,lab:'+X →'},{dx:-1,dy:0,dz:0,lab:'-X ←'},
     {dx:0,dy:1,dz:0,lab:'+Y ↗'},{dx:0,dy:-1,dz:0,lab:'-Y ↙'},
     {dx:0,dy:0,dz:1,lab:'+Z ↑'},{dx:0,dy:0,dz:-1,lab:'-Z ↓'}
   ];
   const d=DIRS[Math.floor(Math.random()*DIRS.length)];
-  const affected=pieces.filter(p=>Math.max(
-    Math.abs(p.userData.x-ox),Math.abs(p.userData.y-oy),Math.abs(p.userData.z-oz)
-  )<=1);
+  // Pull the capturing piece plus any piece within 1 square of it
+  const affected=pieces.filter(p=>
+    Math.max(Math.abs(p.userData.x-ox),Math.abs(p.userData.y-oy),Math.abs(p.userData.z-oz))<=1
+  );
   affected.sort((a,b)=>{
     if(d.dx>0) return b.userData.x-a.userData.x;
     if(d.dx<0) return a.userData.x-b.userData.x;
@@ -100,6 +20,8 @@ function evGravityTesseract(ox, oy, oz) {
     if(d.dz>0) return b.userData.z-a.userData.z;
     return a.userData.z-b.userData.z;
   });
+  const _ptl={knight:'N',king:'K',queen:'Q',rook:'R',bishop:'B'};
+  const moved=[];
   affected.forEach(p=>{
     const from={x:p.userData.x,y:p.userData.y,z:p.userData.z};
     delete boardMap[key(from.x,from.y,from.z)];
@@ -115,55 +37,32 @@ function evGravityTesseract(ox, oy, oz) {
     boardMap[key(nx,ny,nz)]=p;
     if(nx!==from.x||ny!==from.y||nz!==from.z) {
       animateSlide(p,from,{x:nx,y:ny,z:nz},0.05);
+      moved.push({p,from,to:{x:nx,y:ny,z:nz}});
       const orbHere=activeOrbs.find(o=>o.x===nx&&o.y===ny&&o.z===nz);
       if(orbHere){const rem=removeOrbAt(nx,ny,nz);if(rem)setTimeout(()=>applyOrbEffect(p,rem.type,nx,ny,nz),300);}
     }
   });
   arcadeAnnounce('🌌 Gravity Tesseract — '+d.lab, 0x7B2FBE);
+  if(moved.length){
+    arcadeLogEntry('🌌 Gravity '+d.lab+':', '#9966cc');
+    moved.forEach(({p,from,to})=>{
+      arcadeLogEntry('  '+(_ptl[p.userData.type]||'P')+squareName(from.x,from.y,from.z)+'→'+squareName(to.x,to.y,to.z), '#bb88ff');
+    });
+  } else {
+    arcadeLogEntry('🌌 Gravity '+d.lab+' — no pieces moved', '#7B2FBE');
+  }
   update();
-}
-
-function evGravityTesseractRandom() {
-  const validOrigins=[];
-  for(let x=0;x<8;x++) for(let y=0;y<8;y++) for(let z=0;z<LAYERS;z++)
-    if(!isHole(x,y,z)) validOrigins.push({x,y,z});
-  if(!validOrigins.length) return;
-  const o=validOrigins[Math.floor(Math.random()*validOrigins.length)];
-  evGravityTesseract(o.x,o.y,o.z);
 }
 
 /* ================================================================
    RANDOM GLOBAL EVENTS
 ================================================================ */
 function triggerRandomEvent() {
-  const pool = ['meteor','gravity_tesseract','orb_rain'];
+  const pool = ['orb_rain'];
   if (arcadeSettings.laserMode !== 'off') pool.push('laser_warned');
   const ev = pool[Math.floor(Math.random()*pool.length)];
-  if (ev==='meteor')             evMeteorStrike();
-  if (ev==='gravity_tesseract')  evGravityTesseractRandom();
-  if (ev==='laser_warned')       evLaserWarned();
-  if (ev==='orb_rain')           evOrbRain();
-}
-
-function evMeteorStrike() {
-  const n = 2+Math.floor(Math.random()*3);
-  for (let i=0;i<n;i++) {
-    const sq=randomEmptySquare(); if(!sq) continue;
-    const mesh=new THREE.Mesh(
-      new THREE.SphereGeometry(0.28,7,7),
-      new THREE.MeshBasicMaterial({color:0xff3300,transparent:true,opacity:0.75})
-    );
-    mesh.position.set(-half+(sq.x+0.5)*SPACING, layers[sq.z].position.y+0.3, -half+(sq.y+0.5)*SPACING);
-    pivot.add(mesh);
-    meteors.push({...sq, mesh, turnsLeft:3+Math.floor(Math.random()*3)});
-  }
-  arcadeAnnounce('☄ METEOR STRIKE! '+n+' squares blocked!', 0xff3300);
-  updateArcadeBar();
-}
-function tickMeteors() {
-  for (let i=meteors.length-1;i>=0;i--) {
-    if (--meteors[i].turnsLeft<=0) { pivot.remove(meteors[i].mesh); meteors.splice(i,1); }
-  }
+  if (ev==='laser_warned') evLaserWarned();
+  if (ev==='orb_rain')     evOrbRain();
 }
 
 function evTeleportStorm() {
@@ -313,34 +212,26 @@ function clearAllHoles() {
 }
 
 function fireLaser(targets, beam) {
-  if(!targets.length){ arcadeAnnounce('💥 Laser fired — missed everything',0xff3300); return; }
+  if(!targets.length){ arcadeAnnounce('💥 Laser fired — missed everything',0xff3300); arcadeLogEntry('💥 Laser fired — no targets', '#ff5500'); return; }
 
   // Safety net: never destroy kings, never hole their squares
   targets = targets.filter(sq => {
     const p = occ(sq.x, sq.y, sq.z);
     return !(p && p.userData.type === 'king');
   });
-  if(!targets.length){ arcadeAnnounce('💥 Laser fired — kings immune!',0xff9900); return; }
+  if(!targets.length){ arcadeAnnounce('💥 Laser fired — kings immune!',0xff9900); arcadeLogEntry('💥 Laser fired — kings immune', '#ffaa00'); return; }
 
-  const toDestroy=[],toDisplace=[];
+  const toDestroy=[];
   targets.forEach(sq=>{
     const p=occ(sq.x,sq.y,sq.z); if(!p) return;
-    if(p.userData.type==='knight') toDisplace.push({piece:p,sq});
-    else toDestroy.push({piece:p,sq});
+    toDestroy.push({piece:p,sq});
   });
 
-  toDisplace.forEach(({piece,sq})=>{
-    const dirs6=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
-    for(const[dx,dy,dz] of dirs6){
-      const nx=sq.x+dx,ny=sq.y+dy,nz=sq.z+dz;
-      if(nx<0||nx>7||ny<0||ny>7||nz<0||nz>=LAYERS) continue;
-      if(isHole(nx,ny,nz)||occ(nx,ny,nz)) continue;
-      delete boardMap[key(sq.x,sq.y,sq.z)];
-      piece.userData.x=nx;piece.userData.y=ny;piece.userData.z=nz;
-      boardMap[key(nx,ny,nz)]=piece;
-      animateSlide(piece,{x:sq.x,y:sq.y,z:sq.z},{x:nx,y:ny,z:nz},0.1); return;
-    }
-    toDestroy.push({piece,sq});
+  // Log before destroying
+  const _ptl={knight:'N',king:'K',queen:'Q',rook:'R',bishop:'B'};
+  arcadeLogEntry('💥 LASER — '+targets.length+' square(s) holed'+(toDestroy.length?' · '+toDestroy.length+' destroyed':''), '#ff3300');
+  toDestroy.forEach(({piece:p})=>{
+    arcadeLogEntry('  '+(_ptl[p.userData.type]||'P')+squareName(p.userData.x,p.userData.y,p.userData.z)+' destroyed', '#ff4444');
   });
 
   targets.forEach(sq=>createHoleAt(sq.x,sq.y,sq.z));
@@ -427,13 +318,14 @@ function evLaserWarned() {
   });
   laserWarning={targets,beam,turnsLeft:4,warningMeshes};
   arcadeAnnounce('⚠ Laser charging — fires in 2 turns',0xff6600);
+  arcadeLogEntry('⚠ Laser charging — fires in 2 turns', '#ff6600');
   updateArcadeBar();
 }
 
 function tickLaserWarning() {
   if(!laserWarning) return;
   laserWarning.turnsLeft--;
-  if(laserWarning.turnsLeft===2) arcadeAnnounce('⚠ Laser fires next turn',0xff4400);
+  if(laserWarning.turnsLeft===2){ arcadeAnnounce('⚠ Laser fires next turn',0xff4400); arcadeLogEntry('⚠ Laser fires next turn!', '#ff4400'); }
   if(laserWarning.turnsLeft<=0){
     laserWarning.warningMeshes.forEach(m=>{ if(m.parent) m.parent.remove(m); });
     const {targets,beam}=laserWarning;

@@ -207,7 +207,7 @@ const PUZZLES = [
 
   // ──────────────── QUEEN CHECKMATES (8-9) ────────────────
   {
-    id:8, name:"Queen Sweep", difficulty:"intermediate", category:"queen",
+    id:8, name:"Queen Sweep", difficulty:"beginner", category:"queen",
     objective:"White to move — Checkmate in 1. The queen captures AND seals the last exit!",
     hint:"Capture the blocking pawn — the queen will cover two squares at once",
     solution:[{from:{x:4,y:7,z:0},to:{x:5,y:7,z:0}}],
@@ -226,7 +226,7 @@ const PUZZLES = [
     ]
   },
   {
-    id:9, name:"Queen Diagonal", difficulty:"intermediate", category:"queen",
+    id:9, name:"Queen Diagonal", difficulty:"beginner", category:"queen",
     // Queen (3,1,0)→(1,1,0) along y=1 rank; from (1,1,0) diagonal (-1,-1,0) checks king at (0,0,0).
     // Rook at (1,7,0) guards queen via x=1 file — king can't capture.
     // All 7 escape squares from (0,0,0) are blocked by own pawns or covered.
@@ -349,7 +349,7 @@ const PUZZLES = [
 
   // Discovered check through Z-axis — move knight off z-column to reveal rook's vertical attack
   {
-    id:15, name:"3D Discovery", difficulty:"intermediate", category:"layer",
+    id:15, name:"3D Discovery", difficulty:"beginner", category:"layer",
     objective:"White to move — Check! Move the knight to uncover a hidden attack through the layers!",
     hint:"The knight is blocking the rook's Z-axis line. Any knight move off that column reveals the attack",
     solution:[{from:{x:4,y:3,z:2},to:{x:6,y:4,z:2}}],
@@ -365,7 +365,7 @@ const PUZZLES = [
 
   // Bishop uses the unique 3D diagonal (±1,±1,±1) that only bishops have
   {
-    id:16, name:"Bishop's 3D Diagonal", difficulty:"intermediate", category:"bishop",
+    id:16, name:"Bishop's 3D Diagonal", difficulty:"beginner", category:"bishop",
     objective:"White to move — Check! The bishop has a secret weapon: the true 3D diagonal!",
     hint:"Capture the pawn to open the 3D diagonal line (+1,+1,+1) — it cuts through all three dimensions at once",
     solution:[{from:{x:2,y:2,z:0},to:{x:3,y:3,z:1}}],
@@ -382,7 +382,7 @@ const PUZZLES = [
   // Queen delivers checkmate via Z-axis from below — king trapped by own rooks and pawns on top layer
   // Inspired by the Epaulette Mate: king flanked by own rooks, unable to escape
   {
-    id:17, name:"Epaulette Mate 3D", difficulty:"intermediate", category:"queen",
+    id:17, name:"Epaulette Mate 3D", difficulty:"beginner", category:"queen",
     objective:"White to move — Checkmate! The king is flanked by its own rooks — strike from below!",
     hint:"Slide the queen up the file to layer 3. She'll check straight up through the Z-axis — the rook below guards her",
     solution:[{from:{x:4,y:3,z:2},to:{x:4,y:7,z:2}}],
@@ -403,7 +403,7 @@ const PUZZLES = [
   // Knight delivers checkmate from layer 2 via cross-layer L-shape (+2,0,+1) to king on layer 3
   // King is smothered in corner by own rook and pawns — a 3D twist on the classic smothered mate
   {
-    id:18, name:"Cross-Layer Knight Mate", difficulty:"intermediate", category:"smothered",
+    id:18, name:"Cross-Layer Knight Mate", difficulty:"beginner", category:"smothered",
     objective:"White to move — Checkmate! The knight can reach through layers — find the cross-dimensional L-shape!",
     hint:"The knight jumps (+2,+1,0) to a square on layer 2 from which it attacks the king on layer 3 via (+2,0,+1)",
     solution:[{from:{x:3,y:6,z:2},to:{x:5,y:7,z:2}}],
@@ -422,7 +422,7 @@ const PUZZLES = [
   // Knight forks king on layer 2 and queen on layer 0 using cross-layer L-shapes
   // Exploits the knight's unique ability to attack across two layers with (+1,0,-2)
   {
-    id:19, name:"3D Knight Fork", difficulty:"intermediate", category:"fork",
+    id:19, name:"3D Knight Fork", difficulty:"beginner", category:"fork",
     objective:"White to move — Fork! One knight leap threatens both the king AND the queen across layers!",
     hint:"Jump to the square that attacks the king via (-1,+2,0) and the queen below via (+1,0,-2)",
     solution:[{from:{x:2,y:4,z:2},to:{x:4,y:3,z:2}}],
@@ -438,7 +438,7 @@ const PUZZLES = [
 
   // Rook captures bishop to reveal Z-axis pin/check — vertical pin through layers
   {
-    id:20, name:"Vertical Pin", difficulty:"intermediate", category:"rook",
+    id:20, name:"Vertical Pin", difficulty:"beginner", category:"rook",
     objective:"White to move — Check! Punch through the bishop to pin down the Z-axis!",
     hint:"The rook can capture the bishop and open a vertical line straight to the king above",
     solution:[{from:{x:3,y:3,z:0},to:{x:3,y:3,z:1}}],
@@ -455,7 +455,7 @@ const PUZZLES = [
   // Moving bishop off Z-column reveals rook discovered check AND bishop delivers its own check
   // Double check — king MUST move, inspired by the Windmill/Discovery pattern
   {
-    id:21, name:"Double Discovery", difficulty:"advanced", category:"layer",
+    id:21, name:"Double Discovery", difficulty:"beginner", category:"layer",
     objective:"White to move — Double check! One move, two check lines through different dimensions!",
     hint:"Move the bishop to deliver check on layer 4 — it also uncovers the rook's Z-axis attack from below",
     solution:[{from:{x:4,y:4,z:2},to:{x:5,y:5,z:3}}],
@@ -473,7 +473,7 @@ const PUZZLES = [
   // King is trapped on layer 4 corner by own pieces, queen mates from the layer below
   // Inspired by Philidor's suffocation theme adapted for 3D geometry
   {
-    id:22, name:"Queen's Plus-Diagonal", difficulty:"advanced", category:"queen",
+    id:22, name:"Queen's Plus-Diagonal", difficulty:"beginner", category:"queen",
     objective:"White to move — Checkmate! The queen has a cross-layer diagonal that even bishops can't use!",
     hint:"Slide the queen up the file to a square where the plus-diagonal (0,+1,+1) strikes the king diagonally through layers",
     solution:[{from:{x:0,y:2,z:2},to:{x:0,y:6,z:2}}],
@@ -488,6 +488,98 @@ const PUZZLES = [
       {type:"pawn",  color:"black", x:0,y:7,z:2, moved:true}
     ]
   },
+
+   // ────────────────── NEW PUZZLES (23-27) ──────────────────
+  {
+    id:23, name:"Z‑Axis Interception", difficulty:"beginner", category:"escape",
+    objective:"White to move — Escape check by blocking the queen’s vertical line!",
+    hint:"Slide your rook one layer up – it will cut the queen’s attack through the Z‑column.",
+    solution:[{from:{x:4,y:4,z:1},to:{x:4,y:4,z:2}}],
+    turn:"white", goal:"escape", movesAllowed:1,
+    pieces:[
+      {type:"king",  color:"white", x:4,y:4,z:0, moved:true},
+      {type:"rook",  color:"white", x:4,y:4,z:1, moved:true},
+      {type:"queen", color:"black", x:4,y:4,z:3, moved:true},
+      {type:"king",  color:"black", x:0,y:0,z:3, moved:true}
+    ]
+  },
+  {
+    id:24, name:"King Slips Up", difficulty:"beginner", category:"escape",
+    objective:"White to move — Escape check. The king can step into the third dimension!",
+    hint:"The rook only sees you on this layer – move to a square it cannot reach.",
+    solution:[{from:{x:0,y:0,z:0},to:{x:0,y:0,z:1}}],
+    turn:"white", goal:"escape", movesAllowed:1,
+    pieces:[
+      {type:"king",  color:"white", x:0,y:0,z:0, moved:true},
+      {type:"rook",  color:"black", x:1,y:0,z:0, moved:true},
+      {type:"pawn",  color:"black", x:0,y:1,z:0, moved:true},
+      {type:"king",  color:"black", x:7,y:7,z:3, moved:true}
+    ]
+  },
+  {
+    id:25, name:"Queen’s Plus‑Fork", difficulty:"beginner", category:"fork",
+    objective:"White to move — Check! One queen move gives check AND threatens a rook on a different layer.",
+    hint:"Slide the queen along the plus‑diagonal (+1,0,+1) – it will attack the king straight up and the rook sideways through the layers.",
+    solution:[{from:{x:4,y:5,z:1},to:{x:3,y:5,z:2}}],
+    turn:"white", goal:"check", movesAllowed:1,
+    pieces:[
+      {type:"king",  color:"white", x:0,y:0,z:0, moved:true},
+      {type:"queen", color:"white", x:4,y:5,z:1, moved:true},
+      {type:"king",  color:"black", x:5,y:5,z:3, moved:true},
+      {type:"rook",  color:"black", x:2,y:5,z:0, moved:true}
+    ]
+  },
+  {
+    id:26, name:"Bishop’s 3D Mate", difficulty:"beginner", category:"bishop",
+    objective:"White to move — Checkmate! Unleash the bishop’s true 3D diagonal and seal every escape with pieces lurking below.",
+    hint:"The bishop can leap along (+1,+1,+1). Move it to a square that attacks the king through all three dimensions – your rooks and queen below will cover the rest.",
+    solution:[{from:{x:6,y:6,z:3},to:{x:3,y:3,z:0}}],
+    turn:"white", goal:"checkmate", movesAllowed:1,
+    pieces:[
+      {type:"king",   color:"white", x:0,y:7,z:3, moved:true},
+      {type:"rook",   color:"white", x:0,y:3,z:2, moved:true},
+      {type:"bishop", color:"white", x:6,y:6,z:3, moved:true},
+      {type:"king",   color:"black", x:0,y:0,z:3, moved:true},
+      {type:"pawn",   color:"black", x:1,y:0,z:3, moved:true},
+      {type:"pawn",   color:"black", x:0,y:1,z:3, moved:true},
+      {type:"knight",   color:"black", x:1,y:1,z:3, moved:true}
+    ]
+  },
+  {
+    id:27, name:"Pawn Discovery Check", difficulty:"beginner", category:"layer",
+    objective:"White to move — Check! Move the pawn to reveal a hidden queen attack through the layers.",
+    hint:"The pawn is blocking your queen’s plus‑diagonal (0,+1,+1). Push it forward and the line opens.",
+    solution:[{from:{x:3,y:4,z:1},to:{x:3,y:5,z:1}}],
+    turn:"white", goal:"check", movesAllowed:1,
+    pieces:[
+      {type:"king",  color:"white", x:0,y:0,z:0, moved:true},
+      {type:"queen", color:"white", x:3,y:3,z:0, moved:true},
+      {type:"pawn",  color:"white", x:3,y:4,z:1, moved:true},
+      {type:"king",  color:"black", x:3,y:6,z:3, moved:true}
+    ]
+  },
+  {
+  id: 28, name: "False 9", difficulty: "intermediate", category: "smothered",
+  objective: "Find a checkmate in one move",
+  hint: "Sometimes the most effective attacks come from below",
+  solution: [{from: {x:5, y:6, z:2}, to: {x:7, y:6, z:1}}],
+  turn: "white", goal: "checkmate", movesAllowed: 1,
+  pieces: [
+    {type:"king", color:"white", x:0, y:0, z:0, moved:true},
+    {type:"knight", color:"white", x:5, y:6, z:2, moved:true},
+    {type:"king", color:"black", x:7, y:7, z:3, moved:true},
+    {type:"queen", color:"white", x:0, y:6, z:3, moved:true},
+    {type:"queen", color:"white", x:6, y:0, z:3, moved:true},
+    {type:"rook", color:"white", x:6, y:6, z:3, moved:true},
+    {type:"rook", color:"white", x:6, y:6, z:2, moved:true},
+    {type:"rook", color:"white", x:6, y:7, z:2, moved:true},
+    {type:"rook", color:"white", x:7, y:5, z:2, moved:true},
+    {type:"bishop", color:"white", x:7, y:7, z:2, moved:true},
+    {type:"bishop", color:"white", x:6, y:7, z:3, moved:true},
+    {type:"bishop", color:"white", x:7, y:6, z:3, moved:true},
+
+  ]
+}
 ];
 
 /* ======================================================
@@ -692,7 +784,7 @@ const TUTS = [
   {
     section:'arcade',
     title: "Arcade Settings",
-    text:  "Before starting Arcade Mode you can toggle orb types on/off, set spawn rate (Low / Medium / High), and enable board morphing and timer effects. Experiment to find your preferred chaos level!",
+    text:  "Before starting Arcade Mode you can toggle orb types on/off, set spawn rate (Low / Medium / High), enable random events, and configure the laser and regen systems. Experiment to find your preferred chaos level!",
     demo: null, puzzle: null, highlight: null
   },
 

@@ -2028,64 +2028,6 @@ updateArcadeBar = function() {
   if (!txt.includes('W:')) bar.textContent = txt + scoreStr;
 };
 
-// Add GRAVITY and MIRROR to random events
-// These fire when the chaos orb triggers or on random event turns
-function arcadeGravityEvent() {
-  arcadeAnnounce('⬇ GRAVITY SURGE — Pieces pulled to centre', 0x88aaff);
-  // Move each piece one step toward centre (x=3.5, y=3.5)
-  const moved = [];
-  for (const p of [...pieces]) {
-    const dx = p.userData.x < 3 ? 1 : p.userData.x > 4 ? -1 : 0;
-    const dy = p.userData.y < 3 ? 1 : p.userData.y > 4 ? -1 : 0;
-    const nx = p.userData.x + dx, ny = p.userData.y + dy;
-    if ((dx !== 0 || dy !== 0) && !occ(nx, ny, p.userData.z)) {
-      executeMove(p, { x: nx, y: ny, z: p.userData.z });
-      moved.push(p);
-    }
-  }
-}
-
-function arcadeMirrorEvent() {
-  arcadeAnnounce('↔ MIRROR WARP — Board flips horizontally', 0xffaa44);
-  // Swap pieces across x=3.5 axis
-  const done = new Set();
-  for (const p of [...pieces]) {
-    const key2 = p.userData.x + ',' + p.userData.y + ',' + p.userData.z;
-    if (done.has(key2)) continue;
-    const nx = 7 - p.userData.x;
-    const other = occ(nx, p.userData.y, p.userData.z);
-    // Swap positions
-    const ox = p.userData.x, oy = p.userData.y, oz = p.userData.z;
-    delete boardMap[ox + ',' + oy + ',' + oz];
-    if (other) {
-      delete boardMap[nx + ',' + oy + ',' + oz];
-      other.userData.x = ox; other.userData.y = oy;
-      boardMap[ox + ',' + oy + ',' + oz] = other;
-      other.position.set(-((8*1.2)/2) + (ox+0.5)*1.2, 0, -((8*1.2)/2) + (oy+0.5)*1.2);
-      done.add(nx + ',' + oy + ',' + oz);
-    }
-    p.userData.x = nx;
-    boardMap[nx + ',' + oy + ',' + oz] = p;
-    p.position.set(-((8*1.2)/2) + (nx+0.5)*1.2, 0, -((8*1.2)/2) + (oy+0.5)*1.2);
-    done.add(key2);
-  }
-}
-
-// Register new events with the chaos orb handler
-// We expose the extra events as globals and extend via the random event hook below.
-window._arcadeExtraEvents = [arcadeGravityEvent, arcadeMirrorEvent];
-
-// Extend the random event system
-const _origArcadeRandomEvent = typeof arcadeRandomEvent !== 'undefined' ? arcadeRandomEvent : null;
-if (_origArcadeRandomEvent) {
-  arcadeRandomEvent = function() {
-    const extras = Math.random();
-    if (extras < 0.2) arcadeGravityEvent();
-    else if (extras < 0.4) arcadeMirrorEvent();
-    else _origArcadeRandomEvent();
-  };
-}
-
 /* ── 6. TRAIL RENDER HOOK in animation loop ── */
 const _origRunAnimations = runAnimations;
 runAnimations = function() {

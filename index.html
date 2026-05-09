@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 
 <!-- ═══ SEO + PWA + Social ═══════════════════════════════════════════ -->
 <!-- Core SEO -->
@@ -826,7 +829,7 @@ body.gamepad-mode #gpHintBar { display: flex; }
     <div style="margin-bottom:8px;">
       <button id="gmArcadeBtn" style="width:100%;background:#1a2d10;border:1px solid #00ff88;color:#00ff88;padding:14px 16px;font-family:monospace;font-size:12px;cursor:pointer;letter-spacing:2px;text-align:left;transition:all 0.15s;">
         ⚡ ARCADE MODE
-        <div style="font-size:9px;color:#3a6640;letter-spacing:1px;margin-top:4px;">Power orbs · Board morphs · Chaos events</div>
+        <div style="font-size:9px;color:#3a6640;letter-spacing:1px;margin-top:4px;">Power orbs · Laser beams · Chaos events</div>
       </button>
     </div>
 
@@ -856,7 +859,6 @@ body.gamepad-mode #gpHintBar { display: flex; }
     <div id="arcadeSubPanel">
       <div class="arcadeSection">
         <div style="font-size:10px;color:#444;letter-spacing:2px;margin-bottom:8px;">EVENTS</div>
-        <div class="arcadeRow"><span>Board Morphing</span><button class="arcadeToggleBtn on" data-arc="boardMorphing">ON</button></div>
         <div class="arcadeRow"><span>Random Events</span><button class="arcadeToggleBtn on" data-arc="randomEvents">ON</button></div>
       </div>
       <div class="arcadeSection">
@@ -912,12 +914,9 @@ body.gamepad-mode #gpHintBar { display: flex; }
         </div>
       </div>
       <div style="padding:10px 0;font-size:10px;color:#333;line-height:1.9;">
-        ⚡ POWER ORB &nbsp;&nbsp;&nbsp;Enhances any piece that captures it<br>
-        ⏱ TIMER+ ORB &nbsp;&nbsp;Adds time to your clock<br>
-        ⏱ TIMER− ORB &nbsp;&nbsp;Removes time from opponent<br>
-        🌀 MORPH ORB &nbsp;&nbsp;&nbsp;Triggers a board transformation<br>
-        🌌 TESSERACT ORB &nbsp;Gravity wave displaces nearby pieces<br>
-        💥 LASER ORB &nbsp;&nbsp;&nbsp;&nbsp;Instant laser destroys board squares<br>
+        ⚡ POWER ORB &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Enhances the piece that captures it<br>
+        🌌 TESSERACT ORB &nbsp;Gravity wave pushes adjacent pieces<br>
+        💥 LASER ORB &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Instant laser destroys board squares<br>
         <span style="color:#222;font-size:9px;">COL = vertical column · ROW = single layer · WALL = all layers</span>
       </div>
     </div>
@@ -1866,7 +1865,7 @@ body.gamepad-mode #gpHintBar { display: flex; }
       <div class="playSubtitle">CHOOSE MODE</div>
     </div>
     <button class="playModeBtn" id="ps1Standard">♟ STANDARD CHESS<div class="sub">Classic 3D chess — full rules</div></button>
-    <button class="playModeBtn" id="ps1Arcade" style="border-color:#00ff88;color:#00ff88;">⚡ ARCADE<div class="sub" style="color:#2d5540;">Power orbs · Board morphs · Chaos events</div></button>
+    <button class="playModeBtn" id="ps1Arcade" style="border-color:#00ff88;color:#00ff88;">⚡ ARCADE<div class="sub" style="color:#2d5540;">Power orbs · Laser beams · Chaos events</div></button>
     <button class="playModeBtn" id="ps1CTF" style="border-color:#ff6600;color:#ff6600;">🚩 CAPTURE THE FLAG<div class="sub" style="color:#5e3300;">Steal the flag · Deliver to enemy base</div></button>
     <div style="width:100%;border-top:1px solid #2d0a4e;margin:12px 0 8px;"></div>
     <button class="modeBtn" id="ps1Back" style="width:100%;margin:0;">← Back</button>
@@ -1944,7 +1943,6 @@ body.gamepad-mode #gpHintBar { display: flex; }
       </div>
       <div id="ps3ArcadeContent" style="display:none;">
         <div style="font-size:8px;color:#3d1055;letter-spacing:1px;margin-bottom:6px;">EVENTS</div>
-        <div class="arcadeRow"><span>Board Morphing</span><button class="arcadeToggleBtn on" data-ps3arc="boardMorphing">ON</button></div>
         <div class="arcadeRow"><span>Random Events</span><button class="arcadeToggleBtn on" data-ps3arc="randomEvents">ON</button></div>
         <div class="arcadeRow" style="margin-top:4px;">
           <span>Spawn Rate</span>
@@ -6160,25 +6158,25 @@ function _b64ToArrayBuffer(b64) {
   return buf;
 }
 </script>
-<script src="js/01_audio.js"></script>
-<script src="js/02_config.js"></script>
-<script src="js/03_scene.js"></script>
-<script src="js/04_board.js"></script>
-<script src="js/05_pieces.js"></script>
-<script src="js/06_moves.js"></script>
-<script src="js/07_bot.js"></script>
-<script src="js/08_animation.js"></script>
-<script src="js/09_execution.js"></script>
-<script src="js/10_ui_wiring.js"></script>
-<script src="js/11_camera.js"></script>
-<script src="js/12_puzzles.js"></script>
-<script src="js/13_arcade_orbs.js"></script>
-<script src="js/14_arcade_effects.js"></script>
-<script src="js/15_arcade_core.js"></script>
-<script src="js/16_account.js"></script>
-<script src="js/17_themes.js"></script>
-<script src="js/18_ctf_input.js"></script>
-<script src="js/19_online.js"></script>
+<script src="js/01_audio.js?v=20260509e"></script>
+<script src="js/02_config.js?v=20260509e"></script>
+<script src="js/03_scene.js?v=20260509e"></script>
+<script src="js/04_board.js?v=20260509e"></script>
+<script src="js/05_pieces.js?v=20260509e"></script>
+<script src="js/06_moves.js?v=20260509e"></script>
+<script src="js/07_bot.js?v=20260509e"></script>
+<script src="js/08_animation.js?v=20260509e"></script>
+<script src="js/09_execution.js?v=20260509e"></script>
+<script src="js/10_ui_wiring.js?v=20260509e"></script>
+<script src="js/11_camera.js?v=20260509e"></script>
+<script src="js/12_puzzles.js?v=20260509e"></script>
+<script src="js/13_arcade_orbs.js?v=20260509e"></script>
+<script src="js/14_arcade_effects.js?v=20260509e"></script>
+<script src="js/15_arcade_core.js?v=20260509e"></script>
+<script src="js/16_account.js?v=20260509e"></script>
+<script src="js/17_themes.js?v=20260509e"></script>
+<script src="js/18_ctf_input.js?v=20260509e"></script>
+<script src="js/19_online.js?v=20260509e"></script>
 <script>
 /* ── Stars canvas for menu background ── */
 (function(){

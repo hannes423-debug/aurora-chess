@@ -14,7 +14,6 @@
 /* ── Settings object ── */
 const arcadeSettings = {
   enabled:        false,
-  boardMorphing:  true,
   randomEvents:   true,
   spawnRate:      'medium',    // 'low' | 'medium' | 'high'
   laserMode:      'all',       // 'off' | 'column' | 'row' | 'wall' | 'all'
@@ -38,18 +37,11 @@ let activeOrbs         = [];   // [{x,y,z,type,mesh,t,turnsLeft}]
 let arcadeScore        = { white:0, black:0 }; // cumulative
 let arcadeTurnCount    = 0;
 let nextOrbSpawn       = 3;
-let nextMorphTurn      = 10;
 let nextEventTurn      = 8;
-let frozenTurns        = { white:0, black:0 };
-let extraTurns         = { white:0, black:0 };
 // King double-move
 let arcadeDblPending   = false;
 let arcadeDblColor     = null;
 let arcadeDblPiece     = null;
-// Board effects
-let collapsedLayer     = null;   // {z, turnsLeft}
-let meteors            = [];     // [{x,y,z,mesh,turnsLeft}]
-let boardSplit         = null;   // {pos, turnsLeft, meshes:[]}
 const pieceAuras       = new WeakMap();
 // Holes & laser
 const holeMarkers      = new Map(); // key -> THREE.Mesh (void visual inside layer group)
@@ -69,14 +61,19 @@ function arcadeAnnounce(text, colorInt) {
   el._t = setTimeout(() => { el.style.display = 'none'; }, 2600);
 }
 
+function arcadeLogEntry(text, css) {
+  const panel = document.getElementById('movePanel');
+  if (!panel) return;
+  const div = document.createElement('div');
+  div.textContent = text;
+  div.style.cssText = 'font-size:9px;color:'+css+';padding:1px 0 1px 6px;border-left:2px solid '+css+';margin:2px 0;line-height:1.4;opacity:0.9;';
+  panel.appendChild(div);
+  panel.scrollTop = panel.scrollHeight;
+}
+
 function updateArcadeBar() {
   if (!arcadeActive) return;
   const parts = [];
-  if (collapsedLayer !== null) parts.push('⚠ LAYER ' + (collapsedLayer.z+1) + ' COLLAPSED (' + collapsedLayer.turnsLeft + ')');
-  if (boardSplit)               parts.push('⚡ SPLIT@' + (boardSplit.pos+1) + ' (' + boardSplit.turnsLeft + ')');
-  if (meteors.length)           parts.push('☄ ' + meteors.length + ' METEOR(S)');
-  if (frozenTurns.white)        parts.push('❄ WHITE FROZEN ×' + frozenTurns.white);
-  if (frozenTurns.black)        parts.push('❄ BLACK FROZEN ×' + frozenTurns.black);
   if (arcadeDblPending)         parts.push('👑 DOUBLE MOVE!');
   if (laserWarning)             parts.push('🔴 LASER (' + Math.ceil(laserWarning.turnsLeft/2) + ' turn(s))');
   if (holeSquares.size)         parts.push('🕳 ' + holeSquares.size + ' HOLE(S)');
@@ -111,7 +108,7 @@ function randomOrbType() {
 function randomEmptySquare() {
   const emp = [];
   for (let x=0;x<8;x++) for (let y=0;y<8;y++) for (let z=0;z<LAYERS;z++) {
-    if (!occ(x,y,z) && !isHole(x,y,z) && !activeOrbs.find(o=>o.x===x&&o.y===y&&o.z===z) && !meteors.find(m=>m.x===x&&m.y===y&&m.z===z))
+    if (!occ(x,y,z) && !isHole(x,y,z) && !activeOrbs.find(o=>o.x===x&&o.y===y&&o.z===z))
       emp.push({x,y,z});
   }
   return emp.length ? emp[Math.floor(Math.random()*emp.length)] : null;
@@ -226,6 +223,7 @@ function spawnOrb(forceType) {
   if (mesh._edges4d) { entry._edges4d = mesh._edges4d; entry._verts4d = mesh._verts4d; }
   activeOrbs.push(entry);
   arcadeAnnounce(ORB_DEFS[type].label + ' → L' + (sq.z+1), ORB_DEFS[type].color);
+  arcadeLogEntry('⬡ '+ORB_DEFS[type].label+' at '+squareName(sq.x,sq.y,sq.z), '#'+ORB_DEFS[type].color.toString(16).padStart(6,'0'));
 }
 
 function removeOrbAt(x, y, z) {
@@ -235,8 +233,6 @@ function removeOrbAt(x, y, z) {
   return activeOrbs.splice(i,1)[0];
 }
 
-function isMeteorAt(x,y,z) { return meteors.some(m=>m.x===x&&m.y===y&&m.z===z); }
-
 function applyOrbEffect(piece, orbType, orbX, orbY, orbZ) {
   const col = piece.userData.color;
   const opp = col==='white'?'black':'white';
@@ -245,7 +241,7 @@ function applyOrbEffect(piece, orbType, orbX, orbY, orbZ) {
     const ox = orbX ?? piece.userData.x;
     const oy = orbY ?? piece.userData.y;
     const oz = orbZ ?? piece.userData.z;
-    setTimeout(() => evGravityTesseract(ox, oy, oz), 400); return;
+    evGravityTesseract(ox, oy, oz, piece); return;
   }
   if (orbType==='laser_instant') {
     if (arcadeSettings.laserMode !== 'off') evLaserInstant(); return;
@@ -264,36 +260,16 @@ function applyOrbEffect(piece, orbType, orbX, orbY, orbZ) {
         if (_pp) _pp.style.display = 'flex';
       }
       arcadeAnnounce('⭐ POWER ORB — PROMOTE!', 0xff9900);
+      arcadeLogEntry('  ⭐ '+col+' pawn power-promoted', '#ffaa00');
     } else {
       const pw = PIECE_POWER[piece.userData.type];
       if (pw) { piece.userData.power = pw; addAuraToPiece(piece, 0xff9900); }
       arcadeAnnounce('⚡ '+col.toUpperCase()+' '+piece.userData.type.toUpperCase()+' POWERED!', 0xff9900);
+      arcadeLogEntry('  ⚡ '+col+' '+piece.userData.type+' → '+pw.replace(/_/g,' '), '#ffaa00');
     }
     return;
   }
 
-  if (orbType==='timer_plus') {
-    if (typeof timers !== 'undefined') timers[col] = Math.min(timers[col]+60, 99*60);
-    if (typeof updateClockDisplay === 'function') updateClockDisplay();
-    arcadeAnnounce('⏱ +60s → '+col.toUpperCase()+'!', 0x00ff88); return;
-  }
-  if (orbType==='timer_minus') {
-    if (typeof timers !== 'undefined') timers[opp] = Math.max(timers[opp]-60, 5);
-    if (typeof updateClockDisplay === 'function') updateClockDisplay();
-    arcadeAnnounce('⏱ −60s → '+opp.toUpperCase()+'!', 0xff3333); return;
-  }
-  if (orbType==='morph') {
-    arcadeAnnounce('🌀 MORPH ORB!', 0xaa44ff);
-    setTimeout(()=>triggerBoardMorph(), 400); return;
-  }
-  if (orbType==='power') {
-    // Universal power-up: enhancement depends on piece type
-    const pp = PIECE_POWERS[piece.userData.type];
-    if (!pp) { arcadeAnnounce('⚡ No power for '+piece.userData.type+'!', 0x555555); return; }
-    piece.userData.power = pp.power;
-    addAuraToPiece(piece, pp.color);
-    arcadeAnnounce('⚡ '+col.toUpperCase()+' '+piece.userData.type.toUpperCase()+' → '+pp.label.toUpperCase()+'!', pp.color); return;
-  }
 }
 
 /* ================================================================
@@ -310,7 +286,7 @@ function getWarpBishopMoves(p) {
     for (let s=0; s<16; s++) {
       cx+=dx; cy+=dy; cz+=dz;
       if (cx<0||cx>7||cy<0||cy>7||cz<0||cz>=LAYERS) break;
-      if (isHole(cx,cy,cz)||isMeteorAt(cx,cy,cz)) break;
+      if (isHole(cx,cy,cz)) break;
       const k=key(cx,cy,cz); if (seen.has(k)) break; seen.add(k);
       const t=occ(cx,cy,cz);
       if (!t || t.userData.color===p.userData.color) {
@@ -331,7 +307,6 @@ function getPhantomKnightMoves(p) {
     for (let dz=-7; dz<=7; dz++) {
       const tx=x+dx, ty=y+dy, tz=z+dz;
       if (tx<0||tx>7||ty<0||ty>7||tz<0||tz>=LAYERS) continue;
-      if (isMeteorAt(tx,ty,tz)) continue;
       const t = occ(tx,ty,tz);
       if (!t||t.userData.color!==p.userData.color) moves.push({x:tx,y:ty,z:tz});
     }
@@ -393,15 +368,6 @@ getPseudoMoves = function(p) {
   if (!arcadeSettings.enabled) return moves;
   // Filter hole squares
   if (holeSquares.size) moves = moves.filter(m=>!isHole(m.x,m.y,m.z));
-  // Filter meteor-blocked squares
-  if (meteors.length) moves = moves.filter(m=>!isMeteorAt(m.x,m.y,m.z));
-  // Filter collapsed layer
-  if (collapsedLayer!==null) moves = moves.filter(m=>m.z!==collapsedLayer.z);
-  // Filter board split
-  if (boardSplit) {
-    const srcSide = p.userData.y < boardSplit.pos ? 0 : 1;
-    moves = moves.filter(m=>(m.y<boardSplit.pos?0:1)===srcSide);
-  }
   return moves;
 };
 
@@ -442,7 +408,7 @@ executeMove = function(piece, t) {
     if (victim && victim.userData.color!==piece.userData.color) {
       const dx=Math.sign(t.x-piece.userData.x), dy=Math.sign(t.y-piece.userData.y), dz=Math.sign(t.z-piece.userData.z);
       const px=t.x+dx, py=t.y+dy, pz=t.z+dz;
-      if (px>=0&&px<8&&py>=0&&py<8&&pz>=0&&pz<LAYERS&&!occ(px,py,pz)&&!isMeteorAt(px,py,pz)) {
+      if (px>=0&&px<8&&py>=0&&py<8&&pz>=0&&pz<LAYERS&&!occ(px,py,pz)) {
         delete boardMap[key(victim.userData.x,victim.userData.y,victim.userData.z)];
         const from2={x:victim.userData.x,y:victim.userData.y,z:victim.userData.z};
         victim.userData.x=px; victim.userData.y=py; victim.userData.z=pz;
@@ -469,6 +435,7 @@ executeMove = function(piece, t) {
   // ── Absorb orb ──
   if (orbHere) {
     removeOrbAt(t.x, t.y, t.z);
+    arcadeLogEntry('★ '+(ORB_DEFS[orbHere.type]?.label||orbHere.type)+' captured', '#ffdd44');
     applyOrbEffect(movedPiece, orbHere.type, t.x, t.y, t.z);
     SND.confirm();
   }
@@ -504,37 +471,10 @@ function arcadePostTurn(movingColor, isKingOrb, wasDouble, movedPiece) {
     // Fall through to normal post-move processing
   }
 
-  // ── Extra turns ──
-  if (extraTurns[movingColor] > 0) {
-    extraTurns[movingColor]--;
-    turn = movingColor;
-    document.getElementById('hud').textContent = movingColor.charAt(0).toUpperCase()+movingColor.slice(1)+' — BONUS TURN!';
-    arcadeAnnounce('⚡ SPEED — Bonus turn!', 0xffff00);
-    if (!reviewing && turn===botColor) setTimeout(botMove, 1200);
-    updateArcadeBar(); return;
-  }
-
-  // ── Frozen opponent ──
-  const newTurn = turn; // already flipped by base executeMove
-  if (frozenTurns[newTurn] > 0) {
-    frozenTurns[newTurn]--;
-    turn = movingColor;
-    document.getElementById('hud').textContent = movingColor.charAt(0).toUpperCase()+movingColor.slice(1)+' — '+newTurn.toUpperCase()+' FROZEN!';
-    arcadeAnnounce('❄ '+newTurn.toUpperCase()+' is FROZEN!', 0x00ccff);
-    if (!reviewing && turn===botColor) setTimeout(botMove, 1200);
-    updateArcadeBar(); return;
-  }
-
   // ── Orb spawning ──
   if (arcadeTurnCount >= nextOrbSpawn) {
     spawnOrb();
     nextOrbSpawn = arcadeTurnCount + (SPAWN_INTERVALS[arcadeSettings.spawnRate]||4);
-  }
-
-  // ── Board morphing ──
-  if (arcadeSettings.boardMorphing && arcadeTurnCount >= nextMorphTurn) {
-    setTimeout(()=>triggerBoardMorph(), 900);
-    nextMorphTurn = arcadeTurnCount + 6 + Math.floor(Math.random()*7);
   }
 
   // ── Random events ──
@@ -544,7 +484,6 @@ function arcadePostTurn(movingColor, isKingOrb, wasDouble, movedPiece) {
   }
 
   // ── Tick temporary effects ──
-  tickMeteors(); tickCollapsedLayer(); tickBoardSplit();
   tickLaserWarning(); tickRegen(); tickCompact();
   updateArcadeBar();
 }

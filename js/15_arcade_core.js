@@ -3,19 +3,14 @@
 ================================================================ */
 function resetArcadeState() {
   activeOrbs.forEach(o=>pivot.remove(o.mesh)); activeOrbs.length=0;
-  meteors.forEach(m=>pivot.remove(m.mesh));    meteors.length=0;
-  if (boardSplit) { boardSplit.meshes.forEach(m=>pivot.remove(m)); boardSplit=null; }
-  if (collapsedLayer!==null) { layers[collapsedLayer.z].visible=true; collapsedLayer=null; }
   if (laserWarning) { laserWarning.warningMeshes.forEach(m=>{ if(m.parent) m.parent.remove(m); }); laserWarning=null; }
   clearAllHoles();
   layers.forEach((l,i)=>{ l.position.y=(i-LAYERS/2)*LAYER_SPACING; });
   boardW=8; boardH=8; boardD=LAYERS;
-  frozenTurns={white:0,black:0}; extraTurns={white:0,black:0};
   arcadeDblPending=false; arcadeDblColor=null; arcadeDblPiece=null;
   pieces.forEach(p=>{ removeAuraFromPiece(p); delete p.userData.power; });
   arcadeTurnCount=0;
   nextOrbSpawn=3;
-  nextMorphTurn=10+Math.floor(Math.random()*6);
   nextEventTurn=8+Math.floor(Math.random()*5);
   document.getElementById('arcadeBar').style.display='none';
   document.getElementById('arcadeEventBanner').style.display='none';
@@ -26,6 +21,7 @@ function resetArcadeState() {
 /* ── Patch startLocalGame to init arcade ── */
 const _arcadeBaseStartLocal = startLocalGame;
 startLocalGame = function() {
+  setGameInputEnabled(true);
   resetArcadeState();
   _arcadeBaseStartLocal();
   arcadeActive = arcadeSettings.enabled;
@@ -104,10 +100,6 @@ startLocalGame = function() {
     const a = pieceAuras.get(p);
     if (a) { a.material.opacity=0.1+Math.sin(t*2+p.userData.x)*0.08; a.rotation.y+=0.025; }
   });
-  // Meteor pulse
-  meteors.forEach(m => { m.mesh.material.opacity=0.45+Math.sin(t*4)*0.25; m.mesh.rotation.y+=0.06; });
-  // Board split pulse
-  if (boardSplit) boardSplit.meshes.forEach(m=>{ m.material.opacity=0.3+Math.sin(t*3)*0.2; });
   // Laser warning pulse
   if (laserWarning) laserWarning.warningMeshes.forEach(g=>{
     const m = g._warningPlane;
