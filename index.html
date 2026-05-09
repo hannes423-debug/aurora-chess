@@ -99,8 +99,8 @@ body { min-height: -webkit-fill-available; -webkit-touch-callout: none; -webkit-
     width: calc(100% - 120px);
   }
   #puzzleBar {
-    left: auto; right: 0;
-    width: calc(100% - 120px);
+    left: 120px; right: 0;
+    width: auto;
   }
   #menuBtn  { top: calc(8px + env(safe-area-inset-top)); left: 8px; padding: 4px 10px; font-size: 13px; }
   #hud      { top: calc(52px + env(safe-area-inset-top)); font-size: 11px; }
@@ -120,6 +120,24 @@ body { min-height: -webkit-fill-available; -webkit-touch-callout: none; -webkit-
   #panBoardBtn {
     left: auto !important;
     right: 12px !important;
+  }
+}
+
+/* ── Portrait ≤520px: online indicator overlaps menuBtn + move/view toggles.
+   Shift it below the first toolbar row as a full-width centered strip. ── */
+@media (max-width: 520px) and (orientation: portrait) {
+  #onlineColorIndicator {
+    top: calc(44px + env(safe-area-inset-top)) !important;
+    left: 0 !important;
+    right: 0 !important;
+    transform: none !important;
+    border-radius: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+    justify-content: center !important;
+    font-size: 8px !important;
+    letter-spacing: 1px !important;
+    padding: 4px 8px !important;
   }
 }
 
@@ -643,9 +661,6 @@ body.gamepad-mode #gpHintBar { display: flex; }
   #moveToggle { right: 56px !important; font-size: 10px !important; padding: 4px 8px !important; letter-spacing: 0 !important; }
   #viewToggle  { right:  4px !important; font-size: 10px !important; padding: 4px 8px !important; }
 }
-/* Puzzle bar: give extra right padding so the ⎘ SHARE button isn't covered
-   by the #uiHideBtn (□) which sits at bottom:60px right:12px z-index:9999 */
-#puzzleBar { padding-right: 56px !important; }
 </style>
 </head>
 <body>
@@ -2111,9 +2126,22 @@ body.gamepad-mode #gpHintBar { display: flex; }
     <div style="margin-bottom:14px;">
       <div style="font-size:9px;color:#5e2750;letter-spacing:2px;margin-bottom:7px;">ABOUT AURORA CHESS</div>
       <div style="font-size:9px;color:#7a5a8a;line-height:2;">
-        Aurora Chess is played on an 8×8×8 board.<br>
+        Aurora Chess is played on an 8×8×4 board.<br>
         Pieces move in all three dimensions.<br>
         Knights jump in 3D L-shapes.
+      </div>
+    </div>
+    <div style="margin-bottom:14px;">
+      <div style="font-size:9px;color:#5e2750;letter-spacing:2px;margin-bottom:7px;">3D MODEL CREDITS</div>
+      <div style="font-size:9px;color:#7a5a8a;line-height:2;">
+        Chess pieces by <a href="https://sketchfab.com/robie1" target="_blank" style="color:#9b59b6;">Chris (sketchfab.com/robie1)</a><br>
+        License: CC-BY-4.0
+      </div>
+    </div>
+    <div style="margin-bottom:14px;">
+      <div style="font-size:9px;color:#5e2750;letter-spacing:2px;margin-bottom:7px;">LEGAL</div>
+      <div style="font-size:9px;color:#7a5a8a;line-height:2;">
+        <a href="privacy.html" target="_blank" style="color:#9b59b6;">Privacy Policy</a>
       </div>
     </div>
     <button id="helpBackBtn" class="modeBtn" style="width:100%;margin:0;">← Back</button>
@@ -2400,7 +2428,7 @@ body.gamepad-mode #gpHintBar { display: flex; }
     <!-- Section tabs (v12) -->
     <div style="display:flex;border-bottom:1px solid #1a1a1a;flex-shrink:0;overflow-x:auto;">
       <button id="tutTab_chess_basics" style="flex:1;background:none;border:none;border-bottom:2px solid transparent;color:#555;cursor:pointer;font-family:monospace;font-size:10px;padding:9px 4px;letter-spacing:1px;white-space:nowrap;">♟ CHESS</button>
-      <button id="tutTab_cubic_chess"  style="flex:1;background:none;border:none;border-bottom:2px solid transparent;color:#555;cursor:pointer;font-family:monospace;font-size:10px;padding:9px 4px;letter-spacing:1px;white-space:nowrap;">⬡ CUBIC</button>
+      <button id="tutTab_cubic_chess"  style="flex:1;background:none;border:none;border-bottom:2px solid transparent;color:#555;cursor:pointer;font-family:monospace;font-size:10px;padding:9px 4px;letter-spacing:1px;white-space:nowrap;">⬡ 3D</button>
       <button id="tutTab_arcade"       style="flex:1;background:none;border:none;border-bottom:2px solid transparent;color:#555;cursor:pointer;font-family:monospace;font-size:10px;padding:9px 4px;letter-spacing:1px;white-space:nowrap;">⚡ ARCADE</button>
       <button id="tutTab_ctf"          style="flex:1;background:none;border:none;border-bottom:2px solid transparent;color:#555;cursor:pointer;font-family:monospace;font-size:10px;padding:9px 4px;letter-spacing:1px;white-space:nowrap;">⚑ FLAG</button>
     </div>
@@ -2470,10 +2498,10 @@ body.gamepad-mode #gpHintBar { display: flex; }
      PUZZLE IN-GAME CONTROLS BAR
 ====================================================== -->
 <div id="puzzleBar" style="
-  position:fixed;bottom:48px;left:0;width:100%;
-  background:#080808;border-top:1px solid #1e1e1e;
-  display:none;padding:7px 14px;
-  font-family:monospace;font-size:12px;z-index:60;
+  position:fixed;top:0;left:0;width:100%;
+  background:rgba(8,8,8,0.92);border-bottom:1px solid #1e1e1e;
+  display:none;padding:6px 14px;padding-top:calc(6px + env(safe-area-inset-top));
+  font-family:monospace;font-size:12px;z-index:18;
 ">
   <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
     <div style="flex:1;">

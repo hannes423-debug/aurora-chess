@@ -657,7 +657,7 @@ const TUT_PUZZLES = [
 ====================================================== */
 const TUT_SECTIONS = [
   { id:'chess_basics', label:'Chess Basics', icon:'♟' },
-  { id:'cubic_chess',  label:'Cubic Chess',  icon:'⬡' },
+  { id:'cubic_chess',  label:'Volumetric 3d Chess',  icon:'⬡' },
   { id:'arcade',       label:'Arcade Mode',  icon:'⚡' },
   { id:'ctf',          label:'Flag Mode',    icon:'⚑' }
 ];

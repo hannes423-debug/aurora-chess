@@ -642,6 +642,7 @@ resetBoard = function(c) {
     if (menuOpen()) return;
     if (e.button !== 0) return;
     if (_dnd.handled) { _dnd.handled = false; return; }
+    if (window.gpCursor) { window.gpCursor.kbActive = false; }
     var ndc = screenToNDC(e.clientX, e.clientY);
     executeClick(ndc.x, ndc.y);
   });
@@ -837,29 +838,23 @@ resetBoard = function(c) {
     }
     if (key >= '5' && key <= '8') return; // no-op in 4L
 
-    // Arrow Up / Down: layer +/-1
+    // Arrow Up / Down / Left / Right: move board cursor
     if (key === 'ArrowUp') {
       if (menuOpen()) return;
       e.preventDefault();
-      var nz = Math.min(7, activeZ + 1);
-      if (nz === activeZ) return;
-      activeZ = nz;
-      var sl2 = document.getElementById('zSlider');
-      if (sl2) sl2.value = nz;
-      update(); coords();
-      SND.layer(nz); flashLayerIndicator(nz); camOnLayerChange();
+      if (window.gpCursor && window.updateGamepadCursor) {
+        window.gpCursor.kbActive = true;
+        window.updateGamepadCursor(window.gpCursor.x, window.gpCursor.y + 1);
+      }
       return;
     }
     if (key === 'ArrowDown') {
       if (menuOpen()) return;
       e.preventDefault();
-      var nz2 = Math.max(0, activeZ - 1);
-      if (nz2 === activeZ) return;
-      activeZ = nz2;
-      var sl3 = document.getElementById('zSlider');
-      if (sl3) sl3.value = nz2;
-      update(); coords();
-      SND.layer(nz2); flashLayerIndicator(nz2); camOnLayerChange();
+      if (window.gpCursor && window.updateGamepadCursor) {
+        window.gpCursor.kbActive = true;
+        window.updateGamepadCursor(window.gpCursor.x, window.gpCursor.y - 1);
+      }
       return;
     }
 
@@ -869,6 +864,15 @@ resetBoard = function(c) {
       if (selectedPawn) { clearSelection(); return; }
       if (gameStarted || reviewing) {
         document.getElementById('pauseMenu').style.display = 'flex';
+      }
+      return;
+    }
+
+    // Enter: confirm cursor selection (keyboard board navigation)
+    if (key === 'Enter') {
+      if (menuOpen()) return;
+      if (window.gpCursor && window.gpCursor.kbActive && !reviewing && window.handleGamepadSelect) {
+        window.handleGamepadSelect(window.gpCursor.x, window.gpCursor.y);
       }
       return;
     }
@@ -904,17 +908,24 @@ resetBoard = function(c) {
       return;
     }
 
-    // Left / Right arrow: previous / next move in review
     if (key === 'ArrowLeft') {
       if (menuOpen()) return;
-      var pm = document.getElementById('prevMove');
-      if (pm) pm.click();
+      e.preventDefault();
+      if (reviewing) { var pm = document.getElementById('prevMove'); if (pm) pm.click(); return; }
+      if (window.gpCursor && window.updateGamepadCursor) {
+        window.gpCursor.kbActive = true;
+        window.updateGamepadCursor(window.gpCursor.x + 1, window.gpCursor.y);
+      }
       return;
     }
     if (key === 'ArrowRight') {
       if (menuOpen()) return;
-      var nm = document.getElementById('nextMove');
-      if (nm) nm.click();
+      e.preventDefault();
+      if (reviewing) { var nm = document.getElementById('nextMove'); if (nm) nm.click(); return; }
+      if (window.gpCursor && window.updateGamepadCursor) {
+        window.gpCursor.kbActive = true;
+        window.updateGamepadCursor(window.gpCursor.x - 1, window.gpCursor.y);
+      }
       return;
     }
 
@@ -1325,8 +1336,10 @@ function _fmtKey(k) {
   /* ── State ── */
   var _gpConnected   = false;
   var _gpActive      = false;
+  var _kbCursorActive = false;
   var _gpCursorX     = 3;
   var _gpCursorY     = 3;
+  window.gpCursor = { x: 3, y: 3, kbActive: false };
   var _reviewMode    = false;   // true while in move-review (View button)
   var _r3WasHeld     = false;
   var _btnPrev       = {};
@@ -1419,8 +1432,9 @@ function _fmtKey(k) {
   function updateGamepadCursor(x, y) {
     _gpCursorX = Math.max(0, Math.min(7, x));
     _gpCursorY = Math.max(0, Math.min(7, y));
+    if (window.gpCursor) { window.gpCursor.x = _gpCursorX; window.gpCursor.y = _gpCursorY; }
     _placeCursorMesh();
-    if (_gpCursorMesh) _gpCursorMesh.visible = _gpActive;
+    if (_gpCursorMesh) _gpCursorMesh.visible = _gpActive || _kbCursorActive || (window.gpCursor && window.gpCursor.kbActive);
   }
   window.updateGamepadCursor = updateGamepadCursor;
 
