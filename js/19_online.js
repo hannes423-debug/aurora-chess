@@ -63,8 +63,9 @@ function onlineConnect(serverUrl) {
       localStorage.setItem('cc_server_url', serverUrl);
       onlineLog('Connected');
       onlineUpdateUI();
-      var stored = localStorage.getItem('cc_online_username');
-      if (stored) onlineSend('login', { username: stored });
+      var storedToken = localStorage.getItem('cc_online_token');
+      if (storedToken) { onlineSend('login_token', { token: storedToken }); }
+      else { var stored = localStorage.getItem('cc_online_username'); if (stored) onlineSend('login', { username: stored, password: '' }); }
     };
     ws.onmessage = function(ev) {
       var msg; try { msg = JSON.parse(ev.data); } catch { return; }
@@ -103,19 +104,24 @@ function onlineHandle(msg) {
     case 'register_ok':
       ONLINE.player = payload.player; ONLINE.loggedIn = true;
       localStorage.setItem('cc_online_username', payload.player.username);
+      if (payload.token) localStorage.setItem('cc_online_token', payload.token);
       onlineLog('Registered as ' + payload.player.username);
       ONLINE.poolRatings = {};
       onlineUpdateUI(); onlineCloseAuthOverlay(); break;
-    case 'register_err':
-      if ((payload.msg || '').toLowerCase().includes('taken')) {
-        var _ru = document.getElementById('onlineUsernameInput').value.trim();
-        if (_ru) { onlineShowAuthError('Account exists — logging in...'); onlineSend('login', { username: _ru }); }
-        else onlineShowAuthError(payload.msg);
-      } else { onlineShowAuthError(payload.msg); }
+    case 'register_err': {
+      var _gns2 = document.getElementById('onlineGoogleUsernameSection');
+      if (_gns2 && _gns2.style.display !== 'none') {
+        var _gErr = document.getElementById('onlineGoogleUsernameError');
+        if (_gErr) _gErr.textContent = payload.msg;
+      } else {
+        onlineShowAuthError(payload.msg);
+      }
       break;
+    }
     case 'login_ok':
       ONLINE.player = payload.player; ONLINE.loggedIn = true;
       localStorage.setItem('cc_online_username', payload.player.username);
+      if (payload.token) localStorage.setItem('cc_online_token', payload.token);
       onlineLog('Logged in as ' + payload.player.username);
       if (payload.player.ratings) ONLINE.poolRatings = payload.player.ratings;
       onlineUpdateUI(); onlineCloseAuthOverlay();
@@ -125,6 +131,31 @@ function onlineHandle(msg) {
       if (_pm) { try { var _pmd = JSON.parse(_pm); onlineSend('reconnect', { roomId: _pmd.roomId }); } catch(e) {} }
       break;
     case 'login_err': onlineShowAuthError(payload.msg); break;
+    case 'login_token_err':
+      localStorage.removeItem('cc_online_token');
+      onlineLog('Session expired — please log in');
+      onlineUpdateUI(); break;
+    case 'google_need_username': {
+      var _gns = document.getElementById('onlineGoogleUsernameSection');
+      var _gas = document.getElementById('onlineAuthSection');
+      var _gem = document.getElementById('onlineGoogleEmail');
+      window._onlineGooglePendingId = payload.googleId;
+      window._onlineGooglePendingEmail = payload.email;
+      if (_gem) _gem.textContent = payload.email || '';
+      if (_gas) _gas.style.display = 'none';
+      if (_gns) _gns.style.display = 'block';
+      break;
+    }
+    case 'google_ok':
+      ONLINE.player = payload.player; ONLINE.loggedIn = true;
+      localStorage.setItem('cc_online_username', payload.player.username);
+      if (payload.token) localStorage.setItem('cc_online_token', payload.token);
+      onlineLog('Signed in with Google as ' + payload.player.username);
+      if (payload.player.ratings) ONLINE.poolRatings = payload.player.ratings;
+      onlineUpdateUI(); onlineCloseAuthOverlay();
+      onlineSend('rating:all', {});
+      onlineSend('corr:games_list', {});
+      break;
     case 'reconnect_ok':
       ONLINE.roomId = payload.roomId; ONLINE.myColor = payload.color;
       ONLINE.opponent = payload.opponent; ONLINE.inMatch = true;
@@ -879,14 +910,44 @@ var _onlineLobby = (function() {
       <!-- Auth section -->
       <div id="onlineAuthSection" class="settingSection" style="display:none;">
         <h3 style="color:#555;font-size:9px;letter-spacing:2px;margin:0 0 8px;">ACCOUNT</h3>
+        <div style="display:flex;gap:0;margin-bottom:8px;border:1px solid #222;overflow:hidden;border-radius:2px;">
+          <button id="authTabLogin" style="flex:1;padding:5px;background:#001833;border:none;color:#00ccff;font-family:monospace;font-size:9px;cursor:pointer;letter-spacing:1px;">LOGIN</button>
+          <button id="authTabRegister" style="flex:1;padding:5px;background:#1a1a1a;border:none;color:#555;font-family:monospace;font-size:9px;cursor:pointer;letter-spacing:1px;">REGISTER</button>
+        </div>
         <input id="onlineUsernameInput" type="text" placeholder="Username" maxlength="20"
           style="width:100%;background:#1a1a1a;border:1px solid #444;color:#fff;font-family:monospace;
                  font-size:11px;padding:7px 8px;box-sizing:border-box;margin-bottom:6px;outline:none;">
-        <div style="display:flex;gap:6px;margin-bottom:6px;">
-          <button id="onlineLoginBtn" style="flex:1;background:#1a1a1a;border:1px solid #444;color:#aaa;font-family:monospace;font-size:10px;padding:6px;cursor:pointer;letter-spacing:1px;">LOGIN</button>
-          <button id="onlineRegisterBtn" style="flex:1;background:#1a1a1a;border:1px solid #00ccff;color:#00ccff;font-family:monospace;font-size:10px;padding:6px;cursor:pointer;letter-spacing:1px;">REGISTER</button>
+        <div style="position:relative;margin-bottom:6px;">
+          <input id="onlinePasswordInput" type="password" placeholder="Password" maxlength="64"
+            style="width:100%;background:#1a1a1a;border:1px solid #444;color:#fff;font-family:monospace;
+                   font-size:11px;padding:7px 30px 7px 8px;box-sizing:border-box;outline:none;">
+          <button id="onlinePwToggle" title="Show/hide password"
+            style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;color:#444;font-size:12px;cursor:pointer;padding:0;line-height:1;">◉</button>
         </div>
-        <div id="onlineAuthError" style="font-size:11px;color:#ff4444;min-height:16px;letter-spacing:1px;"></div>
+        <div id="onlineAvatarRow" style="display:none;margin-bottom:8px;">
+          <div style="font-size:8px;color:#444;letter-spacing:1px;margin-bottom:4px;">AVATAR</div>
+          <div id="onlineAvatarPicker" style="display:flex;gap:5px;"></div>
+        </div>
+        <button id="onlineLoginBtn" style="width:100%;background:#1a1a1a;border:1px solid #00ccff;color:#00ccff;font-family:monospace;font-size:10px;padding:7px;cursor:pointer;letter-spacing:1px;margin-bottom:6px;">LOGIN</button>
+        <button id="onlineRegisterBtn" style="display:none;width:100%;background:#1a1a1a;border:1px solid #00ff88;color:#00ff88;font-family:monospace;font-size:10px;padding:7px;cursor:pointer;letter-spacing:1px;margin-bottom:6px;">CREATE ACCOUNT</button>
+        <div style="display:flex;align-items:center;gap:6px;margin:2px 0 6px;">
+          <div style="flex:1;height:1px;background:#222;"></div>
+          <span style="font-size:8px;color:#333;letter-spacing:1px;">OR</span>
+          <div style="flex:1;height:1px;background:#222;"></div>
+        </div>
+        <button id="onlineGoogleSigninBtn" style="width:100%;background:#1a1a1a;border:1px solid #333;color:#aaa;font-family:monospace;font-size:9px;padding:7px;cursor:pointer;letter-spacing:1px;">G  Sign in with Google</button>
+        <div id="onlineAuthError" style="font-size:11px;color:#ff4444;min-height:16px;letter-spacing:1px;margin-top:4px;"></div>
+      </div>
+
+      <!-- Google username prompt (new Google accounts) -->
+      <div id="onlineGoogleUsernameSection" class="settingSection" style="display:none;">
+        <h3 style="color:#555;font-size:9px;letter-spacing:2px;margin:0 0 6px;">CHOOSE USERNAME</h3>
+        <div style="font-size:8px;color:#444;margin-bottom:8px;letter-spacing:1px;">Google: <span id="onlineGoogleEmail" style="color:#888;"></span></div>
+        <input id="onlineGoogleUsernameInput" type="text" placeholder="Username" maxlength="20"
+          style="width:100%;background:#1a1a1a;border:1px solid #444;color:#fff;font-family:monospace;
+                 font-size:11px;padding:7px 8px;box-sizing:border-box;margin-bottom:6px;outline:none;">
+        <button id="onlineGoogleConfirmBtn" style="width:100%;background:#1a1a1a;border:1px solid #00ccff;color:#00ccff;font-family:monospace;font-size:10px;padding:7px;cursor:pointer;letter-spacing:1px;">CONFIRM</button>
+        <div id="onlineGoogleUsernameError" style="font-size:11px;color:#ff4444;min-height:16px;letter-spacing:1px;margin-top:4px;"></div>
       </div>
 
       <!-- Player info when logged in -->
@@ -1069,19 +1130,84 @@ document.getElementById('onlineConnectBtn').onclick = function() {
   if (!url.startsWith('ws')) url = 'ws://' + url;
   onlineConnect(url);
 };
+// Auth tab switching
+document.getElementById('authTabLogin').onclick = function() { _onlineAuthTab('login'); };
+document.getElementById('authTabRegister').onclick = function() { _onlineAuthTab('register'); };
+
+// Password show/hide
+document.getElementById('onlinePwToggle').onclick = function() {
+  var inp = document.getElementById('onlinePasswordInput');
+  var showing = inp.type === 'text';
+  inp.type = showing ? 'password' : 'text';
+  this.style.color = showing ? '#444' : '#00ccff';
+};
+
+// Build avatar picker
+(function() {
+  var avatars = ['♟','♞','♝','♜','♛','♚'];
+  var picker = document.getElementById('onlineAvatarPicker');
+  window._onlineSelectedAvatar = '♟';
+  avatars.forEach(function(av) {
+    var btn = document.createElement('button');
+    btn.textContent = av;
+    btn.style.cssText = 'font-size:20px;background:#1a1a1a;border:2px solid ' + (av === '♟' ? '#00ccff' : '#222')
+      + ';cursor:pointer;padding:3px 6px;border-radius:2px;color:#fff;';
+    btn.onclick = function() {
+      picker.querySelectorAll('button').forEach(function(b) { b.style.borderColor = '#222'; });
+      this.style.borderColor = '#00ccff';
+      window._onlineSelectedAvatar = av;
+    };
+    picker.appendChild(btn);
+  });
+})();
+
 document.getElementById('onlineLoginBtn').onclick = function() {
   var u = document.getElementById('onlineUsernameInput').value.trim();
+  var pw = document.getElementById('onlinePasswordInput').value;
   if (!u) { onlineShowAuthError('Enter a username'); return; }
-  onlineSend('login', { username: u });
+  onlineSend('login', { username: u, password: pw });
 };
 document.getElementById('onlineRegisterBtn').onclick = function() {
   var u = document.getElementById('onlineUsernameInput').value.trim();
-  if (!u) return;
-  var avatar = typeof ACC_active !== 'undefined' && ACC_active ? ACC_active.avatar : '♟';
-  onlineSend('register', { username: u, avatar: avatar });
+  var pw = document.getElementById('onlinePasswordInput').value;
+  if (!u) { onlineShowAuthError('Enter a username'); return; }
+  if (!pw) { onlineShowAuthError('Enter a password'); return; }
+  if (pw.length < 4) { onlineShowAuthError('Password must be at least 4 characters'); return; }
+  onlineSend('register', { username: u, password: pw, avatar: window._onlineSelectedAvatar || '♟' });
 };
+
+// Enter key submits login/register
+['onlineUsernameInput', 'onlinePasswordInput'].forEach(function(id) {
+  document.getElementById(id).addEventListener('keydown', function(e) {
+    if (e.key !== 'Enter') return;
+    var loginBtn = document.getElementById('onlineLoginBtn');
+    if (loginBtn.style.display !== 'none') loginBtn.click();
+    else document.getElementById('onlineRegisterBtn').click();
+  });
+});
+
+// Google sign-in
+document.getElementById('onlineGoogleSigninBtn').onclick = function() { _onlineGoogleSignin(); };
+
+// Google username confirm (new accounts)
+document.getElementById('onlineGoogleConfirmBtn').onclick = function() {
+  var u = document.getElementById('onlineGoogleUsernameInput').value.trim();
+  var errEl = document.getElementById('onlineGoogleUsernameError');
+  if (!u) { if (errEl) errEl.textContent = 'Enter a username'; return; }
+  if (errEl) errEl.textContent = '';
+  onlineSend('google_register', {
+    googleId: window._onlineGooglePendingId,
+    email: window._onlineGooglePendingEmail,
+    username: u,
+    avatar: '♟'
+  });
+};
+document.getElementById('onlineGoogleUsernameInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') document.getElementById('onlineGoogleConfirmBtn').click();
+});
 document.getElementById('onlineLogoutBtn').onclick = function() {
   localStorage.removeItem('cc_online_username');
+  localStorage.removeItem('cc_online_token');
   ONLINE.loggedIn = false; ONLINE.player = null;
   ONLINE.friends = []; ONLINE.requests = []; ONLINE.pendingOut = [];
   ONLINE.poolRatings = {}; ONLINE.corrGames = { myTurn: [], theirTurn: [] };
@@ -1607,7 +1733,67 @@ function onlineUpdateUI() {
 }
 
 function onlineShowAuthError(msg) { document.getElementById('onlineAuthError').textContent = msg; }
-function onlineCloseAuthOverlay() { document.getElementById('onlineAuthError').textContent = ''; }
+function onlineCloseAuthOverlay() {
+  document.getElementById('onlineAuthError').textContent = '';
+  var gns = document.getElementById('onlineGoogleUsernameSection');
+  if (gns) gns.style.display = 'none';
+}
+
+function _onlineAuthTab(tab) {
+  var isLogin = tab === 'login';
+  document.getElementById('authTabLogin').style.background    = isLogin ? '#001833' : '#1a1a1a';
+  document.getElementById('authTabLogin').style.color         = isLogin ? '#00ccff' : '#555';
+  document.getElementById('authTabRegister').style.background = isLogin ? '#1a1a1a' : '#001833';
+  document.getElementById('authTabRegister').style.color      = isLogin ? '#555'    : '#00ccff';
+  document.getElementById('onlineLoginBtn').style.display    = isLogin ? 'block' : 'none';
+  document.getElementById('onlineRegisterBtn').style.display = isLogin ? 'none'  : 'block';
+  document.getElementById('onlineAvatarRow').style.display   = isLogin ? 'none'  : 'block';
+  document.getElementById('onlinePasswordInput').placeholder = isLogin ? 'Password' : 'Choose a password';
+  onlineShowAuthError('');
+}
+
+var _onlineGooglePendingId = null;
+var _onlineGooglePendingEmail = null;
+
+function _onlineGoogleSignin() {
+  var clientId = (typeof GOOGLE_CLIENT_ID !== 'undefined') ? GOOGLE_CLIENT_ID : '';
+  if (!clientId) {
+    onlineShowAuthError('Google sign-in not configured');
+    return;
+  }
+  if (window.location.protocol === 'file:') {
+    onlineShowAuthError('Google sign-in requires HTTP server');
+    return;
+  }
+  if (window._onlineGisLoading) return;
+  window._onlineGisLoading = true;
+  var btn = document.getElementById('onlineGoogleSigninBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Loading…'; }
+  var s = document.createElement('script');
+  s.src = 'https://accounts.google.com/gsi/client';
+  s.onload = function() {
+    google.accounts.id.initialize({
+      client_id: clientId,
+      callback: _onlineGoogleCredential,
+      auto_select: false,
+      cancel_on_tap_outside: true,
+    });
+    google.accounts.id.prompt();
+    if (btn) { btn.disabled = false; btn.textContent = 'G  Sign in with Google'; }
+  };
+  s.onerror = function() {
+    onlineShowAuthError('Failed to load Google sign-in');
+    window._onlineGisLoading = false;
+    if (btn) { btn.disabled = false; btn.textContent = 'G  Sign in with Google'; }
+  };
+  document.head.appendChild(s);
+}
+
+function _onlineGoogleCredential(response) {
+  var profile = (typeof _decodeGoogleJwt === 'function') ? _decodeGoogleJwt(response.credential) : null;
+  if (!profile || !profile.sub) { onlineShowAuthError('Google sign-in failed'); return; }
+  onlineSend('google_login', { googleId: profile.sub, email: profile.email, token: response.credential });
+}
 
 function onlineLoadLeaderboard() {
   document.getElementById('onlinePlaySection').style.display = 'none';
