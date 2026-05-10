@@ -957,12 +957,8 @@ var _onlineLobby = (function() {
         <button id="onlineLbBack" style="margin-top:10px;background:#1a1a1a;border:1px solid #333;color:#666;font-family:monospace;font-size:9px;padding:5px 14px;cursor:pointer;">← Back</button>
       </div>
 
-      <!-- Game history panel -->
-      <div id="onlineHistorySection" style="display:none;">
-        <div style="font-size:9px;color:#555;letter-spacing:2px;margin-bottom:10px;">MY GAMES</div>
-        <div id="onlineHistoryContent" style="font-size:9px;color:#aaa;line-height:1.8;max-height:280px;overflow-y:auto;"></div>
-        <button id="onlineHistoryBack" style="margin-top:10px;background:#1a1a1a;border:1px solid #333;color:#666;font-family:monospace;font-size:9px;padding:5px 14px;cursor:pointer;">← Back</button>
-      </div>
+      <!-- Game history panel (kept for _lobbyShowSection compatibility) -->
+      <div id="onlineHistorySection" style="display:none;"></div>
 
       <!-- Friends panel -->
       <div id="onlineFriendsSection" style="display:none;">
@@ -979,21 +975,39 @@ var _onlineLobby = (function() {
         <div id="onlineFriendList" style="max-height:220px;overflow-y:auto;"></div>
       </div>
 
-      <!-- Correspondence games panel -->
+      <!-- Your Games panel (active corr + history + saved) -->
       <div id="onlineCorrGamesSection" style="display:none;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-          <div style="font-size:9px;color:#555;letter-spacing:2px;">ACTIVE GAMES</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div style="font-size:9px;color:#555;letter-spacing:2px;">YOUR GAMES</div>
           <button id="onlineCorrGamesBack" style="background:#1a1a1a;border:1px solid #333;color:#666;font-family:monospace;font-size:8px;padding:3px 10px;cursor:pointer;">← Back</button>
         </div>
-        <div id="onlineCorrGamesContent" style="max-height:320px;overflow-y:auto;font-size:9px;"></div>
+        <!-- Sub-tabs -->
+        <div style="display:flex;gap:2px;margin-bottom:8px;">
+          <button id="ygTabActive"   onclick="_ygTab('active')"  style="flex:1;padding:4px;background:#001a0a;border:1px solid #00ff88;color:#00ff88;font-family:monospace;font-size:7px;cursor:pointer;letter-spacing:1px;">ACTIVE</button>
+          <button id="ygTabHistory"  onclick="_ygTab('history')" style="flex:1;padding:4px;background:#1a1a1a;border:1px solid #222;color:#555;font-family:monospace;font-size:7px;cursor:pointer;letter-spacing:1px;">HISTORY</button>
+          <button id="ygTabSaved"    onclick="_ygTab('saved')"   style="flex:1;padding:4px;background:#1a1a1a;border:1px solid #222;color:#555;font-family:monospace;font-size:7px;cursor:pointer;letter-spacing:1px;">SAVED</button>
+        </div>
+        <!-- Active games -->
+        <div id="ygPanelActive"  style="max-height:300px;overflow-y:auto;font-size:9px;"></div>
+        <!-- History -->
+        <div id="ygPanelHistory" style="display:none;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <span style="font-size:7px;color:#444;letter-spacing:1px;">FINISHED GAMES</span>
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:7px;color:#444;letter-spacing:1px;">
+              <input type="checkbox" id="ygReviewFilter" onchange="_ygApplyHistoryFilter()" style="accent-color:#ce93d8;width:10px;height:10px;"> REVIEW ONLY
+            </label>
+          </div>
+          <div id="ygHistoryContent" style="max-height:270px;overflow-y:auto;font-size:9px;"></div>
+        </div>
+        <!-- Saved games -->
+        <div id="ygPanelSaved"   style="display:none;max-height:300px;overflow-y:auto;font-size:9px;"></div>
       </div>
 
       <!-- Bottom nav -->
       <div id="onlineLobbyNav" style="display:flex;gap:3px;margin-top:12px;border-top:1px solid #111;padding-top:10px;">
-        <button id="onlineLbBtn" style="flex:1;padding:6px;background:#1a1a1a;border:1px solid #222;color:#555;font-family:monospace;font-size:8px;cursor:pointer;letter-spacing:1px;">LB</button>
+        <button id="onlineLbBtn"       style="flex:1;padding:6px;background:#1a1a1a;border:1px solid #222;color:#555;font-family:monospace;font-size:8px;cursor:pointer;letter-spacing:1px;">LB</button>
         <button id="onlineCorrGamesBtn" style="flex:1;padding:6px;background:#1a1a1a;border:1px solid #222;color:#555;font-family:monospace;font-size:8px;cursor:pointer;letter-spacing:1px;">GAMES</button>
-        <button id="onlineHistoryBtn" style="flex:1;padding:6px;background:#1a1a1a;border:1px solid #222;color:#555;font-family:monospace;font-size:8px;cursor:pointer;letter-spacing:1px;">HISTORY</button>
-        <button id="onlineFriendsBtn" style="flex:1;padding:6px;background:#1a1a1a;border:1px solid #222;color:#555;font-family:monospace;font-size:8px;cursor:pointer;letter-spacing:1px;">FRIENDS</button>
+        <button id="onlineFriendsBtn"  style="flex:1;padding:6px;background:#1a1a1a;border:1px solid #222;color:#555;font-family:monospace;font-size:8px;cursor:pointer;letter-spacing:1px;">FRIENDS</button>
       </div>
 
       <!-- Advanced / server -->
@@ -1069,14 +1083,12 @@ document.getElementById('onlinePrefsToggle').onclick = function() {
 };
 document.getElementById('onlineLbBtn').onclick = function() { onlineLoadLeaderboard(); };
 document.getElementById('onlineLbBack').onclick = function() { _lobbyShowSection('onlinePlaySection'); };
-document.getElementById('onlineHistoryBtn').onclick = function() { onlineLoadHistory(); };
-document.getElementById('onlineHistoryBack').onclick = function() { _lobbyShowSection('onlinePlaySection'); };
 document.getElementById('onlineFriendsBtn').onclick = function() {
   _lobbyShowSection('onlineFriendsSection'); onlineUpdateFriends();
 };
 document.getElementById('onlineFriendsBack').onclick = function() { _lobbyShowSection('onlinePlaySection'); };
 document.getElementById('onlineCorrGamesBtn').onclick = function() {
-  _lobbyShowSection('onlineCorrGamesSection'); onlineLobbyUpdateGamesPanel();
+  _lobbyShowSection('onlineCorrGamesSection'); _ygTab('active'); onlineLobbyUpdateGamesPanel();
 };
 document.getElementById('onlineCorrGamesBack').onclick = function() { _lobbyShowSection('onlinePlaySection'); };
 document.getElementById('onlineFriendAddBtn').onclick = function() {
@@ -1252,11 +1264,117 @@ function onlineUpdateGamesBadge() {
   }
 }
 
-function onlineLobbyUpdateGamesPanel() {
-  var el = document.getElementById('onlineCorrGamesContent');
+/* ── Your Games sub-tab switching ── */
+var _ygCurrentTab = 'active';
+function _ygTab(tab) {
+  _ygCurrentTab = tab;
+  ['active','history','saved'].forEach(function(t) {
+    var btn = document.getElementById('ygTab' + t.charAt(0).toUpperCase() + t.slice(1));
+    var panel = document.getElementById('ygPanel' + t.charAt(0).toUpperCase() + t.slice(1));
+    var active = (t === tab);
+    if (btn) {
+      btn.style.background    = active ? (t === 'active' ? '#001a0a' : t === 'history' ? '#1a000a' : '#0a001a') : '#1a1a1a';
+      btn.style.borderColor   = active ? (t === 'active' ? '#00ff88' : t === 'history' ? '#ff6688' : '#8866ff') : '#222';
+      btn.style.color         = active ? (t === 'active' ? '#00ff88' : t === 'history' ? '#ff6688' : '#8866ff') : '#555';
+    }
+    if (panel) panel.style.display = active ? 'block' : 'none';
+  });
+  if (tab === 'history') _ygLoadHistory();
+  if (tab === 'saved')   _ygLoadSaved();
+}
+
+/* ── History tab ── */
+var _ygHistoryCache = null;
+function _ygLoadHistory() {
+  if (!ONLINE.player) {
+    document.getElementById('ygHistoryContent').innerHTML = '<div style="color:#333;padding:12px 0;text-align:center;">Log in to see history</div>';
+    return;
+  }
+  var el = document.getElementById('ygHistoryContent');
+  el.textContent = 'Loading...';
+  var url = (localStorage.getItem('cc_server_url')||'').replace('ws://','http://').replace('wss://','https://');
+  fetch(url + '/player/' + encodeURIComponent(ONLINE.player.username) + '/history')
+    .then(function(r) { return r.json(); })
+    .then(function(games) {
+      _ygHistoryCache = games;
+      _ygApplyHistoryFilter();
+    })
+    .catch(function() { el.textContent = 'Could not load.'; });
+}
+
+function _ygApplyHistoryFilter() {
+  var el = document.getElementById('ygHistoryContent');
+  if (!_ygHistoryCache) { _ygLoadHistory(); return; }
+  var reviewOnly = document.getElementById('ygReviewFilter') && document.getElementById('ygReviewFilter').checked;
+  var reviewSet  = _ygGetReviewSet();
+  var games = reviewOnly ? _ygHistoryCache.filter(function(g) { return reviewSet.has(g.played_at); }) : _ygHistoryCache;
+  if (!games.length) {
+    el.innerHTML = '<div style="color:#333;padding:12px 0;text-align:center;">' + (reviewOnly ? 'No reviewed games' : 'No games recorded yet.') + '</div>';
+    return;
+  }
+  el.innerHTML = games.map(function(g) {
+    var resColor = g.result === 'win' ? '#00ff88' : g.result === 'loss' ? '#ff4444' : '#ffaa00';
+    var delta    = g.delta != null ? (g.delta > 0 ? '+' : '') + g.delta : '';
+    var date     = new Date(g.played_at).toLocaleDateString(undefined, { month:'short', day:'numeric' });
+    var mode     = g.game_mode !== 'standard' ? ' [' + g.game_mode.toUpperCase() + ']' : '';
+    var rated    = g.rated ? '' : ' <span style="color:#333;">(unrated)</span>';
+    var opp      = _esc((g.opponent_avatar||'♟') + ' ' + (g.opponent||'?'));
+    var hasRev   = reviewSet.has(g.played_at);
+    var revBtn   = '<button onclick="_ygToggleReview(\'' + g.played_at.replace(/'/g,"\\'") + '\')" title="' + (hasRev ? 'Remove review' : 'Save for review') + '" style="background:none;border:none;font-size:10px;cursor:pointer;padding:0 2px;opacity:' + (hasRev ? '1' : '0.3') + ';">🔖</button>';
+    return '<div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #111;padding:4px 0;">'
+      + '<span style="flex:1;min-width:0;">'
+        + '<span style="color:' + resColor + ';text-transform:uppercase;">' + g.result + '</span>'
+        + '  <span style="cursor:pointer;" onclick="onlineOpenProfile(\'' + (g.opponent||'').replace(/'/g,"\\'") + '\')">' + opp + '</span>' + mode + rated
+      + '</span>'
+      + '<span style="display:flex;align-items:center;gap:4px;color:#555;white-space:nowrap;">'
+        + (delta ? '<span style="color:' + resColor + ';">' + delta + '</span>' : '')
+        + '<span>' + date + '</span>'
+        + revBtn
+      + '</span>'
+      + '</div>';
+  }).join('');
+}
+
+function _ygGetReviewSet() {
+  try { return new Set(JSON.parse(localStorage.getItem('cc_review_games') || '[]')); } catch(e) { return new Set(); }
+}
+function _ygToggleReview(playedAt) {
+  var s = _ygGetReviewSet();
+  if (s.has(playedAt)) s.delete(playedAt); else s.add(playedAt);
+  localStorage.setItem('cc_review_games', JSON.stringify([...s]));
+  _ygApplyHistoryFilter();
+}
+
+/* ── Saved tab ── */
+function _ygLoadSaved() {
+  var el = document.getElementById('ygPanelSaved');
   if (!el) return;
-  var myT  = ONLINE.corrGames.myTurn  || [];
+  var saves = (typeof savesForUser === 'function' && typeof ACC_active !== 'undefined' && ACC_active)
+    ? savesForUser(ACC_active.username) : [];
+  if (!saves.length) {
+    el.innerHTML = '<div style="color:#333;padding:12px 0;text-align:center;">No saved games</div>';
+    return;
+  }
+  el.innerHTML = saves.map(function(s) {
+    var dateStr = new Date(s.date).toLocaleDateString(undefined, { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+    return '<div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #111;padding:5px 0;">'
+      + '<div style="flex:1;min-width:0;">'
+        + '<div style="color:#ccc;font-size:9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + _esc(s.label) + '</div>'
+        + '<div style="color:#444;font-size:8px;">' + _esc(dateStr) + '</div>'
+      + '</div>'
+      + '<div style="display:flex;gap:4px;">'
+        + '<button onclick="(function(){var sv=(typeof savesForUser===\'function\'&&typeof ACC_active!==\'undefined\'&&ACC_active)?savesForUser(ACC_active.username).find(function(x){return x.id===\'' + s.id + '\';}):null;if(sv&&typeof gameLoad===\'function\')gameLoad(sv);})()" style="background:#001a2a;border:1px solid #00ccff;color:#00ccff;font-family:monospace;font-size:7px;padding:2px 8px;cursor:pointer;">LOAD</button>'
+        + '<button onclick="if(typeof gameDelete===\'function\')gameDelete(\'' + s.id + '\');_ygLoadSaved();" style="background:#1a1a1a;border:1px solid #333;color:#666;font-family:monospace;font-size:7px;padding:2px 6px;cursor:pointer;">✕</button>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+function onlineLobbyUpdateGamesPanel() {
+  var myT    = ONLINE.corrGames.myTurn   || [];
   var theirT = ONLINE.corrGames.theirTurn || [];
+  var el = document.getElementById('ygPanelActive');
+  if (!el) return;
   if (!myT.length && !theirT.length) {
     el.innerHTML = '<div style="color:#2a2a2a;padding:16px 0;text-align:center;">No active correspondence games</div>';
     return;
@@ -1268,7 +1386,7 @@ function onlineLobbyUpdateGamesPanel() {
     html += myT.map(function(g) { return _corrGameRow(g, true); }).join('');
   }
   if (theirT.length) {
-    html += '<div style="' + secStyle + ';margin-top:14px;">WAITING (' + theirT.length + ')</div>';
+    html += '<div style="' + secStyle + (myT.length ? ';margin-top:14px;' : '') + '">WAITING (' + theirT.length + ')</div>';
     html += theirT.map(function(g) { return _corrGameRow(g, false); }).join('');
   }
   el.innerHTML = html;
@@ -1394,7 +1512,7 @@ function onlineShowCorrTurnBanner(count) {
   banner.querySelector('#_corrBannerView').onclick = function() {
     banner.remove();
     onlineOpenLobby();
-    setTimeout(function() { _lobbyShowSection('onlineCorrGamesSection'); onlineLobbyUpdateGamesPanel(); }, 100);
+    setTimeout(function() { _lobbyShowSection('onlineCorrGamesSection'); _ygTab('active'); onlineLobbyUpdateGamesPanel(); }, 100);
   };
   banner.querySelector('#_corrBannerClose').onclick = function() { banner.remove(); };
   setTimeout(function() { if (banner.parentNode) banner.remove(); }, 12000);
@@ -1491,30 +1609,10 @@ function onlineLoadLeaderboard() {
 }
 
 function onlineLoadHistory() {
-  if (!ONLINE.player) { return; }
-  document.getElementById('onlinePlaySection').style.display    = 'none';
-  document.getElementById('onlineHistorySection').style.display = 'block';
-  document.getElementById('onlineHistoryContent').textContent   = 'Loading-';
-  var url = (localStorage.getItem('cc_server_url')||'').replace('ws://','http://').replace('wss://','https://');
-  fetch(url + '/player/' + encodeURIComponent(ONLINE.player.username) + '/history')
-    .then(function(r) { return r.json(); })
-    .then(function(games) {
-      if (!games.length) { document.getElementById('onlineHistoryContent').textContent = 'No games recorded yet.'; return; }
-      document.getElementById('onlineHistoryContent').innerHTML = games.map(function(g) {
-        var resColor = g.result === 'win' ? '#00ff88' : g.result === 'loss' ? '#ff4444' : '#ffaa00';
-        var delta = g.delta != null ? (g.delta > 0 ? '+' : '') + g.delta : '';
-        var date = new Date(g.played_at).toLocaleDateString(undefined, { month:'short', day:'numeric' });
-        var mode = g.game_mode !== 'standard' ? ' [' + g.game_mode.toUpperCase() + ']' : '';
-        var rated = g.rated ? '' : ' (unrated)';
-        var opp = (g.opponent_avatar||'♟') + ' ' + (g.opponent||'?');
-        return '<div style="display:flex;justify-content:space-between;border-bottom:1px solid #111;padding:2px 0;">'
-          + '<span><span style="color:' + resColor + ';text-transform:uppercase;">' + g.result + '</span>'
-          + '  <span style="cursor:pointer;" onclick="onlineOpenProfile(\'' + (g.opponent||'').replace(/'/g,"\\'") + '\')">' + opp + '</span>' + mode + rated + '</span>'
-          + '<span style="color:#555;">' + (delta ? '<span style="color:' + resColor + ';">' + delta + '</span>  ' : '') + date + '</span>'
-          + '</div>';
-      }).join('');
-    })
-    .catch(function() { document.getElementById('onlineHistoryContent').textContent = 'Could not load.'; });
+  // Redirect to the unified Your Games section, history tab
+  _lobbyShowSection('onlineCorrGamesSection');
+  _ygTab('history');
+  onlineLobbyUpdateGamesPanel();
 }
 
 function onlineShowMatchBanner(matchInfo) {

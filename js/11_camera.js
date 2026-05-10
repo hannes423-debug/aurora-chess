@@ -361,6 +361,8 @@ function anim(){
       if (group._warningPlane) group._warningPlane.material.opacity = 0.25 + Math.abs(Math.sin(_lpt)) * 0.5;
     });
   }
+  // Hide board when no game is active (main menu / mode selection state)
+  pivot.visible = (renderer.domElement.style.pointerEvents !== 'none');
   renderer.render(scene,camera);
 }
 

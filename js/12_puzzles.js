@@ -861,6 +861,7 @@ function startPuzzle(index, tutKey) {
     window.Steam.setRichPresence('status', isTut ? 'Tutorial' : 'Solving Puzzle #' + (index + 1));
   }
 
+  if (typeof resetArcadeState === 'function') resetArcadeState();
   ['mainMenu','modeMenu','botMenu','tutorialOverlay','puzzleSelectOverlay','endMenu','pauseMenu'].forEach(id => {
     document.getElementById(id).style.display = 'none';
   });
