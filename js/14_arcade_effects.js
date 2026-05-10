@@ -1,4 +1,112 @@
 /* ================================================================
+   GRAVITY TESSERACT — LEVITATION + FLIGHT + LANDING ANIMATION
+================================================================ */
+function animateTesseractPiece(piece, fromSq, toSq, orbLayer) {
+  var sp     = worldPos(fromSq.x, fromSq.y, fromSq.z);
+  var ep     = worldPos(toSq.x,   toSq.y,   toSq.z);
+  // Float above both origin and destination — handles cross-layer gravity too
+  var floatY = Math.max(sp.y, ep.y, layers[orbLayer].position.y) + 0.9;
+
+  // Capture original rotation so we can restore it on landing
+  var origRot = { x: piece.rotation.x, y: piece.rotation.y, z: piece.rotation.z };
+
+  // Tumble speed in rad/s — time-based so frame rate doesn't affect total spin
+  var tumble = {
+    x: (Math.random() - 0.5) * 1.6,
+    y: (Math.random() - 0.5) * 0.8,
+    z: (Math.random() - 0.5) * 1.4
+  };
+
+  var rot       = { x: origRot.x, y: origRot.y, z: origRot.z };
+  var frozenRot = null;  // captured the moment gravity fires (end of fly phase)
+
+  // Reparent to pivot for world-space position control
+  pivot.add(piece);
+  piece.position.set(sp.x, sp.y, sp.z);
+
+  var T_LEV   = 850;   // ms — float up
+  var T_FLY   = 580;   // ms — shoot sideways
+  var T_LAND  = 720;   // ms — impact freeze + gravity fall + bounce + settle
+  var T_TOTAL = T_LEV + T_FLY + T_LAND;
+
+  // Tiny random stagger so pieces don't move in perfect lockstep
+  var t0      = performance.now() + Math.random() * 60;
+  var prevNow = null;
+
+  (function frame(now) {
+    if (now < t0) { requestAnimationFrame(frame); return; }
+    var elapsed = Math.min(now - t0, T_TOTAL);
+    var dt = prevNow !== null ? (now - prevNow) / 1000 : 0;
+    prevNow = now;
+
+    // Accumulate tumble during levitate + fly
+    if (elapsed < T_LEV + T_FLY) {
+      rot.x += tumble.x * dt;
+      rot.y += tumble.y * dt;
+      rot.z += tumble.z * dt;
+    } else if (!frozenRot) {
+      frozenRot = { x: rot.x, y: rot.y, z: rot.z };
+    }
+
+    if (elapsed < T_LEV) {
+      // ── Phase 1: Levitate ──────────────────────────────────────
+      var p    = elapsed / T_LEV;
+      var ease = p < 0.5 ? 2*p*p : 1 - Math.pow(-2*p + 2, 2) / 2; // ease-in-out
+      piece.position.set(sp.x, sp.y + (floatY - sp.y) * ease, sp.z);
+      piece.rotation.set(rot.x, rot.y, rot.z);
+
+    } else if (elapsed < T_LEV + T_FLY) {
+      // ── Phase 2: Fly ───────────────────────────────────────────
+      var p    = (elapsed - T_LEV) / T_FLY;
+      var ease = p * p; // ease-in — accelerate toward the wall
+      piece.position.set(
+        sp.x + (ep.x - sp.x) * ease,
+        floatY,
+        sp.z + (ep.z - sp.z) * ease
+      );
+      piece.rotation.set(rot.x, rot.y, rot.z);
+
+    } else {
+      // ── Phase 3: Impact + gravity fall + landing bounce ────────
+      var p = (elapsed - T_LEV - T_FLY) / T_LAND;
+
+      // Y: brief freeze at impact, then gravity-accelerated fall, small bounce on landing
+      var yPos;
+      if (p < 0.06) {
+        yPos = floatY; // impact freeze frame — momentum kills instantly
+      } else {
+        var fp     = (p - 0.06) / 0.94;
+        var acc    = fp * fp; // gravity acceleration (ease-in)
+        var bounce = fp > 0.86 ? Math.sin((fp - 0.86) / 0.14 * Math.PI) * 0.10 : 0;
+        yPos = floatY + (ep.y - floatY) * acc - bounce;
+      }
+      piece.position.set(ep.x, yPos, ep.z);
+
+      // Rotation: ease from tumble state back to original upright
+      var rp = p < 0.5 ? 2*p*p : 1 - Math.pow(-2*p + 2, 2) / 2;
+      piece.rotation.set(
+        frozenRot.x + (origRot.x - frozenRot.x) * rp,
+        frozenRot.y + (origRot.y - frozenRot.y) * rp,
+        frozenRot.z + (origRot.z - frozenRot.z) * rp
+      );
+    }
+
+    if (elapsed < T_TOTAL) {
+      requestAnimationFrame(frame);
+    } else {
+      // Snap to exact final state and reparent to target layer
+      piece.rotation.set(origRot.x, origRot.y, origRot.z);
+      if (pieces.includes(piece)) {
+        piece.position.set(ep.x, 0, ep.z);
+        layers[toSq.z].add(piece);
+      } else {
+        if (piece.parent) piece.parent.remove(piece);
+      }
+    }
+  })(performance.now());
+}
+
+/* ================================================================
    GRAVITY TESSERACT EVENT
 ================================================================ */
 function evGravityTesseract(ox, oy, oz, _capturingPiece) {
@@ -36,7 +144,7 @@ function evGravityTesseract(ox, oy, oz, _capturingPiece) {
     p.userData.x=nx;p.userData.y=ny;p.userData.z=nz;
     boardMap[key(nx,ny,nz)]=p;
     if(nx!==from.x||ny!==from.y||nz!==from.z) {
-      animateSlide(p,from,{x:nx,y:ny,z:nz},0.05);
+      animateTesseractPiece(p, from, {x:nx,y:ny,z:nz}, oz);
       moved.push({p,from,to:{x:nx,y:ny,z:nz}});
       const orbHere=activeOrbs.find(o=>o.x===nx&&o.y===ny&&o.z===nz);
       if(orbHere){const rem=removeOrbAt(nx,ny,nz);if(rem)setTimeout(()=>applyOrbEffect(p,rem.type,nx,ny,nz),300);}
