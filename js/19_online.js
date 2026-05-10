@@ -807,10 +807,14 @@ var LOBBY_TCS = [
     { tc: '60+0',  label: '60',    cat: 'classical' }
   ]},
   { section: 'CORRESPONDENCE', badge: 'correspondence', cards: [
-    { tc: '1d', label: '1 day',   cat: 'correspondence' },
-    { tc: '2d', label: '2 days',  cat: 'correspondence' },
-    { tc: '3d', label: '3 days',  cat: 'correspondence' },
-    { tc: '7d', label: '7 days',  cat: 'correspondence' }
+    { tc: '1d',  label: '1 day',   cat: 'correspondence' },
+    { tc: '3d',  label: '3 days',  cat: 'correspondence' },
+    { tc: '7d',  label: '7 days',  cat: 'correspondence' }
+  ], moreCards: [
+    { tc: '2d',  label: '2 days',  cat: 'correspondence' },
+    { tc: '5d',  label: '5 days',  cat: 'correspondence' },
+    { tc: '14d', label: '14 days', cat: 'correspondence' },
+    { tc: '30d', label: '30 days', cat: 'correspondence' }
   ]}
 ];
 
@@ -818,9 +822,23 @@ var BADGE_COLORS = { rapid: '#00ccff', blitz: '#ffaa00', classical: '#ce93d8', c
 
 function _tcId(tc) { return tc.replace(/\+/g,'p').replace(/\|/g,'_'); }
 
+function _buildTcCard(card, badgeCol) {
+  var isCorr = (card.cat === 'correspondence');
+  return '<div class="tcCard" data-tc="' + card.tc + '" data-cat="' + card.cat + '" style="background:#0a0a0a;border:1px solid #1a1a1a;padding:8px 7px;border-radius:2px;"'
+    + (card.minRec ? ' title="Minimum recommended blitz for 3D chess"' : '') + '>'
+    + '<div style="font-size:' + (isCorr ? '11px' : '16px') + ';font-family:monospace;color:#fff;line-height:1.1;">' + card.label + '</div>'
+    + '<div style="font-size:7px;letter-spacing:1px;color:' + badgeCol + ';border:1px solid ' + badgeCol + '33;display:inline-block;padding:1px 4px;margin:3px 0;">' + card.cat.toUpperCase() + (card.minRec ? ' ★' : '') + '</div><br>'
+    + '<div id="cr_' + _tcId(card.tc) + '" style="font-size:10px;color:#00ccff;font-family:monospace;margin:4px 0 2px;">—</div>'
+    + '<div id="cc_' + card.cat + '_' + _tcId(card.tc) + '" style="font-size:7px;color:#444;margin-bottom:5px;">—</div>'
+    + (isCorr
+      ? '<button onclick="onlineCorrCardClick(\'' + card.tc + '\')" style="width:100%;padding:4px;background:#001a0a;border:1px solid #00ff88;color:#00ff88;font-family:monospace;font-size:8px;cursor:pointer;letter-spacing:1px;">SEEK</button>'
+      : '<button onclick="onlineJoinPool(\'' + card.cat + '\',\'' + card.tc + '\')" style="width:100%;padding:4px;background:#1a1a1a;border:1px solid #00ff88;color:#00ff88;font-family:monospace;font-size:8px;cursor:pointer;letter-spacing:1px;">PLAY</button>')
+    + '</div>';
+}
+
 function _buildLobbyCardGrid() {
   var html = '';
-  LOBBY_TCS.forEach(function(sec) {
+  LOBBY_TCS.forEach(function(sec, si) {
     var badgeCol = BADGE_COLORS[sec.badge] || '#aaa';
     var secNote  = sec.note ? '<span style="color:' + badgeCol + '44;font-size:7px;margin-left:6px;">' + sec.note + '</span>' : '';
     html += '<div style="margin-bottom:4px;">'
@@ -828,20 +846,18 @@ function _buildLobbyCardGrid() {
       + '<span style="color:' + (sec.highlight ? badgeCol + '99' : '#444') + ';">' + sec.section + '</span>'
       + secNote + '</div>'
       + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;">';
-    sec.cards.forEach(function(card) {
-      var isCorr = (card.cat === 'correspondence');
-      html += '<div class="tcCard" data-tc="' + card.tc + '" data-cat="' + card.cat + '" style="background:#0a0a0a;border:1px solid #1a1a1a;padding:8px 7px;border-radius:2px;"'
-        + (card.minRec ? ' title="Minimum recommended blitz for 3D chess"' : '') + '>'
-        + '<div style="font-size:' + (isCorr ? '11px' : '16px') + ';font-family:monospace;color:#fff;line-height:1.1;">' + card.label + '</div>'
-        + '<div style="font-size:7px;letter-spacing:1px;color:' + badgeCol + ';border:1px solid ' + badgeCol + '33;display:inline-block;padding:1px 4px;margin:3px 0;">' + sec.badge.toUpperCase() + (card.minRec ? ' ★' : '') + '</div><br>'
-        + '<div id="cr_' + _tcId(card.tc) + '" style="font-size:10px;color:#00ccff;font-family:monospace;margin:4px 0 2px;">—</div>'
-        + '<div id="cc_' + card.cat + '_' + _tcId(card.tc) + '" style="font-size:7px;color:#444;margin-bottom:5px;">—</div>'
-        + (isCorr
-          ? '<button onclick="onlineCorrCardClick(\'' + card.tc + '\')" style="width:100%;padding:4px;background:#001a0a;border:1px solid #00ff88;color:#00ff88;font-family:monospace;font-size:8px;cursor:pointer;letter-spacing:1px;">SEEK</button>'
-          : '<button onclick="onlineJoinPool(\'' + card.cat + '\',\'' + card.tc + '\')" style="width:100%;padding:4px;background:#1a1a1a;border:1px solid #00ff88;color:#00ff88;font-family:monospace;font-size:8px;cursor:pointer;letter-spacing:1px;">PLAY</button>')
-        + '</div>';
-    });
-    html += '</div></div>';
+    sec.cards.forEach(function(card) { html += _buildTcCard(card, badgeCol); });
+    html += '</div>';
+    // "More time controls" expander for sections with moreCards
+    if (sec.moreCards && sec.moreCards.length) {
+      var moreId = 'tcMore_' + si;
+      html += '<button onclick="var m=document.getElementById(\'' + moreId + '\'),btn=this;var open=m.style.display!==\'none\';m.style.display=open?\'none\':\'grid\';btn.textContent=open?\'More time controls ▾\':\'Less ▴\';"'
+        + ' style="margin-top:5px;background:none;border:none;color:#333;font-family:monospace;font-size:8px;cursor:pointer;letter-spacing:1px;padding:2px 0;">More time controls ▾</button>'
+        + '<div id="' + moreId + '" style="display:none;grid-template-columns:1fr 1fr;gap:5px;margin-top:5px;">';
+      sec.moreCards.forEach(function(card) { html += _buildTcCard(card, badgeCol); });
+      html += '</div>';
+    }
+    html += '</div>';
   });
   return html;
 }
@@ -1212,8 +1228,8 @@ function onlineJoinPool(cat, tc) {
 
 function onlineCorrCardClick(tc) {
   if (!ONLINE.loggedIn) { onlineShowToast('Login first', 0xff4444); return; }
-  var secsMap = { '1d': 86400, '2d': 172800, '3d': 259200, '7d': 604800 };
-  var secs = secsMap[tc] || 86400;
+  var secsMap = { '1d': 86400, '2d': 172800, '3d': 259200, '5d': 432000, '7d': 604800, '14d': 1209600, '30d': 2592000 };
+  var secs = secsMap[tc] || (parseInt(tc) * 86400) || 86400;
   var mode = _lobbyActiveMode || 'standard';
   // Show seeks section for this TC
   var seeksEl = document.getElementById('onlineSeeksSection');
