@@ -1726,6 +1726,23 @@ body.gamepad-mode #gpHintBar { display: flex; }
 .fDot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-right:8px;display:inline-block;}
 .fDot.online{background:#00ff88;}.fDot.playing{background:#ffaa00;}.fDot.queued{background:#ffff00;}.fDot.offline{background:#3d1055;}
 #playStepOnline{z-index:45;}
+/* ── Online TC selector (chess.com style) ── */
+.psoTCSec{margin-bottom:13px;}
+.psoTCHead{margin-bottom:6px;}
+.psoTCHead span{font-size:10px;letter-spacing:2px;color:#3a3a3a;}
+.psoTCRapid{color:#00ccff55 !important;}
+.psoTCDaily{color:#00ff8844 !important;}
+.psoTCBtns{display:flex;gap:5px;}
+.psoTCBtn{flex:1;background:#0d0010;border:1px solid #1a0a25;color:#666;font-family:monospace;font-size:12px;padding:11px 4px;cursor:pointer;border-radius:2px;transition:border-color 0.1s,color 0.1s,background 0.1s;touch-action:manipulation;}
+.psoTCBtn:hover,.psoTCBtn:active{border-color:#6b2a80;color:#f0e6ff;background:#1a0028;}
+.psoTCBtn.corr{color:#1a4430;border-color:#0a2018;}
+.psoTCBtn.corr:hover,.psoTCBtn.corr:active{border-color:#00ff88;color:#00ff88;background:#001a08;}
+.psoToggle{position:relative;display:inline-block;width:38px;height:20px;flex-shrink:0;}
+.psoToggle input{opacity:0;width:0;height:0;}
+.psoToggleSlider{position:absolute;cursor:pointer;inset:0;background:#1a0a2a;border:1px solid #3d1055;border-radius:20px;transition:background 0.2s,border-color 0.2s;}
+.psoToggleSlider:before{content:'';position:absolute;height:12px;width:12px;left:3px;bottom:3px;background:#444;border-radius:50%;transition:transform 0.2s,background 0.2s;}
+.psoToggle input:checked + .psoToggleSlider{background:#002040;border-color:#00ccff55;}
+.psoToggle input:checked + .psoToggleSlider:before{transform:translateX(18px);background:#00ccff;}
 </style>
 
 <div id="menuBg">
@@ -2045,27 +2062,99 @@ body.gamepad-mode #gpHintBar { display: flex; }
 ====================================================== -->
 <div id="playStepOnline" class="playStep" style="z-index:45;">
   <div class="playPanel">
-    <div class="playHeader">
-      <div class="playTitle">ONLINE</div>
-      <div id="psoStatus" style="font-size:9px;letter-spacing:2px;margin-top:4px;color:#5e2750;">OFFLINE</div>
+
+    <!-- Header: title + status + rated toggle -->
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;">
+      <div>
+        <div class="playTitle" style="font-size:16px;">ONLINE</div>
+        <div id="psoStatus" style="font-size:9px;letter-spacing:2px;margin-top:4px;color:#5e2750;">OFFLINE</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;padding-top:6px;">
+        <label class="psoToggle">
+          <input type="checkbox" id="psoRatedChk" checked>
+          <span class="psoToggleSlider"></span>
+        </label>
+        <span id="psoRatedLabel" style="font-size:8px;letter-spacing:2px;color:#00ccff;">RATED</span>
+      </div>
     </div>
+
+    <!-- Offline note -->
     <div id="psoOfflineNote" style="font-size:10px;color:#7a5a8a;text-align:center;margin-bottom:16px;line-height:1.9;display:none;">
       Server offline — try again later<br>
       <button id="psoRetryBtn" style="background:none;border:1px solid #3d1055;color:#7a5a8a;font-family:monospace;font-size:9px;padding:3px 12px;cursor:pointer;margin-top:6px;letter-spacing:1px;">RETRY</button>
     </div>
+
+    <!-- Auth required -->
     <div id="psoAuthRequired" style="font-size:10px;color:#7a5a8a;text-align:center;margin-bottom:16px;line-height:1.9;display:none;">
       <button id="psoLoginBtn" style="background:#1e0535;border:1px solid #ce93d8;color:#ce93d8;font-family:monospace;font-size:10px;padding:6px 18px;cursor:pointer;letter-spacing:1px;">LOGIN / REGISTER</button>
     </div>
+
+    <!-- Time control grid (chess.com style) -->
     <div id="psoPlayOptions">
-      <button class="playModeBtn" id="psoQuickMatch" style="border-color:#00ff88;color:#00ff88;">⚡ QUICK MATCH<div class="sub" style="color:#2d5540;">Matchmake automatically</div></button>
-      <button class="playModeBtn" id="psoFriendGame" style="border-color:#ce93d8;color:#ce93d8;">👥 PLAY A FRIEND<div class="sub" style="color:#5e2750;">Challenge from your friend list</div></button>
-      <button class="playModeBtn" id="psoPrivateGame">🔒 PRIVATE GAME<div class="sub">Generate a room code to share</div></button>
+
+      <!-- BULLET -->
+      <div class="psoTCSec">
+        <div class="psoTCHead"><span>🚀 BULLET</span></div>
+        <div class="psoTCBtns">
+          <button class="psoTCBtn" data-tc="1+0" data-cat="bullet">1 min</button>
+          <button class="psoTCBtn" data-tc="1+1" data-cat="bullet">1 | 1</button>
+          <button class="psoTCBtn" data-tc="2+1" data-cat="bullet">2 | 1</button>
+        </div>
+      </div>
+
+      <!-- BLITZ -->
+      <div class="psoTCSec">
+        <div class="psoTCHead"><span>⚡ BLITZ</span></div>
+        <div class="psoTCBtns">
+          <button class="psoTCBtn" data-tc="3+0" data-cat="blitz">3 min</button>
+          <button class="psoTCBtn" data-tc="3+2" data-cat="blitz">3 | 2</button>
+          <button class="psoTCBtn" data-tc="5+0" data-cat="blitz">5 min</button>
+        </div>
+      </div>
+
+      <!-- RAPID -->
+      <div class="psoTCSec">
+        <div class="psoTCHead"><span class="psoTCRapid">🕐 RAPID <em style="font-style:normal;font-size:7px;opacity:0.5;">★ recommended</em></span></div>
+        <div class="psoTCBtns">
+          <button class="psoTCBtn" data-tc="10+0" data-cat="rapid">10 min</button>
+          <button class="psoTCBtn" data-tc="15+10" data-cat="rapid">15 | 10</button>
+          <button class="psoTCBtn" data-tc="30+0" data-cat="rapid">30 min</button>
+        </div>
+      </div>
+
+      <!-- DAILY (correspondence) -->
+      <div class="psoTCSec">
+        <div class="psoTCHead"><span class="psoTCDaily">☀ DAILY</span></div>
+        <div class="psoTCBtns">
+          <button class="psoTCBtn corr" data-tc="1d" data-cat="correspondence">1 day</button>
+          <button class="psoTCBtn corr" data-tc="3d" data-cat="correspondence">3 days</button>
+          <button class="psoTCBtn corr" data-tc="7d" data-cat="correspondence">7 days</button>
+        </div>
+        <button id="psoMoreTCBtn" style="background:none;border:none;color:#2a2a2a;font-family:monospace;font-size:8px;cursor:pointer;letter-spacing:1px;padding:4px 0;margin-top:2px;">More time controls ▾</button>
+        <div id="psoMoreTC" style="display:none;">
+          <div class="psoTCBtns" style="margin-top:4px;">
+            <button class="psoTCBtn corr" data-tc="2d" data-cat="correspondence">2 days</button>
+            <button class="psoTCBtn corr" data-tc="5d" data-cat="correspondence">5 days</button>
+            <button class="psoTCBtn corr" data-tc="14d" data-cat="correspondence">14 days</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Secondary: Friend / Private side by side -->
+      <div style="display:flex;gap:6px;margin-top:6px;margin-bottom:2px;">
+        <button id="psoFriendGame" style="flex:1;background:#12001e;border:1px solid #5e2750;color:#ce93d8;font-family:monospace;font-size:10px;padding:9px 6px;cursor:pointer;letter-spacing:1px;touch-action:manipulation;">👥 FRIEND</button>
+        <button id="psoPrivateGame" style="flex:1;background:#12001e;border:1px solid #3d1055;color:#777;font-family:monospace;font-size:10px;padding:9px 6px;cursor:pointer;letter-spacing:1px;touch-action:manipulation;">🔒 PRIVATE</button>
+      </div>
     </div>
+
+    <!-- Searching / seek posted state -->
     <div id="psoLobbyArea" style="display:none;text-align:center;padding:14px 0;">
       <div id="psoLobbyText" style="font-size:12px;color:#00ff88;letter-spacing:2px;margin-bottom:8px;"></div>
       <div id="psoLobbyTimer" style="font-size:9px;color:#5e2750;letter-spacing:1px;margin-bottom:16px;min-height:14px;"></div>
       <button id="psoCancelBtn" style="background:#1e0535;border:1px solid #ff4444;color:#ff4444;font-family:monospace;font-size:10px;padding:6px 18px;cursor:pointer;letter-spacing:1px;">CANCEL</button>
     </div>
+
+    <!-- Private room code -->
     <div id="psoPrivateSection" style="display:none;border-top:1px solid #2d0a4e;padding-top:12px;margin-top:8px;">
       <div style="font-size:9px;color:#5e2750;letter-spacing:2px;margin-bottom:8px;">ROOM CODE</div>
       <div style="display:flex;gap:6px;margin-bottom:6px;">
@@ -2075,16 +2164,20 @@ body.gamepad-mode #gpHintBar { display: flex; }
       <div style="font-size:9px;color:#3d1055;letter-spacing:1px;text-align:center;margin-bottom:8px;">Share this code with your friend</div>
       <button id="psoCancelRoom" style="width:100%;background:#1e0535;border:1px solid #3d1055;color:#7a5a8a;font-family:monospace;font-size:9px;padding:5px;cursor:pointer;letter-spacing:1px;">CANCEL ROOM</button>
     </div>
+
+    <!-- Join with code -->
     <div id="psoJoinSection" style="border-top:1px solid #2d0a4e;padding-top:12px;margin-top:8px;">
       <div style="font-size:9px;color:#5e2750;letter-spacing:2px;margin-bottom:8px;">JOIN WITH CODE</div>
       <div style="display:flex;gap:6px;">
-        <input id="psoJoinInput" type="text" placeholder="Enter code" maxlength="8"
+        <input id="psoJoinInput" type="text" placeholder="ENTER CODE" maxlength="8"
           style="flex:1;background:#1e0535;border:1px solid #3d1055;color:#f0e6ff;font-family:monospace;font-size:13px;padding:6px 8px;outline:none;letter-spacing:3px;text-transform:uppercase;">
         <button id="psoJoinBtn" style="background:#1e0535;border:1px solid #ce93d8;color:#ce93d8;font-family:monospace;font-size:10px;padding:6px 12px;cursor:pointer;white-space:nowrap;letter-spacing:1px;">JOIN</button>
       </div>
     </div>
+
     <div style="width:100%;border-top:1px solid #2d0a4e;margin:14px 0 8px;"></div>
     <button class="modeBtn" id="psoBack" style="width:100%;margin:0;">← Back</button>
+
   </div>
 </div>
 
@@ -2297,6 +2390,7 @@ body.gamepad-mode #gpHintBar { display: flex; }
 
 <button id="hintBtn" style="position:fixed;top:calc(12px + env(safe-area-inset-top));left:134px;display:none;z-index:22;background:#111;color:#ffaa00;border:1px solid #444;padding:6px 10px;font-family:monospace;font-size:11px;cursor:pointer;letter-spacing:1px;border-radius:2px;touch-action:manipulation;" title="Show hint">💡</button>
 <button id="undoBtn" style="position:fixed;top:calc(12px + env(safe-area-inset-top));left:172px;display:none;z-index:22;background:#111;color:#aaa;border:1px solid #444;padding:6px 10px;font-family:monospace;font-size:11px;cursor:pointer;letter-spacing:1px;border-radius:2px;touch-action:manipulation;" title="Undo last move">↩</button>
+<button id="puzzleInfoToggle" style="position:fixed;top:calc(12px + env(safe-area-inset-top));left:210px;display:none;z-index:22;background:#111;color:#88aaff;border:1px solid #334;padding:6px 10px;font-family:monospace;font-size:11px;cursor:pointer;letter-spacing:1px;border-radius:2px;touch-action:manipulation;" title="Puzzle objective">ℹ</button>
 <button id="panBoardBtn" style="position:fixed;top:calc(48px + env(safe-area-inset-top));left:116px;display:none;z-index:22;background:#111;color:#aaa;border:1px solid #333;padding:4px 8px;font-family:monospace;font-size:10px;cursor:pointer;letter-spacing:1px;border-radius:2px;touch-action:manipulation;" title="Pan board — Alt+drag or click to toggle. Double-click to reset.">✥ PAN</button>
 <button id="uiHideBtn" style="position:fixed;bottom:60px;right:12px;z-index:9999;background:rgba(10,10,10,0.85);color:#666;border:1px solid #333;padding:6px 9px;font-family:monospace;font-size:13px;cursor:pointer;border-radius:3px;line-height:1;touch-action:manipulation;" title="Toggle UI visibility">◻</button>
 <button id="layerVisToggle" style="position:fixed;top:calc(48px + env(safe-area-inset-top));left:12px;display:none;z-index:22;background:#111;color:#aaa;border:1px solid #333;padding:4px 8px;font-family:monospace;font-size:10px;cursor:pointer;letter-spacing:1px;border-radius:2px;touch-action:manipulation;" title="Cycle layer visibility">◈ LTD</button>
@@ -2494,22 +2588,30 @@ body.gamepad-mode #gpHintBar { display: flex; }
   <div id="puzzleList" style="flex:1;overflow-y:auto;padding:12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;align-content:start;"></div>
 </div>
 
+<!-- stub kept for JS compat -->
+<div id="puzzleBar" style="display:none;"></div>
+
 <!-- ======================================================
-     PUZZLE IN-GAME CONTROLS BAR
+     PUZZLE OBJECTIVE POPUP
 ====================================================== -->
-<div id="puzzleBar" style="
-  position:fixed;top:0;left:0;width:100%;
-  background:rgba(8,8,8,0.92);border-bottom:1px solid #1e1e1e;
-  display:none;padding:6px 14px;padding-top:calc(6px + env(safe-area-inset-top));
-  font-family:monospace;font-size:12px;z-index:18;
+<div id="puzzleInfoPopup" style="
+  position:fixed;
+  top:calc(44px + env(safe-area-inset-top));
+  left:12px;
+  max-width:260px;
+  background:rgba(6,6,6,0.95);
+  border:1px solid #222;
+  border-radius:3px;
+  padding:10px 14px;
+  font-family:monospace;
+  font-size:12px;
+  z-index:25;
+  display:none;
+  pointer-events:auto;
 ">
-  <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
-    <div style="flex:1;">
-      <div id="puzzleBarName"   style="font-size:11px;letter-spacing:1px;color:#aaa;"></div>
-      <div id="puzzleBarStatus" style="font-size:11px;color:#555;margin-top:2px;"></div>
-    </div>
-    <button id="puzzleShareBtn" style="background:#1a1a1a;border:1px solid #333;color:#888;padding:5px 10px;cursor:pointer;font-family:monospace;font-size:10px;letter-spacing:1px;">⎘ SHARE</button>
-  </div>
+  <div id="puzzleBarName"   style="font-size:11px;letter-spacing:1px;color:#aaa;"></div>
+  <div id="puzzleBarStatus" style="font-size:10px;color:#555;margin-top:4px;line-height:1.5;"></div>
+  <button id="puzzleShareBtn" style="margin-top:8px;background:#111;border:1px solid #2a2a2a;color:#555;padding:3px 8px;cursor:pointer;font-family:monospace;font-size:9px;letter-spacing:1px;display:block;">⎘ SHARE PUZZLE</button>
 </div>
 
 <!-- ======================================================
@@ -6185,6 +6287,35 @@ function _b64ToArrayBuffer(b64) {
   for (let i = 0; i < bin.length; i++) view[i] = bin.charCodeAt(i);
   return buf;
 }
+</script>
+<script>
+/* ── Steam Cloud restore (Electron only, runs before game modules) ── */
+(function() {
+  if (!window.electronAPI || !window.electronAPI.getCloudData) return;
+  var SYNC_KEYS = [
+    'cc_accounts','cc_saves','cc_cfg','cc_gfx_cfg','cc_input_cfg',
+    'cc_key_bindings','cc_bg_colors','cc_bg_type','cc_cosmic_glass',
+    'cc_layer_spacing','cc_layer_vis','cc_layout_v2','cc_ui_prefs','cc_ui_style',
+    'cc_online_username','cc_review_games','cc_pc_hint_seen'
+  ];
+  var CLOUD_TS_KEY = '_steam_cloud_ts';
+  try {
+    var raw = window.electronAPI.getCloudData();
+    if (!raw) return;
+    var cloud = JSON.parse(raw);
+    var cloudTs = cloud._ts || 0;
+    var localTs = parseInt(localStorage.getItem(CLOUD_TS_KEY) || '0', 10);
+    if (cloudTs > localTs) {
+      SYNC_KEYS.forEach(function(k) {
+        if (cloud[k] !== undefined) localStorage.setItem(k, cloud[k]);
+      });
+      localStorage.setItem(CLOUD_TS_KEY, String(cloudTs));
+      console.log('[Steam Cloud] Restored from cloud (ts=' + cloudTs + ')');
+    }
+  } catch(e) {
+    console.warn('[Steam Cloud] Restore failed:', e);
+  }
+})();
 </script>
 <script src="js/01_audio.js?v=20260509e"></script>
 <script src="js/02_config.js?v=20260509e"></script>

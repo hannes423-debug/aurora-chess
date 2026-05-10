@@ -27,7 +27,7 @@ document.getElementById("pauseDrawBtn").onclick=()=>{
 };
 document.getElementById("restartBtn").onclick=()=>{
   SND.confirm(); document.getElementById("pauseMenu").style.display="none";
-  if(PUZZLE_MODE){const puzData=PUZZLE_TUT_KEY>=0?TUT_PUZZLES[PUZZLE_TUT_KEY]:PUZZLES[PUZZLE_ACTIVE];if(puzData){PUZZLE_MOVES_MADE=0;loadPuzzlePieces(puzData);document.getElementById('puzzleBarName').textContent=puzData.name.toUpperCase();document.getElementById('puzzleBarStatus').textContent=puzData.objective;}}else{startLocalGame();}
+  if(PUZZLE_MODE){const puzData=PUZZLE_TUT_KEY>=0?TUT_PUZZLES[PUZZLE_TUT_KEY]:PUZZLES[PUZZLE_ACTIVE];if(puzData){PUZZLE_MOVES_MADE=0;loadPuzzlePieces(puzData);document.getElementById('puzzleBarName').textContent=puzData.name.toUpperCase();document.getElementById('puzzleBarName').style.color='';document.getElementById('puzzleBarStatus').textContent=puzData.objective;var _rp=document.getElementById('puzzleInfoPopup');if(_rp){_rp.style.display='block';clearTimeout(window._puzzleInfoAutoHide);window._puzzleInfoAutoHide=setTimeout(()=>{if(_rp)_rp.style.display='none';},3500);}}}else{startLocalGame();}
 };
 function _doExit() {
   SND.confirm();
@@ -328,6 +328,7 @@ document.getElementById('mainSettingsBtn').onclick = () => {
 document.getElementById('mainProfileBtn').onclick = () => {
   SND.ui();
   document.getElementById('mainMenu').style.display = 'none';
+  window._profileOrigin = 'mainMenu';
   openProfileOverlay();
 };
 document.getElementById('mainHelpBtn').onclick = () => {
@@ -607,7 +608,7 @@ document.getElementById('hintBtn').onclick = () => {
   SND.ui();
   if (PUZZLE_MODE) {
     const puzData = PUZZLE_TUT_KEY >= 0 ? TUT_PUZZLES[PUZZLE_TUT_KEY] : PUZZLES[PUZZLE_ACTIVE];
-    if (puzData) showBoardMsg({ text: puzData.hint.toUpperCase(), color: '#ffaa00', size: 50, dur: 4, anim: 'fade', layer: 'current', glow: true });
+    if (puzData && typeof flashHintPiece === 'function') flashHintPiece(puzData);
   } else {
     showBotHint();
   }
@@ -667,8 +668,11 @@ function startLocalGame(){
   setGameInputEnabled(true);
   // Reset puzzle UI only — do NOT reset botColor/playerColor (caller sets those before calling us)
   PUZZLE_MODE=false; PUZZLE_ACTIVE=-1; PUZZLE_TUT_KEY=-1;
+  clearTimeout(window._puzzleInfoAutoHide);
   document.getElementById('puzzleBar').style.display='none';
   document.getElementById('puzzleSuccess').style.display='none';
+  var _it=document.getElementById('puzzleInfoToggle'), _ip=document.getElementById('puzzleInfoPopup');
+  if(_it) _it.style.display='none'; if(_ip) _ip.style.display='none';
   resetBoard();turn="white";setPOV();coords();update();startGameMessage();gameStarted=false;
   document.getElementById("modeMenu").style.display="none";
   document.getElementById("botMenu").style.display="none";

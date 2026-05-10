@@ -2093,6 +2093,37 @@ function onlineLog(msg) { console.log('[online]', msg); }
 /* ── Play-step online overlay ──────────────────────────────── */
 var _psoInited = false;
 
+function _psoCancelSeekIfAny() {
+  if (ONLINE.mySeek) { onlineSend('corr:seek_cancel', {}); ONLINE.mySeek = null; }
+}
+
+function psoJoinTC(cat, tc) {
+  if (!ONLINE.loggedIn) { onlineShowToast('Login first', 0xff4444); return; }
+  var rated = document.getElementById('psoRatedChk') ? document.getElementById('psoRatedChk').checked : true;
+  var isCorr = (cat === 'correspondence');
+  document.getElementById('psoPlayOptions').style.display = 'none';
+  document.getElementById('psoLobbyArea').style.display = 'block';
+
+  if (isCorr) {
+    var secsMap = { '1d':86400,'2d':172800,'3d':259200,'5d':432000,'7d':604800,'14d':1209600,'30d':2592000 };
+    var secs = secsMap[tc] || (parseInt(tc) * 86400) || 86400;
+    onlineSend('corr:seek_post', { timePerMove: secs, colorPref: 'random', gameMode: 'standard' });
+    ONLINE.mySeek = { tc: tc };
+    var corrLabels = { '1d':'1 DAY','2d':'2 DAYS','3d':'3 DAYS','5d':'5 DAYS','7d':'7 DAYS','14d':'14 DAYS','30d':'30 DAYS' };
+    document.getElementById('psoLobbyText').textContent = 'SEEK POSTED — ' + (corrLabels[tc] || tc.toUpperCase());
+    document.getElementById('psoLobbyTimer').textContent = 'Waiting for an opponent to accept...';
+  } else {
+    if (_queued) return;
+    var eloRange = 150;
+    _queued = true; _queuedPool = 'standard_' + cat; _queuedTc = tc;
+    onlineSend('match:join', { timeControl: tc, gameMode: 'standard', ranked: rated, eloRange: eloRange });
+    var tcLabel = tc.replace('+', '|');
+    document.getElementById('psoLobbyText').textContent = 'SEARCHING — ' + tcLabel.toUpperCase();
+    document.getElementById('psoLobbyTimer').textContent = '';
+    onlineQueueTimer();
+  }
+}
+
 function _openOnlinePlayStep() {
   var overlay = document.getElementById('playStepOnline');
   if (!overlay) return;
@@ -2102,7 +2133,7 @@ function _openOnlinePlayStep() {
   _psoInited = true;
 
   document.getElementById('psoBack').onclick = function() {
-    SND.ui(); _psoLeaveIfQueued();
+    SND.ui(); _psoLeaveIfQueued(); _psoCancelSeekIfAny();
     overlay.style.display = 'none';
     document.getElementById('playStep2').style.display = 'flex';
   };
@@ -2115,24 +2146,38 @@ function _openOnlinePlayStep() {
   document.getElementById('psoLoginBtn').onclick = function() {
     SND.ui(); overlay.style.display = 'none'; onlineOpenLobby();
   };
-  document.getElementById('psoQuickMatch').onclick = function() {
-    SND.confirm(); if (!ONLINE.loggedIn) return;
-    _queued = true;
-    onlineSend('queue_join', { timeControl: 'none', gameMode: 'standard', ranked: true });
-    document.getElementById('psoPlayOptions').style.display = 'none';
-    document.getElementById('psoLobbyArea').style.display = 'block';
-    document.getElementById('psoLobbyText').textContent = 'SEARCHING...';
-    document.getElementById('psoLobbyTimer').textContent = '';
-    onlineQueueTimer();
+
+  // Rated toggle label
+  document.getElementById('psoRatedChk').onchange = function() {
+    var lbl = document.getElementById('psoRatedLabel');
+    if (lbl) { lbl.textContent = this.checked ? 'RATED' : 'UNRATED'; lbl.style.color = this.checked ? '#00ccff' : '#444'; }
   };
+
+  // More time controls expander
+  document.getElementById('psoMoreTCBtn').onclick = function() {
+    var m = document.getElementById('psoMoreTC'), open = m.style.display !== 'none';
+    m.style.display = open ? 'none' : 'flex';
+    this.textContent = open ? 'More time controls ▾' : 'Less ▴';
+  };
+
+  // Time control buttons
+  overlay.querySelectorAll('.psoTCBtn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      SND.confirm();
+      psoJoinTC(btn.dataset.cat, btn.dataset.tc);
+    });
+  });
+
   document.getElementById('psoFriendGame').onclick = function() {
     SND.confirm(); overlay.style.display = 'none'; openFriendPanel(false, true);
   };
   document.getElementById('psoPrivateGame').onclick = function() {
-    SND.confirm(); onlineSend('room_create', { timeControl: 'none', gameMode: 'standard', ranked: false });
+    SND.confirm();
+    var rated = document.getElementById('psoRatedChk').checked;
+    onlineSend('room_create', { timeControl: 'none', gameMode: 'standard', ranked: rated });
   };
   document.getElementById('psoCancelBtn').onclick = function() {
-    SND.ui(); _psoLeaveIfQueued();
+    SND.ui(); _psoLeaveIfQueued(); _psoCancelSeekIfAny();
     document.getElementById('psoLobbyArea').style.display = 'none';
     document.getElementById('psoPlayOptions').style.display = 'block';
   };
@@ -2555,7 +2600,8 @@ drawSettingsPreview = function(page) {
     'arcadeBar','clockW','clockB','clockToggleBtn','onlineColorIndicator',
     'offlineBanner',
     'onlineStatusBar', 'onlineWidget', 'signalIndicator',
-    'hudGearBtn', 'hudQuickPanel'
+    'hudGearBtn', 'hudQuickPanel',
+    'puzzleInfoToggle', 'puzzleInfoPopup'
   ];
   // Expose hidden state globally so intervals/functions can respect it
   window._uiHidden = false;

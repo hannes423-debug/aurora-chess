@@ -871,11 +871,24 @@ function startPuzzle(index, tutKey) {
 
   loadPuzzlePieces(puzData);
 
-  document.getElementById('puzzleBar').style.display     = 'block';
   document.getElementById('puzzleBarName').textContent   = puzData.name.toUpperCase();
   document.getElementById('puzzleBarStatus').textContent = puzData.objective;
   document.getElementById('puzzleBarName').style.color   = '';
   document.getElementById('hud').textContent = turn.charAt(0).toUpperCase() + turn.slice(1) + ' to move';
+
+  // Show info popup — auto-collapses after 3.5s; toggle button stays visible
+  (function() {
+    const btn = document.getElementById('puzzleInfoToggle');
+    const pop = document.getElementById('puzzleInfoPopup');
+    if (btn) btn.style.display = 'block';
+    if (pop) {
+      pop.style.display = 'block';
+      clearTimeout(window._puzzleInfoAutoHide);
+      window._puzzleInfoAutoHide = setTimeout(() => {
+        if (pop) pop.style.display = 'none';
+      }, 3500);
+    }
+  })();
 
   setPOV();
   if (isInCheck('white')) {
@@ -886,9 +899,14 @@ function startPuzzle(index, tutKey) {
 
 function exitPuzzleMode() {
   PUZZLE_MODE = false; PUZZLE_ACTIVE = -1; PUZZLE_TUT_KEY = -1;
-  document.getElementById('puzzleBar').style.display     = 'none';
+  clearTimeout(window._puzzleInfoAutoHide);
   document.getElementById('puzzleSuccess').style.display = 'none';
-  (function(){ const h=document.getElementById('hintBtn'), u=document.getElementById('undoBtn'); if(h) h.style.display='none'; if(u) u.style.display='none'; })();
+  (function(){
+    const h=document.getElementById('hintBtn'), u=document.getElementById('undoBtn');
+    if(h) h.style.display='none'; if(u) u.style.display='none';
+    const btn=document.getElementById('puzzleInfoToggle'), pop=document.getElementById('puzzleInfoPopup');
+    if(btn) btn.style.display='none'; if(pop) pop.style.display='none';
+  })();
 }
 
 function checkPuzzleCondition(puzData, movedPiece, target) {
@@ -919,7 +937,8 @@ function showPuzzleSuccess(puzData) {
     if (totalSolved >= 50)  window.Steam.unlockAchievement('PUZZLES_50');
   }
 
-  document.getElementById('puzzleBar').style.display = 'none';
+  clearTimeout(window._puzzleInfoAutoHide);
+  const _infoP = document.getElementById('puzzleInfoPopup'); if (_infoP) _infoP.style.display = 'none';
   const el = document.getElementById('puzzleSuccess');
   document.getElementById('puzSuccessTitle').textContent = puzData.name.toUpperCase();
   document.getElementById('puzSuccessDesc').textContent  = 'Solved! ' + puzData.objective;
@@ -975,6 +994,13 @@ executeMove = function(piece, moveTarget) {
     } else if (puzData.movesAllowed && PUZZLE_MOVES_MADE >= puzData.movesAllowed) {
       document.getElementById('puzzleBarStatus').textContent = '✗ Try again — ' + puzData.objective;
       document.getElementById('puzzleBarName').style.color = '#ff6666';
+      // Briefly show the popup so the fail message is visible
+      const _failPop = document.getElementById('puzzleInfoPopup');
+      if (_failPop) {
+        _failPop.style.display = 'block';
+        clearTimeout(window._puzzleInfoAutoHide);
+        window._puzzleInfoAutoHide = setTimeout(() => { if(_failPop) _failPop.style.display='none'; }, 3500);
+      }
       SND.ui();
     }
   }, 350);
@@ -1078,6 +1104,66 @@ function doPuzzleUndo() {
     document.getElementById('puzzleBarName').style.color   = '';
   }
 }
+// Wire puzzle info toggle button
+(function() {
+  const btn = document.getElementById('puzzleInfoToggle');
+  const pop = document.getElementById('puzzleInfoPopup');
+  if (btn && pop) {
+    btn.addEventListener('click', () => {
+      clearTimeout(window._puzzleInfoAutoHide);
+      pop.style.display = pop.style.display === 'none' ? 'block' : 'none';
+    });
+  }
+})();
+
+// Highlight (pulse) the piece that needs to move next in the puzzle solution.
+// Tracks PUZZLE_MOVES_MADE so multi-move hints stay accurate throughout.
+function flashHintPiece(puzData) {
+  if (!puzData || !puzData.solution) return;
+  const moveIdx = PUZZLE_MOVES_MADE;
+  if (moveIdx >= puzData.solution.length) return;
+  const from = puzData.solution[moveIdx].from;
+  // Switch to the piece's layer so it's fully visible regardless of where user is
+  if (typeof jumpToLayer === 'function') jumpToLayer(from.z);
+  const piece = occ(from.x, from.y, from.z);
+  if (!piece) return;
+
+  const meshes = [];
+  piece.traverse(o => {
+    if (o.isMesh && !o.userData.isOutline && !o.userData.isHighlightEffect) meshes.push(o);
+  });
+  if (!meshes.length) return;
+
+  const origEmissives = meshes.map(m => ({
+    r: m.material.emissive ? m.material.emissive.r : 0,
+    g: m.material.emissive ? m.material.emissive.g : 0,
+    b: m.material.emissive ? m.material.emissive.b : 0,
+    i: m.material.emissiveIntensity || 0
+  }));
+
+  const duration = 2400;
+  const start = performance.now();
+
+  function _pulse() {
+    const elapsed = performance.now() - start;
+    if (elapsed > duration) {
+      meshes.forEach((m, i) => {
+        if (m.material.emissive) m.material.emissive.setRGB(origEmissives[i].r, origEmissives[i].g, origEmissives[i].b);
+        m.material.emissiveIntensity = origEmissives[i].i;
+      });
+      return;
+    }
+    const t = elapsed / duration;
+    const pulse = 0.5 + 0.5 * Math.sin(t * Math.PI * 8); // ~4 pulses over 2.4s
+    meshes.forEach(m => {
+      if (m.material.emissive) m.material.emissive.setRGB(1, 0.65, 0.1);
+      m.material.emissiveIntensity = pulse * 2.2;
+    });
+    requestAnimationFrame(_pulse);
+  }
+  _pulse();
+}
+
 document.getElementById('puzzleShareBtn').onclick = () => {
   if (!PUZZLE_MODE || PUZZLE_ACTIVE < 0) return;
   const puzzleNum = PUZZLE_ACTIVE + 1;

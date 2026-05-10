@@ -684,6 +684,11 @@ function renderSavedGames() {
 
 document.getElementById('profileCloseBtn').onclick = () => {
   document.getElementById('profileOverlay').style.display = 'none';
+  if (window._profileOrigin === 'pauseMenu') {
+    document.getElementById('pauseMenu').style.display = 'flex';
+  } else {
+    document.getElementById('mainMenu').style.display = 'flex';
+  }
 };
 document.getElementById('profileViewFriendsBtn').onclick = () => {
   document.getElementById('profileOverlay').style.display = 'none';
@@ -731,6 +736,7 @@ document.getElementById('deleteAccountConfirmBtn').onclick = () => {
 document.getElementById('pauseProfileBtn').onclick = () => {
   SND.ui();
   document.getElementById('pauseMenu').style.display = 'none';
+  window._profileOrigin = 'pauseMenu';
   openProfileOverlay();
 };
 
