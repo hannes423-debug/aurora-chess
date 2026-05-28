@@ -30,7 +30,7 @@ function _onlineConfirm(message, onConfirm) {
     + 'padding:24px 28px;z-index:9999;text-align:center;letter-spacing:1px;min-width:220px;border-radius:4px;';
   el.innerHTML = '<div style="font-size:11px;color:#6ab4d8;margin-bottom:16px;">'+_esc(message)+'</div>'
     + '<div style="display:flex;gap:8px;justify-content:center;">'
-    + '<button id="_ocYes" style="background:#1a0030;border:1px solid #e95420;color:#e95420;font-family:monospace;font-size:10px;padding:7px 18px;cursor:pointer;letter-spacing:1px;">YES</button>'
+    + '<button id="_ocYes" style="background:rgba(10,12,20,0.95);border:1px solid #00e5ff;color:#00e5ff;font-family:monospace;font-size:10px;padding:7px 18px;cursor:pointer;letter-spacing:1px;">YES</button>'
     + '<button id="_ocNo" style="background:#040c16;border:1px solid #0a1e30;color:#3a7a9b;font-family:monospace;font-size:10px;padding:7px 16px;cursor:pointer;letter-spacing:1px;">CANCEL</button>'
     + '</div>';
   document.body.appendChild(el);
@@ -768,11 +768,11 @@ document.getElementById('openOnlineBtn').onclick = function() {
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.88);display:none;'
     + 'flex-direction:column;justify-content:center;align-items:center;z-index:44;font-family:monospace;color:#cce8ff;';
   overlay.innerHTML = `
-    <div style="width:280px;background:#0d0020;border:1px solid #0a1e30;border-radius:6px;padding:22px 20px;position:relative;">
+    <div style="width:280px;background:rgba(10,12,20,0.95);border:1px solid #0a1e30;border-radius:6px;padding:22px 20px;position:relative;">
       <div style="font-size:15px;letter-spacing:4px;color:#00e5ff;margin-bottom:4px;">SUPPORT</div>
       <div style="font-size:9px;color:#3a7a9b;letter-spacing:2px;margin-bottom:20px;">AURORA CHESS</div>
 
-      <button id="supBugBtn" style="width:100%;background:#1a0030;border:1px solid #e95420;color:#e95420;padding:11px;font-family:monospace;font-size:11px;cursor:pointer;letter-spacing:2px;border-radius:3px;margin-bottom:10px;">
+      <button id="supBugBtn" style="width:100%;background:rgba(10,12,20,0.95);border:1px solid #00e5ff;color:#00e5ff;padding:11px;font-family:monospace;font-size:11px;cursor:pointer;letter-spacing:2px;border-radius:3px;margin-bottom:10px;">
         🐛  REPORT A BUG
       </button>
       <button id="supFeatureBtn" style="width:100%;background:#001a10;border:1px solid #00cc66;color:#00cc66;padding:11px;font-family:monospace;font-size:11px;cursor:pointer;letter-spacing:2px;border-radius:3px;margin-bottom:18px;">
