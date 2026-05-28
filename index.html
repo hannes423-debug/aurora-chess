@@ -75,7 +75,7 @@
 html, body {
   margin: 0; padding: 0;
   width: 100%; height: 100%;
-  overflow: hidden; background: #120020;
+  overflow: hidden; background: #05060f;
   position: fixed; top: 0; left: 0;
 }
 
@@ -568,18 +568,27 @@ body { min-height: -webkit-fill-available; -webkit-touch-callout: none; -webkit-
   #onlineWidget { display: none !important; }
 }
 
-/* ── Ubuntu purple theme — overlay & menu overrides ── */
-#mainMenu, #modeMenu, #botMenu, #pauseMenu, #endMenu,
+/* ── Aurora Waves theme — menu background overrides ── */
+#mainMenu {
+  background: transparent !important;
+}
+#modeMenu, #botMenu, #pauseMenu, #endMenu,
 #gameModesMenu, #ctfMenu,
 #uiSettingsOverlay, #tutorialOverlay, #puzzleSelectOverlay {
-  background: rgba(12,0,24,0.90) !important;
+  background: rgba(5,6,15,0.88) !important;
 }
-/* Main menu title gradient */
+.playStep { background: rgba(5,6,15,0.90) !important; }
+/* Main menu title — aurora style */
 #mainMenu h1 {
-  background: linear-gradient(135deg, #ce93d8 0%, #e95420 100%);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  background-clip: text;
-  filter: drop-shadow(0 0 18px rgba(180,80,255,0.45));
+  font-size: clamp(2rem,5vw,4.5rem) !important;
+  font-weight: 300 !important;
+  letter-spacing: 0.35em !important;
+  background: none !important;
+  -webkit-text-fill-color: unset !important;
+  color: rgba(255,255,255,0.88) !important;
+  text-shadow: 0 0 40px rgba(100,200,255,0.35), 0 0 80px rgba(100,180,255,0.15) !important;
+  filter: none !important;
+  margin-bottom: 0.2em !important;
 }
 /* Main menu subtitle & server status */
 #mainMenu > div > div[style*="color:#333"],
@@ -1623,74 +1632,28 @@ body.gamepad-mode #gpHintBar { display: flex; }
 
 
 <!-- ======================================================
-     MENU BACKGROUND — Aurora canvas shown whenever any
-     pre-game menu is open. Blocks the Three.js board.
+     AURORA WAVES BACKGROUND — canvas shown during menus
+     and as a masked frame during gameplay.
 ====================================================== -->
 <style>
 #menuBg {
   position: fixed; inset: 0; z-index: 39;
-  background: #0c0018;
+  background: #05060f;
   overflow: hidden;
-  display: block; /* visible by default — game opens on main menu */
+  display: block;
 }
-/* Animated aurora blobs */
-#menuBg .ab {
-  position: absolute;
-  border-radius: 50%;
-  pointer-events: none;
-}
-#menuBg .ab1 {
-  width: 70vw; height: 55vh;
-  background: radial-gradient(ellipse at 50% 50%, rgba(180,60,255,0.28) 0%, transparent 70%);
-  top: -15%; left: 15%;
-  filter: blur(60px);
-  animation: abMove1 18s ease-in-out infinite;
-}
-#menuBg .ab2 {
-  width: 55vw; height: 60vh;
-  background: radial-gradient(ellipse at 50% 50%, rgba(233,84,32,0.18) 0%, transparent 70%);
-  bottom: 0%; right: -5%;
-  filter: blur(70px);
-  animation: abMove2 24s ease-in-out infinite;
-}
-#menuBg .ab3 {
-  width: 45vw; height: 45vh;
-  background: radial-gradient(ellipse at 50% 50%, rgba(100,30,180,0.32) 0%, transparent 70%);
-  bottom: -10%; left: -5%;
-  filter: blur(55px);
-  animation: abMove3 20s ease-in-out infinite;
-}
-#menuBg .ab4 {
-  width: 30vw; height: 30vh;
-  background: radial-gradient(ellipse at 50% 50%, rgba(206,147,216,0.15) 0%, transparent 70%);
-  top: 30%; left: 50%;
-  filter: blur(40px);
-  animation: abMove4 14s ease-in-out infinite;
-}
-/* Stars layer */
-#menuBg canvas#menuStars {
+#menuBg canvas {
   position: absolute; inset: 0;
   width: 100%; height: 100%;
-  opacity: 0.5;
 }
-@keyframes abMove1 {
-  0%,100% { transform: translate(0, 0) scale(1); }
-  30%     { transform: translate(6vw, -4vh) scale(1.1); }
-  65%     { transform: translate(-4vw, 6vh) scale(0.95); }
-}
-@keyframes abMove2 {
-  0%,100% { transform: translate(0, 0) scale(1); }
-  40%     { transform: translate(-5vw, -3vh) scale(1.15); }
-  70%     { transform: translate(3vw, 5vh) scale(0.9); }
-}
-@keyframes abMove3 {
-  0%,100% { transform: translate(0, 0) scale(1); }
-  50%     { transform: translate(7vw, -5vh) scale(1.12); }
-}
-@keyframes abMove4 {
-  0%,100% { transform: translate(0, 0) scale(1); }
-  25%     { transform: translate(-3vw, 4vh) scale(1.2); }
-  75%     { transform: translate(4vw, -3vh) scale(0.85); }
+/* Gameplay aurora: always-on, center masked out so the board is clear */
+#auroraGameBg {
+  position: fixed; inset: 0; z-index: 2;
+  pointer-events: none;
+  display: none;
+  opacity: 0.6;
+  -webkit-mask-image: radial-gradient(ellipse 54% 58% at 50% 50%, transparent 0%, rgba(0,0,0,0.4) 38%, black 65%);
+  mask-image: radial-gradient(ellipse 54% 58% at 50% 50%, transparent 0%, rgba(0,0,0,0.4) 38%, black 65%);
 }
 
 /* ══ PLAY FLOW ══ */
@@ -1745,12 +1708,10 @@ body.gamepad-mode #gpHintBar { display: flex; }
 .psoToggle input:checked + .psoToggleSlider:before{transform:translateX(18px);background:#00ccff;}
 </style>
 
+<canvas id="auroraGameBg"></canvas>
+
 <div id="menuBg">
-  <canvas id="menuStars"></canvas>
-  <div class="ab ab1"></div>
-  <div class="ab ab2"></div>
-  <div class="ab ab3"></div>
-  <div class="ab ab4"></div>
+  <canvas id="menuAuroraCanvas"></canvas>
 </div>
 
 <!-- ======================================================
@@ -1763,8 +1724,8 @@ body.gamepad-mode #gpHintBar { display: flex; }
   z-index:40;color:#f0e6ff;font-family:monospace;
   padding: env(safe-area-inset-top,12px) env(safe-area-inset-right,0) env(safe-area-inset-bottom,12px) env(safe-area-inset-left,0);
 ">
-  <h1 style="margin:0 0 6px;font-size:28px;letter-spacing:6px;position:relative;z-index:1;background:linear-gradient(135deg,#ce93d8,#e95420);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 18px rgba(180,80,255,0.4));">AURORA</h1>
-  <div style="color:#5e2750;font-size:9px;letter-spacing:4px;margin-bottom:28px;position:relative;z-index:1;">CHESS</div>
+  <h1 style="margin:0 0 0.25em;position:relative;z-index:1;">AURORA CHESS</h1>
+  <div style="font-size:clamp(0.6rem,1.4vw,1rem);letter-spacing:0.55em;text-transform:uppercase;color:rgba(160,200,240,0.5);margin-bottom:36px;position:relative;z-index:1;">A NEW DIMENSION</div>
 
   <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:0;">
     <button class="modeBtn" id="mainPlayBtn"    style="margin-bottom:4px;">▶ Play</button>
@@ -6337,37 +6298,157 @@ function _b64ToArrayBuffer(b64) {
 <script src="js/18_ctf_input.js?v=20260509e"></script>
 <script src="js/19_online.js?v=20260509e"></script>
 <script>
-/* ── Stars canvas for menu background ── */
-(function(){
-  const c = document.getElementById('menuStars');
-  function drawStars() {
-    c.width = window.innerWidth; c.height = window.innerHeight;
-    const ctx = c.getContext('2d');
-    for (let i = 0; i < 160; i++) {
-      const x = Math.random()*c.width, y = Math.random()*c.height;
-      const r = Math.random()*1.2+0.2;
-      ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2);
-      ctx.fillStyle = 'rgba(255,255,255,'+(Math.random()*0.5+0.1).toFixed(2)+')';
-      ctx.fill();
+/* ── Aurora Waves animation — runs on both menu bg and gameplay frame ── */
+(function() {
+  var PALETTES = [
+    { r:[0,40],   g:[180,240], b:[200,255], a:0.22 },
+    { r:[120,180],g:[40,80],   b:[200,255], a:0.18 },
+    { r:[20,60],  g:[200,255], b:[100,160], a:0.16 },
+    { r:[30,80],  g:[60,130],  b:[200,255], a:0.20 },
+    { r:[200,255],g:[100,160], b:[80,140],  a:0.10 },
+    { r:[180,220],g:[210,240], b:[240,255], a:0.08 },
+  ];
+  var ribbonDefs = [
+    {yPct:0.55,amp:70,thick:120,speed:0.25,freq:4.5,pal:3,phase:0,   blur:18},
+    {yPct:0.40,amp:55,thick:100,speed:0.20,freq:3.8,pal:2,phase:2.0, blur:14},
+    {yPct:0.50,amp:50,thick:55, speed:0.35,freq:5.2,pal:0,phase:0.5, blur:6 },
+    {yPct:0.58,amp:45,thick:45, speed:0.40,freq:5.8,pal:1,phase:1.2, blur:4 },
+    {yPct:0.45,amp:40,thick:50, speed:0.30,freq:4.0,pal:2,phase:3.1, blur:5 },
+    {yPct:0.62,amp:35,thick:35, speed:0.45,freq:6.5,pal:4,phase:4.0, blur:3 },
+    {yPct:0.52,amp:35,thick:22, speed:0.50,freq:6.0,pal:0,phase:0.8, blur:0 },
+    {yPct:0.48,amp:30,thick:18, speed:0.55,freq:7.0,pal:5,phase:1.5, blur:0 },
+    {yPct:0.56,amp:28,thick:16, speed:0.60,freq:7.5,pal:1,phase:2.5, blur:0 },
+  ];
+
+  function lerp(range, t) { return Math.round(range[0] + (range[1]-range[0])*t); }
+
+  function initAurora(canvasId) {
+    var canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+    var W, H, dpr, stars = [];
+
+    function resize() {
+      dpr = Math.min(window.devicePixelRatio||1, 2);
+      W = window.innerWidth; H = window.innerHeight;
+      canvas.width = W*dpr; canvas.height = H*dpr;
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+      genStars();
     }
+    function genStars() {
+      stars = [];
+      var count = Math.floor((W*H)/3500);
+      for (var i=0;i<count;i++) {
+        stars.push({x:Math.random()*W, y:Math.random()*H,
+          r:Math.random()*1.2+0.3, brightness:Math.random(),
+          speed:Math.random()*0.4+0.1, phase:Math.random()*Math.PI*2});
+      }
+    }
+    function drawStars(t) {
+      for (var i=0;i<stars.length;i++) {
+        var s=stars[i];
+        var fl=0.4+0.6*(0.5+0.5*Math.sin(t*s.speed+s.phase));
+        ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+        ctx.fillStyle='rgba(200,220,255,'+(s.brightness*fl*0.7).toFixed(3)+')';
+        ctx.fill();
+      }
+    }
+    function drawOrbs(t) {
+      var orbs=[
+        {x:0.25,y:0.45,r:250,c:[60,200,230], s:0.07,d:60},
+        {x:0.70,y:0.55,r:300,c:[140,60,220], s:0.05,d:80},
+        {x:0.50,y:0.40,r:220,c:[40,220,140], s:0.06,d:50},
+        {x:0.85,y:0.35,r:180,c:[200,130,100],s:0.04,d:70},
+      ];
+      for (var i=0;i<orbs.length;i++) {
+        var o=orbs[i];
+        var cx=o.x*W+Math.sin(t*o.s)*o.d;
+        var cy=o.y*H+Math.cos(t*o.s*0.8+1)*o.d*0.6;
+        var pulse=0.8+0.2*Math.sin(t*o.s*2);
+        var g=ctx.createRadialGradient(cx,cy,0,cx,cy,o.r*pulse);
+        g.addColorStop(0,'rgba('+o.c.join(',')+',0.08)');
+        g.addColorStop(0.5,'rgba('+o.c.join(',')+',0.03)');
+        g.addColorStop(1,'rgba('+o.c.join(',')+',0)');
+        ctx.fillStyle=g; ctx.fillRect(cx-o.r,cy-o.r,o.r*2,o.r*2);
+      }
+    }
+    function drawRibbon(rd, t) {
+      var p=PALETTES[rd.pal%PALETTES.length];
+      var ti=t*rd.speed+rd.phase;
+      ctx.save();
+      if (rd.blur>0) ctx.filter='blur('+rd.blur+'px)';
+      var pts=[], seg=200;
+      for (var i=0;i<=seg;i++) {
+        var ratio=i/seg, x=ratio*(W+40)-20;
+        var y=rd.yPct*H
+          +Math.sin(ratio*rd.freq+ti)*rd.amp*(H/900)
+          +Math.sin(ratio*rd.freq*1.7+ti*0.6+1.3)*rd.amp*(H/900)*0.35
+          +Math.sin(ratio*rd.freq*0.4+ti*0.3+2.7)*rd.amp*(H/900)*0.5
+          +Math.sin(ti*0.15+ratio*0.8)*rd.amp*(H/900)*0.15;
+        pts.push({x:x,y:y});
+      }
+      var th=rd.thick*(H/900);
+      var gr=ctx.createLinearGradient(0,0,W,0);
+      var ctr=0.4+0.2*Math.sin(ti*0.1);
+      gr.addColorStop(0,'rgba('+p.r[0]+','+p.g[0]+','+p.b[0]+',0)');
+      gr.addColorStop(Math.max(0.05,ctr-0.25),'rgba('+lerp(p.r,0.5)+','+lerp(p.g,0.5)+','+lerp(p.b,0.5)+','+p.a+')');
+      gr.addColorStop(ctr,'rgba('+p.r[1]+','+p.g[1]+','+p.b[1]+','+(p.a*1.3)+')');
+      gr.addColorStop(Math.min(0.95,ctr+0.25),'rgba('+lerp(p.r,0.5)+','+lerp(p.g,0.5)+','+lerp(p.b,0.5)+','+p.a+')');
+      gr.addColorStop(1,'rgba('+p.r[0]+','+p.g[0]+','+p.b[0]+',0)');
+      ctx.beginPath();
+      ctx.moveTo(pts[0].x,pts[0].y-th/2);
+      for (var i=1;i<pts.length-1;i++) {
+        ctx.quadraticCurveTo(pts[i].x,pts[i].y-th/2,(pts[i].x+pts[i+1].x)/2,(pts[i].y+pts[i+1].y-th)/2);
+      }
+      for (var i=pts.length-1;i>0;i--) {
+        ctx.quadraticCurveTo(pts[i].x,pts[i].y+th/2,(pts[i].x+pts[i-1].x)/2,(pts[i].y+pts[i-1].y+th)/2);
+      }
+      ctx.closePath(); ctx.fillStyle=gr; ctx.fill();
+      ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y);
+      for (var i=1;i<pts.length-1;i++) {
+        ctx.quadraticCurveTo(pts[i].x,pts[i].y,(pts[i].x+pts[i+1].x)/2,(pts[i].y+pts[i+1].y)/2);
+      }
+      ctx.strokeStyle=gr; ctx.lineWidth=1.2; ctx.globalAlpha=0.6; ctx.stroke(); ctx.globalAlpha=1;
+      ctx.restore();
+    }
+    function frame(ts) {
+      var t=ts*0.001;
+      var bg=ctx.createRadialGradient(W*0.5,H*0.45,0,W*0.5,H*0.5,Math.max(W,H)*0.8);
+      bg.addColorStop(0,'#0a0e1a'); bg.addColorStop(0.5,'#060a14'); bg.addColorStop(1,'#020308');
+      ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+      drawStars(t); drawOrbs(t);
+      for (var i=0;i<ribbonDefs.length;i++) drawRibbon(ribbonDefs[i],t);
+      var vig=ctx.createRadialGradient(W/2,H/2,H*0.3,W/2,H/2,Math.max(W,H)*0.75);
+      vig.addColorStop(0,'rgba(0,0,0,0)'); vig.addColorStop(1,'rgba(0,0,0,0.55)');
+      ctx.fillStyle=vig; ctx.fillRect(0,0,W,H);
+      requestAnimationFrame(frame);
+    }
+    window.addEventListener('resize', resize);
+    resize();
+    requestAnimationFrame(frame);
   }
-  drawStars(); window.addEventListener('resize', drawStars);
+
+  initAurora('menuAuroraCanvas');
+  initAurora('auroraGameBg');
 })();
 
-/* ── Auto-show/hide #menuBg whenever a pre-game menu is open ── */
+/* ── Auto-show/hide #menuBg + #auroraGameBg based on menu state ── */
 (function(){
-  const bg = document.getElementById('menuBg');
-  const watchIds = ['mainMenu','modeMenu','botMenu','gameModesMenu','arcadeMenu','ctfMenu'];
+  var bg = document.getElementById('menuBg');
+  var gameBg = document.getElementById('auroraGameBg');
+  var watchIds = ['mainMenu','modeMenu','botMenu','gameModesMenu','arcadeMenu','ctfMenu',
+                  'playStep1','playStep2','playStep3','playStepOnline'];
   function update() {
-    const any = watchIds.some(function(id){
-      const e = document.getElementById(id);
+    var any = watchIds.some(function(id){
+      var e = document.getElementById(id);
       return e && e.style.display !== 'none';
     });
     bg.style.display = any ? 'block' : 'none';
+    gameBg.style.display = any ? 'none' : 'block';
   }
-  const obs = new MutationObserver(update);
+  var obs = new MutationObserver(update);
   watchIds.forEach(function(id){
-    const e = document.getElementById(id);
+    var e = document.getElementById(id);
     if (e) obs.observe(e, {attributes:true, attributeFilter:['style']});
   });
   update();
