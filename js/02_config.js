@@ -298,17 +298,17 @@ const CFG = {
   pieces: {
     white: {
       color: 0xffffff, outlineColor: 0x888888, outlineSelColor: 0x00ffff, thickness: 0.038,
-      materialPreset: 'plastic', baseOpacity: 0.9,
-      emissiveColor: 0x000000, emissiveIntensity: 0.0,
-      roughness: 0.4,
+      materialPreset: 'cosmic', baseOpacity: 0.9,
+      emissiveColor: 0x4400cc, emissiveIntensity: 1.5,
+      roughness: 0.15,
       highlightStyle: 'outline', highlightColor: 0x888888,
       useGLB: true,
     },
     black: {
       color: 0x555555, outlineColor: 0x222222, outlineSelColor: 0xff5500, thickness: 0.038,
-      materialPreset: 'plastic', baseOpacity: 0.9,
-      emissiveColor: 0x000000, emissiveIntensity: 0.0,
-      roughness: 0.4,
+      materialPreset: 'cosmic', baseOpacity: 0.9,
+      emissiveColor: 0x4400cc, emissiveIntensity: 1.5,
+      roughness: 0.15,
       highlightStyle: 'outline', highlightColor: 0x222222,
       useGLB: true,
     }
