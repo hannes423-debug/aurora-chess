@@ -561,6 +561,25 @@ resetBoard = function(c) {
     var move2 = legal2.find(function(mv2) { return mv2.x === sq.x && mv2.y === sq.y && mv2.z === sq.z; });
 
     if (!move2) {
+      // Auto-layer-switch: if enabled and the clicked (x,y) matches a legal move on another layer, animate there and execute
+      if (typeof UI_PREFS !== 'undefined' && UI_PREFS.autoLayerSwitch) {
+        var crossMove = legal2.find(function(mv2) { return mv2.x === sq.x && mv2.y === sq.y && mv2.z !== sq.z; });
+        if (crossMove) {
+          var _prevSel3 = selectedPawn;
+          clearSelection();
+          animLayerCrawl(activeZ, crossMove.z, 200, function() {
+            activeZ = crossMove.z;
+            var sl = document.getElementById('zSlider'); if (sl) sl.value = activeZ;
+            update(); coords(); camOnLayerChange();
+            if (_prevSel3.userData.type === 'king' && crossMove.castle) executeCastle(crossMove, _prevSel3);
+            executeMove(_prevSel3, crossMove);
+            fadeHighlight(crossMove.x, crossMove.y, crossMove.z, _prevSel3);
+            if (!gameStarted) gameStarted = true;
+            document.getElementById('hud').textContent = turn.charAt(0).toUpperCase() + turn.slice(1) + ' to move';
+          });
+          return;
+        }
+      }
       // Clicked empty square or non-move square — check if own piece is there to switch
       var sp2 = occ(sq.x, sq.y, sq.z);
       if (sp2 && sp2.userData.color === turn && ((!botColor && !ONLINE.inMatch) || sp2.userData.color === playerColor)) {

@@ -26,12 +26,12 @@ function _onlineConfirm(message, onConfirm) {
   var el = document.createElement('div');
   el.id = '_onlineConfirmModal';
   el.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);'
-    + 'background:rgba(0,0,0,0.97);border:1px solid #3d1055;font-family:monospace;color:#f0e6ff;'
+    + 'background:rgba(0,0,0,0.97);border:1px solid #0a1e30;font-family:monospace;color:#cce8ff;'
     + 'padding:24px 28px;z-index:9999;text-align:center;letter-spacing:1px;min-width:220px;border-radius:4px;';
-  el.innerHTML = '<div style="font-size:11px;color:#9b8fa8;margin-bottom:16px;">'+_esc(message)+'</div>'
+  el.innerHTML = '<div style="font-size:11px;color:#6ab4d8;margin-bottom:16px;">'+_esc(message)+'</div>'
     + '<div style="display:flex;gap:8px;justify-content:center;">'
     + '<button id="_ocYes" style="background:#1a0030;border:1px solid #e95420;color:#e95420;font-family:monospace;font-size:10px;padding:7px 18px;cursor:pointer;letter-spacing:1px;">YES</button>'
-    + '<button id="_ocNo" style="background:#1e0535;border:1px solid #3d1055;color:#5e2750;font-family:monospace;font-size:10px;padding:7px 16px;cursor:pointer;letter-spacing:1px;">CANCEL</button>'
+    + '<button id="_ocNo" style="background:#040c16;border:1px solid #0a1e30;color:#3a7a9b;font-family:monospace;font-size:10px;padding:7px 16px;cursor:pointer;letter-spacing:1px;">CANCEL</button>'
     + '</div>';
   document.body.appendChild(el);
   el.querySelector('#_ocYes').onclick = function() { el.remove(); onConfirm(); };
@@ -766,11 +766,11 @@ document.getElementById('openOnlineBtn').onclick = function() {
   var overlay = document.createElement('div');
   overlay.id = 'supportOverlay';
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.88);display:none;'
-    + 'flex-direction:column;justify-content:center;align-items:center;z-index:44;font-family:monospace;color:#f0e6ff;';
+    + 'flex-direction:column;justify-content:center;align-items:center;z-index:44;font-family:monospace;color:#cce8ff;';
   overlay.innerHTML = `
-    <div style="width:280px;background:#0d0020;border:1px solid #3d1055;border-radius:6px;padding:22px 20px;position:relative;">
-      <div style="font-size:15px;letter-spacing:4px;color:#ce93d8;margin-bottom:4px;">SUPPORT</div>
-      <div style="font-size:9px;color:#5e2750;letter-spacing:2px;margin-bottom:20px;">AURORA CHESS</div>
+    <div style="width:280px;background:#0d0020;border:1px solid #0a1e30;border-radius:6px;padding:22px 20px;position:relative;">
+      <div style="font-size:15px;letter-spacing:4px;color:#00e5ff;margin-bottom:4px;">SUPPORT</div>
+      <div style="font-size:9px;color:#3a7a9b;letter-spacing:2px;margin-bottom:20px;">AURORA CHESS</div>
 
       <button id="supBugBtn" style="width:100%;background:#1a0030;border:1px solid #e95420;color:#e95420;padding:11px;font-family:monospace;font-size:11px;cursor:pointer;letter-spacing:2px;border-radius:3px;margin-bottom:10px;">
         🐛  REPORT A BUG
@@ -779,15 +779,15 @@ document.getElementById('openOnlineBtn').onclick = function() {
         ✨  SUGGEST A FEATURE
       </button>
 
-      <div style="font-size:9px;color:#5e2750;letter-spacing:2px;margin-bottom:6px;">CONTACT</div>
-      <a href="mailto:AuroraChess3d@gmail.com" style="display:block;font-size:11px;color:#ce93d8;letter-spacing:1px;text-decoration:none;margin-bottom:18px;">AuroraChess3d@gmail.com</a>
+      <div style="font-size:9px;color:#3a7a9b;letter-spacing:2px;margin-bottom:6px;">CONTACT</div>
+      <a href="mailto:AuroraChess3d@gmail.com" style="display:block;font-size:11px;color:#00e5ff;letter-spacing:1px;text-decoration:none;margin-bottom:18px;">AuroraChess3d@gmail.com</a>
 
       <div style="font-size:9px;color:#333;line-height:1.8;">
         Aurora Chess &copy; 2025<br>
         <a href="http://100.94.74.5:3000/privacy" target="_blank" rel="noopener" style="color:#333;text-decoration:none;">Privacy Policy</a>
       </div>
 
-      <button id="supCloseBtn" style="position:absolute;top:10px;right:12px;background:none;border:none;color:#5e2750;font-size:16px;cursor:pointer;font-family:monospace;line-height:1;">✕</button>
+      <button id="supCloseBtn" style="position:absolute;top:10px;right:12px;background:none;border:none;color:#3a7a9b;font-size:16px;cursor:pointer;font-family:monospace;line-height:1;">✕</button>
     </div>`;
   document.body.appendChild(overlay);
 
@@ -849,7 +849,7 @@ var LOBBY_TCS = [
   ]}
 ];
 
-var BADGE_COLORS = { rapid: '#00ccff', blitz: '#ffaa00', classical: '#ce93d8', correspondence: '#00ff88' };
+var BADGE_COLORS = { rapid: '#00ccff', blitz: '#ffaa00', classical: '#00e5ff', correspondence: '#00ff88' };
 
 function _tcId(tc) { return tc.replace(/\+/g,'p').replace(/\|/g,'_'); }
 
@@ -903,7 +903,7 @@ var _onlineLobby = (function() {
     <div style="width:320px;">
       <!-- Header -->
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-        <div style="font-size:15px;letter-spacing:4px;color:#f0e6ff;">ONLINE PLAY</div>
+        <div style="font-size:15px;letter-spacing:4px;color:#cce8ff;">ONLINE PLAY</div>
         <div id="onlineLobbyStatus" style="font-size:8px;color:#555;letter-spacing:2px;">CONNECTING</div>
       </div>
 
@@ -1071,7 +1071,7 @@ var _onlineLobby = (function() {
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
             <span style="font-size:7px;color:#444;letter-spacing:1px;">FINISHED GAMES</span>
             <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:7px;color:#444;letter-spacing:1px;">
-              <input type="checkbox" id="ygReviewFilter" onchange="_ygApplyHistoryFilter()" style="accent-color:#ce93d8;width:10px;height:10px;"> REVIEW ONLY
+              <input type="checkbox" id="ygReviewFilter" onchange="_ygApplyHistoryFilter()" style="accent-color:#00e5ff;width:10px;height:10px;"> REVIEW ONLY
             </label>
           </div>
           <div id="ygHistoryContent" style="max-height:270px;overflow-y:auto;font-size:9px;"></div>
@@ -2105,7 +2105,7 @@ function _renderProfileRatingsGrid() {
   if (!grid) return;
   var cats = ['blitz', 'rapid', 'classical', 'correspondence'];
   var catLabels = { blitz: 'Blitz', rapid: 'Rapid', classical: 'Classical', correspondence: 'Corr.' };
-  var catColors = { blitz: '#ffaa00', rapid: '#00ccff', classical: '#ce93d8', correspondence: '#00ff88' };
+  var catColors = { blitz: '#ffaa00', rapid: '#00ccff', classical: '#00e5ff', correspondence: '#00ff88' };
   grid.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:8px;">'
     + '<tr style="color:#333;letter-spacing:1px;border-bottom:1px solid #111;">'
     + '<td style="padding:3px 4px;">FORMAT</td><td style="padding:3px 4px;text-align:right;">RATING</td>'
@@ -2284,7 +2284,12 @@ function _psoCancelSeekIfAny() {
 }
 
 function psoJoinTC(cat, tc) {
-  if (!ONLINE.loggedIn) { onlineShowToast('Login first', 0xff4444); return; }
+  if (!ONLINE.loggedIn) {
+    // Show auth section inline — guest clicks Login/Register to continue
+    var authReq = document.getElementById('psoAuthRequired');
+    if (authReq) { authReq.style.display = 'block'; authReq.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+    return;
+  }
   var rated = document.getElementById('psoRatedChk') ? document.getElementById('psoRatedChk').checked : true;
   var isCorr = (cat === 'correspondence');
   document.getElementById('psoPlayOptions').style.display = 'none';
@@ -2457,15 +2462,15 @@ function _renderFriendPanel(challengeMode) {
   var reqEl = document.getElementById('friendPanelRequests');
   if (reqEl) {
     if (ONLINE.requests.length) {
-      reqEl.innerHTML = '<div style="padding:8px 12px 4px;font-size:8px;color:#5e2750;letter-spacing:2px;">PENDING REQUESTS</div>'
+      reqEl.innerHTML = '<div style="padding:8px 12px 4px;font-size:8px;color:#3a7a9b;letter-spacing:2px;">PENDING REQUESTS</div>'
         + ONLINE.requests.map(function(r) {
           var fu = _esc(r.from);
           return '<div class="friendItem">'
             + '<div style="display:flex;align-items:center;gap:8px;"><span style="font-size:14px;">'+(r.avatar||'♟')+'</span>'
-            + '<span style="font-size:10px;color:#9b8fa8;">'+fu+'</span></div>'
+            + '<span style="font-size:10px;color:#6ab4d8;">'+fu+'</span></div>'
             + '<div style="display:flex;gap:4px;">'
-            + '<button onclick="onlineSend(\'friend_accept\',{from:\''+fu+'\'});onlineUpdateFriends();" style="background:#1e0535;border:1px solid #00ff88;color:#00ff88;font-family:monospace;font-size:8px;padding:3px 8px;cursor:pointer;">ACCEPT</button>'
-            + '<button onclick="onlineSend(\'friend_decline\',{from:\''+fu+'\'});ONLINE.requests=ONLINE.requests.filter(function(x){return x.from!==\''+fu+'\';});onlineUpdateFriends();" style="background:#1e0535;border:1px solid #3d1055;color:#7a5a8a;font-family:monospace;font-size:8px;padding:3px 8px;cursor:pointer;">DECLINE</button>'
+            + '<button onclick="onlineSend(\'friend_accept\',{from:\''+fu+'\'});onlineUpdateFriends();" style="background:#040c16;border:1px solid #00ff88;color:#00ff88;font-family:monospace;font-size:8px;padding:3px 8px;cursor:pointer;">ACCEPT</button>'
+            + '<button onclick="onlineSend(\'friend_decline\',{from:\''+fu+'\'});ONLINE.requests=ONLINE.requests.filter(function(x){return x.from!==\''+fu+'\';});onlineUpdateFriends();" style="background:#040c16;border:1px solid #0a1e30;color:#4a8fb0;font-family:monospace;font-size:8px;padding:3px 8px;cursor:pointer;">DECLINE</button>'
             + '</div></div>';
         }).join('');
     } else { reqEl.innerHTML = ''; }
@@ -2474,7 +2479,7 @@ function _renderFriendPanel(challengeMode) {
   if (!listEl) return;
   if (!ONLINE.connected || !ONLINE.loggedIn) { listEl.innerHTML = ''; return; }
   if (!ONLINE.friends.length) {
-    listEl.innerHTML = '<div style="padding:16px;color:#3d1055;font-size:9px;text-align:center;letter-spacing:1px;">No friends yet — add someone above</div>';
+    listEl.innerHTML = '<div style="padding:16px;color:#0a1e30;font-size:9px;text-align:center;letter-spacing:1px;">No friends yet — add someone above</div>';
     return;
   }
   var sorted = ONLINE.friends.slice().sort(function(a,b) {
@@ -2488,11 +2493,11 @@ function _renderFriendPanel(challengeMode) {
     var fu = _esc(f.username);
     return '<div class="friendItem">'
       + '<div style="display:flex;align-items:center;gap:8px;"><span class="'+dotClass+'"></span>'
-      + '<div><div style="font-size:10px;color:#9b8fa8;">'+_esc(f.avatar||'♟')+' '+fu+'</div>'
-      + '<div style="font-size:8px;color:#5e2750;">'+label+'  ·  ELO '+(f.elo||1200)+'</div></div></div>'
+      + '<div><div style="font-size:10px;color:#6ab4d8;">'+_esc(f.avatar||'♟')+' '+fu+'</div>'
+      + '<div style="font-size:8px;color:#3a7a9b;">'+label+'  ·  ELO '+(f.elo||1200)+'</div></div></div>'
       + '<div style="display:flex;gap:4px;">'
-      + (canChallenge ? '<button onclick="onlineSendInvite(\''+fu+'\')" style="background:#1e0535;border:1px solid #ce93d8;color:#ce93d8;font-family:monospace;font-size:8px;padding:3px 8px;cursor:pointer;">PLAY</button>' : '')
-      + '<button onclick="onlineRemoveFriend(\''+fu+'\')" style="background:#1e0535;border:1px solid #2d0a4e;color:#3d1055;font-family:monospace;font-size:8px;padding:3px 6px;cursor:pointer;" title="Remove">✕</button>'
+      + (canChallenge ? '<button onclick="onlineSendInvite(\''+fu+'\')" style="background:#040c16;border:1px solid #00e5ff;color:#00e5ff;font-family:monospace;font-size:8px;padding:3px 8px;cursor:pointer;">PLAY</button>' : '')
+      + '<button onclick="onlineRemoveFriend(\''+fu+'\')" style="background:#040c16;border:1px solid #061520;color:#0a1e30;font-family:monospace;font-size:8px;padding:3px 6px;cursor:pointer;" title="Remove">✕</button>'
       + '</div></div>';
   }).join('');
 }

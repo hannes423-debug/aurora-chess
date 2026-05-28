@@ -586,7 +586,7 @@ resetBoard = function(c) { _resetCLT(c); clearCrossLayerThreats(); };
         if (p.y > 1.12)  p.y = -0.12;
         ctx.globalAlpha = p.a;
         ctx.font = `${p.sz}px monospace`;
-        ctx.fillStyle = '#ce93d8';
+        ctx.fillStyle = '#00e5ff';
         ctx.fillText(p.ch, p.x * W, p.y * H);
       });
       ctx.globalAlpha = 1;
@@ -2245,7 +2245,8 @@ let _lastTouchActivity = 0;
     ['advThreatArrows','threatArrows'],['advHoverTooltip','hoverTooltip'],['advLayerLabels','layerLabels'],
     ['advAutoRotate','autoRotate'],['advIdleSpin','idleSpin'],
     ['advBoardRotate','boardRotate'],['advPinchZoom','pinchZoom'],['advSwipeLayer','swipeLayer'],
-    ['advOpponentLayerAnim','opponentLayerAnim']
+    ['advOpponentLayerAnim','opponentLayerAnim'],
+    ['advAutoLayerSwitch','autoLayerSwitch']
   ];
   map.forEach(function(pair) {
     var elId = pair[0], key = pair[1];

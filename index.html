@@ -158,8 +158,8 @@ body { min-height: -webkit-fill-available; -webkit-touch-callout: none; -webkit-
   margin: 0 0 24px;
   font-size: 18px;
   letter-spacing: 2px;
-  color: #ce93d8;
-  text-shadow: 0 0 14px rgba(206,147,216,0.6);
+  color: #00e5ff;
+  text-shadow: 0 0 14px rgba(0,229,255,0.6);
 }
 .promoRow {
   display: grid;
@@ -170,8 +170,8 @@ body { min-height: -webkit-fill-available; -webkit-touch-callout: none; -webkit-
 .promoBtn {
   width: 80px;
   height: 80px;
-  background: #12001e;
-  border: 2px solid #6b2a80;
+  background: #060d16;
+  border: 2px solid #0077aa;
   border-radius: 8px;
   color: #fff;
   font-size: 38px;
@@ -186,11 +186,11 @@ body { min-height: -webkit-fill-available; -webkit-touch-callout: none; -webkit-
 .promoBtn span.promoLabel {
   font-size: 9px;
   letter-spacing: 1px;
-  color: #9b8fa8;
+  color: #6ab4d8;
 }
 .promoBtn:hover, .promoBtn:focus {
-  background: #2d0a4e;
-  border-color: #ce93d8;
+  background: #061520;
+  border-color: #00e5ff;
   transform: scale(1.06);
   outline: none;
 }
@@ -204,10 +204,10 @@ body { min-height: -webkit-fill-available; -webkit-touch-callout: none; -webkit-
   align-items: center;
   justify-content: center;
   font-family: monospace;
-  color: #ce93d8;
+  color: #00e5ff;
   font-size: 15px;
   letter-spacing: 2px;
-  text-shadow: 0 0 10px rgba(206,147,216,0.5);
+  text-shadow: 0 0 10px rgba(0,229,255,0.5);
 }
 
 #zSlider {
@@ -219,30 +219,30 @@ body { min-height: -webkit-fill-available; -webkit-touch-callout: none; -webkit-
   width: 56vh;
   height: 32px;
   z-index: 20;
-  accent-color: #ce93d8;
+  accent-color: #00e5ff;
   cursor: pointer;
   opacity: 0.55;
   transition: opacity 0.15s;
   display: none;
 }
 #zSlider:hover, #zSlider:active { opacity: 1; }
-#zSlider::-webkit-slider-thumb { background: #9b59b6; }
-#zSlider::-webkit-slider-runnable-track { background: #2d0a4e; }
-#zSlider::-moz-range-thumb { background: #9b59b6; }
-#zSlider::-moz-range-track { background: #2d0a4e; }
+#zSlider::-webkit-slider-thumb { background: #0099bb; }
+#zSlider::-webkit-slider-runnable-track { background: #061520; }
+#zSlider::-moz-range-thumb { background: #0099bb; }
+#zSlider::-moz-range-track { background: #061520; }
 
 .menuBtn, .modeBtn, #backToMain, #backToMode {
-  background: #2d0a4e; color: #f0e6ff; border: 1px solid #6b2a80;
+  background: rgba(10,12,20,0.9); color: #cce8ff; border: 1px solid rgba(0,229,255,0.25);
   padding: 12px 28px; margin: 8px; font-family: monospace; cursor: pointer;
   width: 220px; box-sizing: border-box; text-align: center;
   transition: border-color 0.15s, background 0.15s;
 }
-.menuBtn:hover, .modeBtn:hover, #backToMain:hover, #backToMode:hover { border-color: #ce93d8; background: #3d1060; }
-.uiToggleRow{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #2d0a4e;cursor:pointer;font-size:13px;user-select:none;}
-.uiToggleRow:hover{color:#f0e6ff;}
+.menuBtn:hover, .modeBtn:hover, #backToMain:hover, #backToMode:hover { border-color: #00e5ff; background: rgba(0,40,60,0.9); }
+.uiToggleRow{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #061520;cursor:pointer;font-size:13px;user-select:none;}
+.uiToggleRow:hover{color:#cce8ff;}
 .uiToggleDot{font-size:16px;transition:color 0.15s;}
 .uiToggleDot.on{color:#e95420;}
-.uiToggleDot.off{color:#4a2060;}
+.uiToggleDot.off{color:#0d2535;}
 
 .copyBtn {
   background: none; border: none; width: 26px; height: 26px;
@@ -250,66 +250,66 @@ body { min-height: -webkit-fill-available; -webkit-touch-callout: none; -webkit-
 }
 .copyBtn:active { transform: scale(0.85); }
 .copySq1, .copySq2 {
-  position: absolute; width: 12px; height: 12px; border: 2px solid #f0e6ff;
+  position: absolute; width: 12px; height: 12px; border: 2px solid #cce8ff;
 }
 .copySq1 { top: 6px; left: 6px; }
 .copySq2 { top: 2px; left: 10px; }
 
 /* ======== SETTINGS PANEL ======== */
 #settingsOverlay {
-  position: fixed; inset: 0; background: rgba(12,0,24,0.85);
+  position: fixed; inset: 0; background: rgba(10,12,20,0.85);
   display: none; justify-content: center; align-items: center;
   z-index: 100; padding: 12px; box-sizing: border-box;
 }
 #settingsPanel {
-  background: #1e0535;
-  color: #f0e6ff; font-family: monospace;
+  background: #040c16;
+  color: #cce8ff; font-family: monospace;
   width: min(420px, 100vw - 24px);
   max-height: calc(100vh - 24px);
   display: flex; flex-direction: column;
   border-radius: 6px;
-  border: 1px solid #5e2750;
+  border: 1px solid #3a7a9b;
   overflow: hidden;
-  box-shadow: 0 0 40px rgba(180,80,255,0.14), 0 8px 32px rgba(0,0,0,0.8);
+  box-shadow: 0 0 40px rgba(0,200,255,0.14), 0 8px 32px rgba(0,0,0,0.8);
 }
 
 /* ── Arch header ── */
 #settingsHeader {
   padding: 20px 20px 14px;
   text-align: center;
-  border-bottom: 1px solid #2d0a4e;
+  border-bottom: 1px solid #061520;
   flex-shrink: 0;
   position: relative;
 }
 #settingsHeader h2 {
   margin: 0; font-size: 13px; letter-spacing: 6px;
-  text-transform: uppercase; color: #f0e6ff; font-weight: normal;
+  text-transform: uppercase; color: #cce8ff; font-weight: normal;
 }
 #settingsHeader .settingsSubtitle {
-  font-size: 9px; letter-spacing: 3px; color: #5e2750; margin-top: 3px;
+  font-size: 9px; letter-spacing: 3px; color: #3a7a9b; margin-top: 3px;
 }
 #closeSettings {
   position: absolute; top: 16px; right: 16px;
-  background: none; border: none; color: #5e2750; cursor: pointer;
+  background: none; border: none; color: #3a7a9b; cursor: pointer;
   font-size: 14px; padding: 0; line-height: 1;
 }
-#closeSettings:hover { color: #9b59b6; }
+#closeSettings:hover { color: #0099bb; }
 
 /* ── Tab row ── */
 #settingsTabRow {
-  display: flex; overflow-x: auto; border-bottom: 1px solid #2d0a4e;
+  display: flex; overflow-x: auto; border-bottom: 1px solid #061520;
   flex-shrink: 0; scrollbar-width: none;
 }
 #settingsTabRow::-webkit-scrollbar { display: none; }
 .stTab {
   flex-shrink: 0;
   padding: 8px 14px; font-size: 10px; letter-spacing: 2px;
-  font-family: monospace; cursor: pointer; color: #5e2750;
+  font-family: monospace; cursor: pointer; color: #3a7a9b;
   background: none; border: none; border-bottom: 2px solid transparent;
   transition: all 0.15s; text-transform: uppercase;
 }
-.stTab:hover { color: #9b59b6; }
-.stTab.active { color: #f0e6ff; border-bottom-color: #e95420; }
+.stTab:hover { color: #0099bb; }
+.stTab.active { color: #cce8ff; border-bottom-color: #e95420; }
 
 /* ── Body: left controls + right preview ── */
 #settingsBody {
@@ -318,11 +318,11 @@ body { min-height: -webkit-fill-available; -webkit-touch-callout: none; -webkit-
 #settingsControls {
   flex: 1; overflow-y: auto; padding: 14px 16px;
   border-right: 1px solid #1a0030;
-  scrollbar-width: thin; scrollbar-color: #2d0a4e transparent;
+  scrollbar-width: thin; scrollbar-color: #061520 transparent;
   min-width: 0;
 }
 #settingsControls::-webkit-scrollbar { width: 4px; }
-#settingsControls::-webkit-scrollbar-thumb { background: #2d0a4e; }
+#settingsControls::-webkit-scrollbar-thumb { background: #061520; }
 
 #settingsPreview {
   width: 130px; flex-shrink: 0;
@@ -333,13 +333,13 @@ body { min-height: -webkit-fill-available; -webkit-touch-callout: none; -webkit-
 }
 #previewCanvas {
   width: 110px; height: 130px;
-  border: 1px solid #2d0a4e;
+  border: 1px solid #061520;
   border-radius: 4px;
   background: #080018;
   display: block;
 }
 .previewLabel {
-  font-size: 9px; letter-spacing: 2px; color: #4a2060;
+  font-size: 9px; letter-spacing: 2px; color: #0d2535;
   text-align: center; text-transform: uppercase;
 }
 
@@ -349,39 +349,39 @@ body { min-height: -webkit-fill-available; -webkit-touch-callout: none; -webkit-
 .settingSection { margin-bottom: 16px; }
 .settingSection h3 {
   margin: 0 0 8px; font-size: 9px; letter-spacing: 3px;
-  text-transform: uppercase; color: #7b3a9b;
-  border-bottom: 1px solid #2d0a4e; padding-bottom: 5px;
+  text-transform: uppercase; color: #0077aa;
+  border-bottom: 1px solid #061520; padding-bottom: 5px;
 }
 .settingRow {
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: 8px; gap: 6px;
 }
-.settingRow label { font-size: 11px; color: #9b8fa8; flex: 1; min-width: 0; }
+.settingRow label { font-size: 11px; color: #6ab4d8; flex: 1; min-width: 0; }
 .settingRow .controls { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; flex-shrink: 0; }
 
 /* ── Toggle ── */
 .toggle { position: relative; width: 36px; height: 18px; cursor: pointer; }
 .toggle input { display: none; }
-.toggle .track { position: absolute; inset: 0; background: #1e0535; border-radius: 9px; border: 1px solid #3d1055; transition: all 0.2s; }
-.toggle input:checked + .track { background: #3a1000; border-color: #e95420; }
-.toggle .thumb { position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; background: #4a2060; border-radius: 50%; transition: all 0.2s; }
+.toggle .track { position: absolute; inset: 0; background: #040c16; border-radius: 9px; border: 1px solid #0a1e30; transition: all 0.2s; }
+.toggle input:checked + .track { background: #00131e; border-color: #e95420; }
+.toggle .thumb { position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; background: #0d2535; border-radius: 50%; transition: all 0.2s; }
 .toggle input:checked ~ .thumb { left: 20px; background: #e95420; }
 
 /* ── Swatches & sliders ── */
-.colorSwatch { width: 20px; height: 20px; border-radius: 3px; border: 1px solid #3d1055; cursor: pointer; flex-shrink: 0; }
-.settingSlider { -webkit-appearance: none; width: 80px; height: 2px; background: #2d0a4e; outline: none; border-radius: 2px; }
+.colorSwatch { width: 20px; height: 20px; border-radius: 3px; border: 1px solid #0a1e30; cursor: pointer; flex-shrink: 0; }
+.settingSlider { -webkit-appearance: none; width: 80px; height: 2px; background: #061520; outline: none; border-radius: 2px; }
 .settingSlider::-webkit-slider-thumb { -webkit-appearance: none; width: 10px; height: 10px; border-radius: 50%; background: #e95420; cursor: pointer; }
 
 /* ── Chips ── */
 .chipRow { display: flex; gap: 3px; flex-wrap: wrap; margin-bottom: 6px; }
 .chip {
-  background: #1e0535; border: 1px solid #2d0a4e; color: #6b3a80;
+  background: #040c16; border: 1px solid #061520; color: #0077aa;
   padding: 3px 7px; font-size: 9px; font-family: monospace;
   cursor: pointer; border-radius: 2px; letter-spacing: 1px;
   transition: all 0.1s;
 }
-.chip:hover { color: #ce93d8; border-color: #5e2750; }
-.chip.active { background: #3a1000; color: #e95420; border-color: #e95420; }
+.chip:hover { color: #00e5ff; border-color: #3a7a9b; }
+.chip.active { background: #00131e; color: #e95420; border-color: #e95420; }
 
 /* ── Settings nav (legacy, hidden — replaced by stTabs) ── */
 .settingNav { display: none; }
@@ -389,7 +389,7 @@ body { min-height: -webkit-fill-available; -webkit-touch-callout: none; -webkit-
 /* ── Footer ── */
 #settingsFooter {
   display: flex; gap: 6px; padding: 12px 16px;
-  border-top: 1px solid #2d0a4e; flex-shrink: 0;
+  border-top: 1px solid #061520; flex-shrink: 0;
   background: #130225;
 }
 .sfBtn {
@@ -397,59 +397,59 @@ body { min-height: -webkit-fill-available; -webkit-touch-callout: none; -webkit-
   letter-spacing: 2px; cursor: pointer; border-radius: 2px;
   text-transform: uppercase; transition: all 0.15s;
 }
-#sfSave    { background: #3a1000; border: 1px solid #e95420; color: #e95420; }
+#sfSave    { background: #00131e; border: 1px solid #e95420; color: #e95420; }
 #sfSave:hover { background: #4a1500; }
-#sfCancel  { background: #1e0535; border: 1px solid #3d1055; color: #7a5a8a; }
-#sfCancel:hover { background: #2d0a4e; color: #9b8fa8; }
-#sfDefault { background: #1e0535; border: 1px solid #2d0a4e; color: #4a2060; }
-#sfDefault:hover { background: #2d0a4e; color: #7a5a8a; }
+#sfCancel  { background: #040c16; border: 1px solid #0a1e30; color: #4a8fb0; }
+#sfCancel:hover { background: #061520; color: #6ab4d8; }
+#sfDefault { background: #040c16; border: 1px solid #061520; color: #0d2535; }
+#sfDefault:hover { background: #061520; color: #4a8fb0; }
 
 .uploadLabel {
-  display: block; background: #1e0535; border: 1px dashed #3d1055; color: #7a5a8a;
+  display: block; background: #040c16; border: 1px dashed #0a1e30; color: #4a8fb0;
   padding: 5px 8px; font-size: 10px; font-family: monospace;
   cursor: pointer; border-radius: 2px; text-align: center; margin-bottom: 6px;
 }
-.uploadLabel:hover { border-color: #6b2a80; color: #9b8fa8; }
+.uploadLabel:hover { border-color: #0077aa; color: #6ab4d8; }
 
 #bgCanvas { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 2; display: none; pointer-events: none; mix-blend-mode: screen; }
 #bgPhoto  { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 2; object-fit: cover; display: none; opacity: 0.4; pointer-events: none; mix-blend-mode: screen; }
 
 #layerFlash {
   position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
-  color: #f0e6ff; font-family: monospace; font-size: 48px; font-weight: bold;
+  color: #cce8ff; font-family: monospace; font-size: 48px; font-weight: bold;
   letter-spacing: 4px; pointer-events: none; z-index: 25; opacity: 0;
-  text-shadow: 0 0 20px rgba(200,150,255,0.6); transition: opacity 0.4s;
+  text-shadow: 0 0 20px rgba(0,220,255,0.6); transition: opacity 0.4s;
 }
 
 /* ── ARCADE MODE STYLES ── */
-#arcadeMenu{position:fixed;inset:0;background:transparent;display:none;flex-direction:column;justify-content:center;align-items:center;z-index:44;font-family:monospace;color:#f0e6ff;overflow-y:auto;}
+#arcadeMenu{position:fixed;inset:0;background:transparent;display:none;flex-direction:column;justify-content:center;align-items:center;z-index:44;font-family:monospace;color:#cce8ff;overflow-y:auto;}
 .arcadePanel{width:320px;max-height:85vh;overflow-y:auto;}
-.arcadeSection{border-bottom:1px solid #2d0a4e;padding:12px 0;}
+.arcadeSection{border-bottom:1px solid #061520;padding:12px 0;}
 .arcadeRow{display:flex;justify-content:space-between;align-items:center;padding:7px 0;font-size:12px;color:#c4b0d4;}
 .arcadeRow span{flex:1;}
-.arcadeToggleBtn{background:#1e0535;border:1px solid #3d1055;color:#6b3a80;padding:4px 14px;font-family:monospace;font-size:11px;cursor:pointer;letter-spacing:1px;border-radius:2px;transition:all 0.15s;min-width:48px;}
+.arcadeToggleBtn{background:#040c16;border:1px solid #0a1e30;color:#0077aa;padding:4px 14px;font-family:monospace;font-size:11px;cursor:pointer;letter-spacing:1px;border-radius:2px;transition:all 0.15s;min-width:48px;}
 .arcadeToggleBtn.on{border-color:#00ff88;color:#00ff88;}
-.arcadeToggleBtn.off{border-color:#3d1055;color:#4a2060;}
+.arcadeToggleBtn.off{border-color:#0a1e30;color:#0d2535;}
 .arcadeRateRow{display:flex;gap:4px;}
-.arcadeRateBtn{background:#1e0535;border:1px solid #3d1055;color:#6b3a80;padding:3px 10px;font-family:monospace;font-size:10px;cursor:pointer;border-radius:2px;letter-spacing:1px;}
+.arcadeRateBtn{background:#040c16;border:1px solid #0a1e30;color:#0077aa;padding:3px 10px;font-family:monospace;font-size:10px;cursor:pointer;border-radius:2px;letter-spacing:1px;}
 .arcadeRateBtn.active{border-color:#ffaa00;color:#ffaa00;}
-#arcadeBar{position:fixed;top:calc(44px + env(safe-area-inset-top));left:0;width:100%;background:#0d0020;border-bottom:1px solid #2d0a4e;padding:3px 12px;font-family:monospace;font-size:10px;color:#7a5a8a;z-index:19;display:none;letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#arcadeBar{position:fixed;top:calc(44px + env(safe-area-inset-top));left:0;width:100%;background:#0d0020;border-bottom:1px solid #061520;padding:3px 12px;font-family:monospace;font-size:10px;color:#4a8fb0;z-index:19;display:none;letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 #arcadeEventBanner{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-family:monospace;font-size:20px;text-align:center;z-index:36;pointer-events:none;display:none;line-height:1.6;padding:0 20px;text-shadow:0 0 20px currentColor;}
 
 /* ── ACCOUNT SYSTEM STYLES ── */
-#accountOverlay{position:fixed;inset:0;background:rgba(12,0,24,0.92);display:none;flex-direction:column;justify-content:center;align-items:center;z-index:80;font-family:monospace;color:#f0e6ff;}
+#accountOverlay{position:fixed;inset:0;background:rgba(10,12,20,0.92);display:none;flex-direction:column;justify-content:center;align-items:center;z-index:80;font-family:monospace;color:#cce8ff;}
 #accountPanel{width:300px;display:flex;flex-direction:column;gap:10px;}
 #accountPanel h2{font-size:18px;letter-spacing:3px;text-align:center;margin:0 0 10px;}
-.acct-input{background:#1e0535;border:1px solid #3d1055;color:#f0e6ff;padding:10px 14px;font-family:monospace;font-size:13px;width:100%;outline:none;letter-spacing:1px;}
+.acct-input{background:#040c16;border:1px solid #0a1e30;color:#cce8ff;padding:10px 14px;font-family:monospace;font-size:13px;width:100%;outline:none;letter-spacing:1px;}
 .acct-input:focus{border-color:#e95420;}
-.acct-btn{background:#2d0a4e;border:1px solid #6b2a80;color:#f0e6ff;padding:10px;font-family:monospace;font-size:12px;cursor:pointer;letter-spacing:2px;transition:border-color 0.15s;}
-.acct-btn:hover{border-color:#ce93d8;}
+.acct-btn{background:#061520;border:1px solid #0077aa;color:#cce8ff;padding:10px;font-family:monospace;font-size:12px;cursor:pointer;letter-spacing:2px;transition:border-color 0.15s;}
+.acct-btn:hover{border-color:#00e5ff;}
 .acct-btn.primary{border-color:#e95420;color:#e95420;}
 .acct-btn.primary:hover{background:#e9542022;}
 .acct-btn.danger{border-color:#ff4444;color:#ff4444;}
-.acct-tab{flex:1;background:#1e0535;border:1px solid #3d1055;border-bottom:none;color:#6b3080;padding:7px;font-family:monospace;font-size:11px;cursor:pointer;letter-spacing:2px;transition:color 0.15s,background 0.15s;}
-.acct-tab.acct-tab-active{background:#2d0a4e;color:#f0e6ff;border-color:#6b2a80;}
-.acct-tab:hover{color:#ce93d8;}
+.acct-tab{flex:1;background:#040c16;border:1px solid #0a1e30;border-bottom:none;color:#0077aa;padding:7px;font-family:monospace;font-size:11px;cursor:pointer;letter-spacing:2px;transition:color 0.15s,background 0.15s;}
+.acct-tab.acct-tab-active{background:#061520;color:#cce8ff;border-color:#0077aa;}
+.acct-tab:hover{color:#00e5ff;}
 .acct-google-btn{display:flex;align-items:center;justify-content:center;gap:8px;color:#aaa;border-color:#444;}
 .acct-google-btn:hover{border-color:#888;color:#fff;}
 .acct-google-btn:disabled{opacity:0.4;cursor:not-allowed;}
@@ -457,33 +457,33 @@ body { min-height: -webkit-fill-available; -webkit-touch-callout: none; -webkit-
 #acctAvatarRow{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:4px 0;}
 .acct-avatar{font-size:22px;cursor:pointer;padding:4px 6px;border:2px solid transparent;border-radius:4px;transition:border-color 0.15s;}
 .acct-avatar.sel{border-color:#e95420;}
-#accountBadge{position:fixed;top:calc(12px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:21;font-family:monospace;font-size:11px;color:#5e2750;letter-spacing:1px;pointer-events:none;display:none;}
-#offlineBanner{position:fixed;bottom:0;left:0;right:0;z-index:200;background:rgba(40,20,60,0.95);color:#c8a8e8;font-family:monospace;font-size:12px;padding:7px 16px;display:none;align-items:center;justify-content:center;gap:12px;border-top:1px solid #5e2750;}
-#offlineBanner button{background:none;border:1px solid #5e2750;color:#c8a8e8;font-family:monospace;font-size:11px;cursor:pointer;padding:2px 8px;border-radius:3px;}
+#accountBadge{position:fixed;top:calc(12px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:21;font-family:monospace;font-size:11px;color:#3a7a9b;letter-spacing:1px;pointer-events:none;display:none;}
+#offlineBanner{position:fixed;bottom:0;left:0;right:0;z-index:200;background:rgba(10,18,28,0.95);color:#c8a8e8;font-family:monospace;font-size:12px;padding:7px 16px;display:none;align-items:center;justify-content:center;gap:12px;border-top:1px solid #3a7a9b;}
+#offlineBanner button{background:none;border:1px solid #3a7a9b;color:#c8a8e8;font-family:monospace;font-size:11px;cursor:pointer;padding:2px 8px;border-radius:3px;}
 
 /* Profile panel (from pause menu) */
-#profileOverlay{position:fixed;inset:0;background:rgba(12,0,24,0.88);display:none;flex-direction:column;justify-content:center;align-items:center;z-index:75;font-family:monospace;color:#f0e6ff;}
-#profilePanel{width:300px;background:#1e0535;border:1px solid #3d1055;padding:20px;display:flex;flex-direction:column;gap:10px;}
+#profileOverlay{position:fixed;inset:0;background:rgba(10,12,20,0.88);display:none;flex-direction:column;justify-content:center;align-items:center;z-index:75;font-family:monospace;color:#cce8ff;}
+#profilePanel{width:300px;background:#040c16;border:1px solid #0a1e30;padding:20px;display:flex;flex-direction:column;gap:10px;}
 #profilePanel h2{font-size:14px;letter-spacing:3px;margin:0 0 8px;text-align:center;}
-.profile-stat{display:flex;justify-content:space-between;font-size:12px;color:#9b8fa8;padding:4px 0;border-bottom:1px solid #2d0a4e;}
-.profile-stat span{color:#f0e6ff;}
+.profile-stat{display:flex;justify-content:space-between;font-size:12px;color:#6ab4d8;padding:4px 0;border-bottom:1px solid #061520;}
+.profile-stat span{color:#cce8ff;}
 #savedGamesPanel{margin-top:8px;}
 #savedGamesList{max-height:160px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;margin-top:8px;}
-.saved-game-row{display:flex;justify-content:space-between;align-items:center;background:#2d0a4e;border:1px solid #3d1055;padding:6px 10px;font-size:11px;}
-.saved-game-row button{background:none;border:1px solid #3d1055;color:#9b8fa8;padding:2px 8px;font-family:monospace;font-size:10px;cursor:pointer;}
-.saved-game-row button:hover{border-color:#ce93d8;color:#f0e6ff;}
+.saved-game-row{display:flex;justify-content:space-between;align-items:center;background:#061520;border:1px solid #0a1e30;padding:6px 10px;font-size:11px;}
+.saved-game-row button{background:none;border:1px solid #0a1e30;color:#6ab4d8;padding:2px 8px;font-family:monospace;font-size:10px;cursor:pointer;}
+.saved-game-row button:hover{border-color:#00e5ff;color:#cce8ff;}
 .saved-game-row button.load-btn{border-color:#e9542044;color:#e95420;}
 
 /* ── CSS Custom Properties (UI Style System) ── */
 :root {
   --ui-panel-bg:       rgba(30, 5, 50, 0.95);
-  --ui-panel-border:   #5e2750;
-  --ui-font:           #f0e6ff;
-  --ui-font-dim:       #9b8fa8;
+  --ui-panel-border:   #3a7a9b;
+  --ui-font:           #cce8ff;
+  --ui-font-dim:       #6ab4d8;
   --ui-font-accent:    #e95420;
-  --ui-btn-bg:         #2d0a4e;
-  --ui-btn-border:     #6b2a80;
-  --ui-btn-active-bg:  #3a1000;
+  --ui-btn-bg:         #061520;
+  --ui-btn-border:     #0077aa;
+  --ui-btn-active-bg:  #00131e;
   --ui-btn-active-bdr: #e95420;
   --ui-font-family:    monospace;
 }
@@ -491,17 +491,17 @@ body { min-height: -webkit-fill-available; -webkit-touch-callout: none; -webkit-
 #uiStyleVars {}
 
 /* ── Advanced sub-tabs (inside MORE panel) ── */
-#advTabRow { display:flex; overflow-x:auto; border-bottom:1px solid #2d0a4e;
+#advTabRow { display:flex; overflow-x:auto; border-bottom:1px solid #061520;
   margin:-14px -16px 12px; scrollbar-width:none; flex-shrink:0; }
 #advTabRow::-webkit-scrollbar { display:none; }
 .advTab {
   flex-shrink:0; padding:7px 10px; font-size:9px; letter-spacing:1px;
-  font-family:monospace; cursor:pointer; color:#5e2750;
+  font-family:monospace; cursor:pointer; color:#3a7a9b;
   background:none; border:none; border-bottom:2px solid transparent;
   transition:all 0.15s; text-transform:uppercase; white-space:nowrap;
 }
-.advTab:hover { color:#9b59b6; }
-.advTab.active { color:#e0ccf0; border-bottom-color:#7b3a9b; }
+.advTab:hover { color:#0099bb; }
+.advTab.active { color:#e0ccf0; border-bottom-color:#0077aa; }
 .advPage { display:none; }
 .advPage.active { display:block; }
 
@@ -515,7 +515,7 @@ body { min-height: -webkit-fill-available; -webkit-touch-callout: none; -webkit-
   display:none;
   transition:border-color 0.15s, color 0.15s;
 }
-#rotateBoardBtn:hover { border-color:#9b59b6; color:var(--ui-font); }
+#rotateBoardBtn:hover { border-color:#0099bb; color:var(--ui-font); }
 #rotateBoardBtn:active { border-color:var(--ui-font-accent); }
 
 /* ── Layout Editor ── */
@@ -526,41 +526,41 @@ body { min-height: -webkit-fill-available; -webkit-touch-callout: none; -webkit-
 }
 #layoutEditorOverlay.active { pointer-events:auto; display:block; }
 .lh {
-  position:fixed; border:1px dashed rgba(180,80,255,0.6);
+  position:fixed; border:1px dashed rgba(0,200,255,0.6);
   cursor:grab; z-index:201; user-select:none;
-  background:rgba(180,80,255,0.04);
+  background:rgba(0,200,255,0.04);
   box-sizing:border-box;
 }
 .lh:active { cursor:grabbing; }
 .lh-bar {
   display:flex; align-items:center; gap:0;
-  background:rgba(10,0,20,0.85); position:absolute; top:-1px; left:-1px;
-  border-bottom:1px solid rgba(180,80,255,0.3);
+  background:rgba(10,12,20,0.85); position:absolute; top:-1px; left:-1px;
+  border-bottom:1px solid rgba(0,200,255,0.3);
 }
 .lh-label {
   font-family:monospace; font-size:8px; letter-spacing:1px;
-  color:rgba(180,80,255,0.8); padding:2px 6px; pointer-events:none;
+  color:rgba(0,200,255,0.8); padding:2px 6px; pointer-events:none;
 }
 .lh-eye {
   background:none; border:none; font-size:11px; cursor:pointer;
   padding:2px 5px; line-height:1; pointer-events:auto;
-  color:#5e2750; transition:color 0.1s;
+  color:#3a7a9b; transition:color 0.1s;
 }
-.lh-eye:hover { color:#9b59b6; }
+.lh-eye:hover { color:#0099bb; }
 .lh-eye.hidden-el { color:#ff4444; }
 #layoutToolbar {
   position:fixed; bottom:16px; left:50%; transform:translateX(-50%);
-  background:#130225; border:1px solid #3d1055; padding:8px 16px;
+  background:#130225; border:1px solid #0a1e30; padding:8px 16px;
   display:flex; gap:8px; align-items:center; z-index:202;
   font-family:monospace; box-shadow:0 4px 20px rgba(0,0,0,0.8);
 }
 .ltbtn {
-  background:#1e0535; border:1px solid #3d1055; color:#9b8fa8;
+  background:#040c16; border:1px solid #0a1e30; color:#6ab4d8;
   padding:5px 12px; font-family:monospace; font-size:10px;
   letter-spacing:1px; cursor:pointer; border-radius:2px; transition:all 0.15s;
 }
-.ltbtn:hover { border-color:#6b2a80; color:#f0e6ff; }
-.ltbtn.primary { border-color:#e9542044; color:#e95420; background:#3a1000; }
+.ltbtn:hover { border-color:#0077aa; color:#cce8ff; }
+.ltbtn.primary { border-color:#e9542044; color:#e95420; background:#00131e; }
 .ltbtn.primary:hover { background:#4a1500; }
 
 /* ── Mobile: hide left status widget (menus have their own status line) ── */
@@ -568,16 +568,22 @@ body { min-height: -webkit-fill-available; -webkit-touch-callout: none; -webkit-
   #onlineWidget { display: none !important; }
 }
 
-/* ── Aurora Waves theme — menu background overrides ── */
+/* ── Aurora Waves / Dark+Neon-Blue theme ── */
 #mainMenu {
   background: transparent !important;
 }
 #modeMenu, #botMenu, #pauseMenu, #endMenu,
 #gameModesMenu, #ctfMenu,
 #uiSettingsOverlay, #tutorialOverlay, #puzzleSelectOverlay {
-  background: rgba(5,6,15,0.88) !important;
+  background: rgba(10,12,20,0.88) !important;
 }
-.playStep { background: rgba(5,6,15,0.90) !important; }
+.playStep { background: rgba(10,12,20,0.90) !important; }
+/* Shared button/chip base */
+.modeBtn, .menuBtn { background: rgba(10,12,20,0.9) !important; border-color: rgba(0,229,255,0.25) !important; color: #cce8ff !important; }
+.modeBtn:hover, .menuBtn:hover { border-color: #00e5ff !important; color: #fff !important; background: rgba(0,40,60,0.9) !important; }
+/* chip active */
+.chip.active { background: rgba(0,60,90,0.9) !important; color: #00e5ff !important; border-color: #00e5ff !important; }
+.chip:hover  { border-color: rgba(0,229,255,0.6) !important; color: #cce8ff !important; }
 /* Main menu title — aurora style */
 #mainMenu h1 {
   font-size: clamp(2rem,5vw,4.5rem) !important;
@@ -590,39 +596,52 @@ body { min-height: -webkit-fill-available; -webkit-touch-callout: none; -webkit-
   filter: none !important;
   margin-bottom: 0.2em !important;
 }
+/* UI scale — applied by uiScaleSlider JS via --ui-scale custom property */
+:root { --ui-scale: 1; }
+#mainMenu, #modeMenu, #botMenu, .playStep,
+#pauseMenu, #endMenu, #settingsOverlay,
+#onlineLobby, #accountOverlay, #helpOverlay,
+#tutorialOverlay, #profileOverlay, #friendPanel,
+#leaderboardOverlay, #puzzleSelectOverlay, #uiSettingsOverlay,
+#hud, #movePanel, #layerControl, #ctfHud {
+  zoom: var(--ui-scale);
+}
+
 /* Main menu subtitle & server status */
 #mainMenu > div > div[style*="color:#333"],
-#mainMenu div[style*="color:#333"] { color: #5e2750 !important; }
-#serverStatusLine { color: #4a2060 !important; }
+#mainMenu div[style*="color:#333"] { color: rgba(140,200,255,0.5) !important; }
+#serverStatusLine { color: rgba(0,229,255,0.35) !important; }
 /* Main menu Settings/Profile buttons */
-#mainSettingsBtn, #mainProfileBtn {
-  background: #1e0535 !important; border-color: #3d1055 !important; color: #9b8fa8 !important;
+#mainSettingsBtn, #mainProfileBtn, #mainHelpBtn, #mainSupportBtn {
+  background: rgba(10,12,20,0.9) !important; border-color: rgba(0,229,255,0.2) !important; color: #6ab4d8 !important;
 }
-#mainSettingsBtn:hover, #mainProfileBtn:hover { border-color: #6b2a80 !important; color: #f0e6ff !important; }
+#mainSettingsBtn:hover, #mainProfileBtn:hover, #mainHelpBtn:hover, #mainSupportBtn:hover {
+  border-color: #00e5ff !important; color: #cce8ff !important;
+}
 /* Game mode panel buttons */
-#gmStandardBtn { background: #2d0a4e !important; border-color: #6b2a80 !important; color: #f0e6ff !important; }
+#gmStandardBtn { background: rgba(0,20,35,0.9) !important; border-color: rgba(0,229,255,0.4) !important; color: #cce8ff !important; }
 #gmArcadeBtn   { background: #1a2d10 !important; }
 #gmCTFBtn      { background: #2d1500 !important; }
 /* Dividers inside menus */
-#mainMenu hr, #modeMenu hr { border-color: #2d0a4e; }
+#mainMenu hr, #modeMenu hr { border-color: #061520; }
 
 /* ── PIECE APPEARANCE PANEL ── */
 .apSideBtn {
-  background:#1e0535; border:1px solid #2d0a4e; color:#5e2750;
+  background:#040c16; border:1px solid #061520; color:#3a7a9b;
   padding:4px 12px; font-family:monospace; font-size:10px;
   cursor:pointer; letter-spacing:1px; border-radius:2px;
   transition:all 0.15s; flex:1; text-align:center;
 }
-.apSideBtn.active { border-color:#7b3a9b; color:#e0ccf0; background:#2d0a4e; }
+.apSideBtn.active { border-color:#0077aa; color:#e0ccf0; background:#061520; }
 .apSlotBtn {
-  background:#1e0535; border:1px solid #2d0a4e; color:#4a2060;
+  background:#040c16; border:1px solid #061520; color:#0d2535;
   padding:3px 6px; font-size:9px; font-family:monospace;
   cursor:pointer; border-radius:2px; min-width:28px; text-align:center;
   transition:all 0.1s; letter-spacing:0px;
 }
-.apSlotBtn:hover { border-color:#5e2750; color:#7b59b0; }
-.apSlotBtn.filled { border-color:#3d1055; color:#7b59b0; }
-.apSlotBtn.filled:hover { border-color:#9b59b6; color:#ce93d8; }
+.apSlotBtn:hover { border-color:#3a7a9b; color:#7b59b0; }
+.apSlotBtn.filled { border-color:#0a1e30; color:#7b59b0; }
+.apSlotBtn.filled:hover { border-color:#0099bb; color:#00e5ff; }
 /* UI hide mode — suppress elements managed by their own intervals */
 body.ui-hidden #minimap,
 body.ui-hidden #offlineBanner { display:none !important; }
@@ -716,12 +735,12 @@ body.gamepad-mode #gpHintBar { display: flex; }
 
     <div style="position:relative;">
       <input id="acctPassword" class="acct-input" type="password" placeholder="Password" maxlength="72" autocomplete="current-password" style="padding-right:38px;">
-      <button id="acctPwToggle" tabindex="-1" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:#6b3080;cursor:pointer;font-size:15px;line-height:1;padding:2px 4px;">&#128065;</button>
+      <button id="acctPwToggle" tabindex="-1" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:#0077aa;cursor:pointer;font-size:15px;line-height:1;padding:2px 4px;">&#128065;</button>
     </div>
 
     <div id="acctConfirmRow" style="display:none;position:relative;">
       <input id="acctConfirmPw" class="acct-input" type="password" placeholder="Confirm Password" maxlength="72" autocomplete="new-password" style="padding-right:38px;">
-      <button id="acctConfirmToggle" tabindex="-1" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:#6b3080;cursor:pointer;font-size:15px;line-height:1;padding:2px 4px;">&#128065;</button>
+      <button id="acctConfirmToggle" tabindex="-1" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:#0077aa;cursor:pointer;font-size:15px;line-height:1;padding:2px 4px;">&#128065;</button>
     </div>
 
     <div id="acctError"></div>
@@ -743,12 +762,12 @@ body.gamepad-mode #gpHintBar { display: flex; }
 
     <!-- Google link flow overlay (shown when Google user not yet linked) -->
     <div id="acctGoogleLinkPanel" style="display:none;flex-direction:column;gap:8px;padding:10px;background:#160028;border:1px solid #4d1a6e;border-radius:4px;">
-      <div id="acctGoogleLinkName" style="font-size:11px;color:#ce93d8;text-align:center;letter-spacing:1px;"></div>
+      <div id="acctGoogleLinkName" style="font-size:11px;color:#00e5ff;text-align:center;letter-spacing:1px;"></div>
       <div style="font-size:10px;color:#888;text-align:center;">Link to existing account or create new?</div>
       <input id="acctGoogleLinkUser" class="acct-input" placeholder="Username (new or existing)" maxlength="18" autocomplete="off" style="font-size:12px;">
       <div id="acctGoogleLinkPwRow" style="position:relative;">
         <input id="acctGoogleLinkPw" class="acct-input" type="password" placeholder="Password (if linking existing)" maxlength="72" autocomplete="off" style="font-size:12px;padding-right:38px;">
-        <button tabindex="-1" id="acctGoogleLinkPwToggle" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:#6b3080;cursor:pointer;font-size:15px;line-height:1;padding:2px 4px;">&#128065;</button>
+        <button tabindex="-1" id="acctGoogleLinkPwToggle" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:#0077aa;cursor:pointer;font-size:15px;line-height:1;padding:2px 4px;">&#128065;</button>
       </div>
       <div id="acctGoogleLinkErr" style="font-size:10px;color:#ff6666;min-height:12px;text-align:center;"></div>
       <div style="display:flex;gap:6px;">
@@ -773,7 +792,7 @@ body.gamepad-mode #gpHintBar { display: flex; }
     <div class="profile-stat">Bot wins      <span id="pStatBotWins">0</span></div>
     <div class="profile-stat">Puzzles solved<span id="pStatPuzzles">0</span></div>
 
-    <div id="profileFriendsSection" style="display:none;margin:8px 0;border-top:1px solid #2d0a4e;padding-top:8px;">
+    <div id="profileFriendsSection" style="display:none;margin:8px 0;border-top:1px solid #061520;padding-top:8px;">
       <div class="profile-stat">Friends<span id="pStatFriends">0</span></div>
       <div style="display:flex;gap:6px;margin-top:6px;">
         <button id="profileViewFriendsBtn" class="acct-btn" style="flex:1;font-size:10px;">VIEW FRIENDS</button>
@@ -797,12 +816,12 @@ body.gamepad-mode #gpHintBar { display: flex; }
     </div>
 
     <!-- Delete account confirmation (hidden by default) -->
-    <div id="deleteAccountSection" style="display:none;margin-top:10px;border-top:1px solid #2d0a4e;padding-top:10px;">
+    <div id="deleteAccountSection" style="display:none;margin-top:10px;border-top:1px solid #061520;padding-top:10px;">
       <div style="font-size:10px;color:#ff4444;letter-spacing:1px;margin-bottom:6px;">DANGER ZONE — THIS CANNOT BE UNDONE</div>
       <div style="font-size:10px;color:#888;margin-bottom:8px;">Type your username to confirm deletion:</div>
       <input id="deleteAccountConfirmInput" type="text" autocomplete="off" spellcheck="false"
         placeholder="username"
-        style="width:100%;background:#0c0018;border:1px solid #ff444488;color:#f0e6ff;padding:8px;font-family:monospace;font-size:12px;letter-spacing:1px;box-sizing:border-box;margin-bottom:8px;">
+        style="width:100%;background:#05090f;border:1px solid #ff444488;color:#cce8ff;padding:8px;font-family:monospace;font-size:12px;letter-spacing:1px;box-sizing:border-box;margin-bottom:8px;">
       <div style="display:flex;gap:8px;">
         <button id="deleteAccountCancelBtn" class="acct-btn" style="flex:1;border-color:#333;color:#555;font-size:11px;">CANCEL</button>
         <button id="deleteAccountConfirmBtn" class="acct-btn danger" style="flex:1;font-size:11px;">DELETE ACCOUNT</button>
@@ -834,18 +853,18 @@ body.gamepad-mode #gpHintBar { display: flex; }
 <!-- ======================================================
      GAME MODES MENU
 ====================================================== -->
-<div id="gameModesMenu" style="position:fixed;inset:0;background:transparent;display:none;flex-direction:column;justify-content:center;align-items:center;z-index:44;font-family:monospace;color:#f0e6ff;overflow-y:auto;">
+<div id="gameModesMenu" style="position:fixed;inset:0;background:transparent;display:none;flex-direction:column;justify-content:center;align-items:center;z-index:44;font-family:monospace;color:#cce8ff;overflow-y:auto;">
   <div style="width:300px;max-height:85vh;overflow-y:auto;">
     <div style="text-align:center;margin-bottom:24px;">
-      <div style="font-size:18px;letter-spacing:5px;color:#f0e6ff;">GAME MODES</div>
-      <div style="font-size:9px;color:#5e2750;letter-spacing:3px;margin-top:4px;">CHOOSE A VARIANT</div>
+      <div style="font-size:18px;letter-spacing:5px;color:#cce8ff;">GAME MODES</div>
+      <div style="font-size:9px;color:#3a7a9b;letter-spacing:3px;margin-top:4px;">CHOOSE A VARIANT</div>
     </div>
 
     <!-- Standard -->
     <div style="margin-bottom:8px;">
-      <button id="gmStandardBtn" style="width:100%;background:#2d0a4e;border:1px solid #6b2a80;color:#f0e6ff;padding:14px 16px;font-family:monospace;font-size:12px;cursor:pointer;letter-spacing:2px;text-align:left;transition:border-color 0.15s;">
+      <button id="gmStandardBtn" style="width:100%;background:#061520;border:1px solid #0077aa;color:#cce8ff;padding:14px 16px;font-family:monospace;font-size:12px;cursor:pointer;letter-spacing:2px;text-align:left;transition:border-color 0.15s;">
         ♟ STANDARD CHESS
-        <div style="font-size:9px;color:#9b8fa8;letter-spacing:1px;margin-top:4px;">Classic 3D chess — full rules</div>
+        <div style="font-size:9px;color:#6ab4d8;letter-spacing:1px;margin-top:4px;">Classic 3D chess — full rules</div>
       </button>
     </div>
 
@@ -865,7 +884,7 @@ body.gamepad-mode #gpHintBar { display: flex; }
       </button>
     </div>
 
-    <div style="width:100%;border-top:1px solid #2d0a4e;margin:16px 0 12px;"></div>
+    <div style="width:100%;border-top:1px solid #061520;margin:16px 0 12px;"></div>
     <button class="modeBtn" id="gameModesBackBtn">← Back</button>
   </div>
 </div>
@@ -1210,7 +1229,7 @@ body.gamepad-mode #gpHintBar { display: flex; }
               <div class="chipRow" id="apModelChips">
                 <button class="chip active" data-apmodel="glb">GLB Models</button>
               </div>
-              <div id="apGlbStatus" style="font-size:9px;color:#3d1055;letter-spacing:1px;margin-top:4px;">Waiting for loader…</div>
+              <div id="apGlbStatus" style="font-size:9px;color:#0a1e30;letter-spacing:1px;margin-top:4px;">Waiting for loader…</div>
             </div>
 
             <div class="settingSection">
@@ -1228,9 +1247,9 @@ body.gamepad-mode #gpHintBar { display: flex; }
             <div class="settingSection">
               <h3>Base Appearance</h3>
               <div class="settingRow"><label>Base Color</label><div class="controls"><input class="colorSwatch" type="color" id="apBaseColor" value="#ffffff"></div></div>
-              <div class="settingRow"><label>Opacity</label><div class="controls"><input class="settingSlider" type="range" id="apOpacity" min="0" max="100" value="100" style="width:70px;"><span id="apOpacityVal" style="font-size:9px;color:#5e2750;width:26px;text-align:right;">100%</span></div></div>
-              <div class="settingRow"><label>Roughness</label><div class="controls"><input class="settingSlider" type="range" id="apRoughness" min="0" max="100" value="40" style="width:70px;"><span id="apRoughnessVal" style="font-size:9px;color:#5e2750;width:26px;text-align:right;">0.4</span></div></div>
-              <div class="settingRow"><label>Emissive</label><div class="controls"><input class="colorSwatch" type="color" id="apEmissiveColor" value="#000000"><input class="settingSlider" type="range" id="apEmissiveInt" min="0" max="300" value="0" style="width:50px;"><span id="apEmissiveIntVal" style="font-size:9px;color:#5e2750;width:22px;text-align:right;">0</span></div></div>
+              <div class="settingRow"><label>Opacity</label><div class="controls"><input class="settingSlider" type="range" id="apOpacity" min="0" max="100" value="100" style="width:70px;"><span id="apOpacityVal" style="font-size:9px;color:#3a7a9b;width:26px;text-align:right;">100%</span></div></div>
+              <div class="settingRow"><label>Roughness</label><div class="controls"><input class="settingSlider" type="range" id="apRoughness" min="0" max="100" value="40" style="width:70px;"><span id="apRoughnessVal" style="font-size:9px;color:#3a7a9b;width:26px;text-align:right;">0.4</span></div></div>
+              <div class="settingRow"><label>Emissive</label><div class="controls"><input class="colorSwatch" type="color" id="apEmissiveColor" value="#000000"><input class="settingSlider" type="range" id="apEmissiveInt" min="0" max="300" value="0" style="width:50px;"><span id="apEmissiveIntVal" style="font-size:9px;color:#3a7a9b;width:22px;text-align:right;">0</span></div></div>
             </div>
 
             <div class="settingSection">
@@ -1249,7 +1268,7 @@ body.gamepad-mode #gpHintBar { display: flex; }
               </div>
               <div class="settingRow">
                 <label>Outline Thickness</label>
-                <div class="controls"><input class="settingSlider" type="range" id="apOutlineThick" min="0" max="20" value="4" style="width:70px;"><span id="apOutlineThickVal" style="font-size:9px;color:#5e2750;width:30px;text-align:right;">0.04</span></div>
+                <div class="controls"><input class="settingSlider" type="range" id="apOutlineThick" min="0" max="20" value="4" style="width:70px;"><span id="apOutlineThickVal" style="font-size:9px;color:#3a7a9b;width:30px;text-align:right;">0.04</span></div>
               </div>
               <div class="settingRow">
                 <label>Sel. Outline Color</label>
@@ -1259,14 +1278,14 @@ body.gamepad-mode #gpHintBar { display: flex; }
 
             <div class="settingSection">
               <h3>Saved Presets</h3>
-              <div style="font-size:9px;color:#2d0a4e;letter-spacing:1px;margin-bottom:6px;">CLICK=LOAD &nbsp; SHIFT+CLICK=SAVE</div>
+              <div style="font-size:9px;color:#061520;letter-spacing:1px;margin-bottom:6px;">CLICK=LOAD &nbsp; SHIFT+CLICK=SAVE</div>
               <div class="chipRow" id="apSavedSlots">
                 <button class="apSlotBtn" data-apslot="0">1</button>
                 <button class="apSlotBtn" data-apslot="1">2</button>
                 <button class="apSlotBtn" data-apslot="2">3</button>
                 <button class="apSlotBtn" data-apslot="3">4</button>
               </div>
-              <div style="font-size:9px;color:#2d0a4e;margin-top:4px;letter-spacing:1px;">APPLIES TO CURRENT SIDE (WHITE/BLACK)</div>
+              <div style="font-size:9px;color:#061520;margin-top:4px;letter-spacing:1px;">APPLIES TO CURRENT SIDE (WHITE/BLACK)</div>
             </div>
           </div>
 
@@ -1407,6 +1426,7 @@ body.gamepad-mode #gpHintBar { display: flex; }
               <div class="settingRow"><label>Board Rotation</label><div class="controls"><label class="toggle"><input type="checkbox" id="advBoardRotate" checked><div class="track"></div><div class="thumb"></div></label></div></div>
               <div class="settingRow"><label>Pinch Zoom</label><div class="controls"><label class="toggle"><input type="checkbox" id="advPinchZoom" checked><div class="track"></div><div class="thumb"></div></label></div></div>
               <div class="settingRow"><label>Swipe Layer</label><div class="controls"><label class="toggle"><input type="checkbox" id="advSwipeLayer" checked><div class="track"></div><div class="thumb"></div></label></div></div>
+              <div class="settingRow"><label>Auto-Switch Layer on Move</label><div class="controls"><label class="toggle"><input type="checkbox" id="advAutoLayerSwitch"><div class="track"></div><div class="thumb"></div></label></div></div>
               <div class="settingRow"><label>Opponent Layer Anim</label><div class="controls"><label class="toggle"><input type="checkbox" id="advOpponentLayerAnim" checked><div class="track"></div><div class="thumb"></div></label></div></div>
             </div>
           </div>
@@ -1576,6 +1596,10 @@ body.gamepad-mode #gpHintBar { display: flex; }
                 <button class="chip" data-uifont="serif">SERIF</button>
               </div>
             </div>
+            <div class="settingSection">
+              <h3>Scale</h3>
+              <div class="settingRow"><label>UI Scale (<span id="uiScaleLabel">1.0</span>×)</label><div class="controls"><input class="settingSlider" type="range" id="uiScaleSlider" min="70" max="150" value="100" title="0.7–1.5×"></div></div>
+            </div>
             <div style="margin-top:10px;">
               <button id="uiStyleResetBtn" style="width:100%;background:#111;border:1px solid #333;color:#555;padding:7px;font-family:monospace;font-size:10px;cursor:pointer;letter-spacing:1px;">RESET UI STYLE</button>
             </div>
@@ -1623,7 +1647,7 @@ body.gamepad-mode #gpHintBar { display: flex; }
       <button class="sfBtn" id="sfDefault">DEFAULT</button>
       <a href="http://100.94.74.5:3000/privacy" target="_blank" rel="noopener"
          style="font-family:monospace;font-size:8px;color:#333;letter-spacing:1px;text-decoration:none;margin-left:auto;align-self:center;padding-right:4px;"
-         onmouseover="this.style.color='#7a5a8a'" onmouseout="this.style.color='#333'">PRIVACY POLICY</a>
+         onmouseover="this.style.color='#4a8fb0'" onmouseout="this.style.color='#333'">PRIVACY POLICY</a>
     </div>
 
   </div><!-- end settingsPanel -->
@@ -1657,35 +1681,35 @@ body.gamepad-mode #gpHintBar { display: flex; }
 /* ══ PLAY FLOW ══ */
 .playPanel{width:300px;max-height:85vh;overflow-y:auto;}
 .playHeader{text-align:center;margin-bottom:20px;}
-.playTitle{font-size:18px;letter-spacing:5px;color:#f0e6ff;}
-.playSubtitle{font-size:9px;color:#5e2750;letter-spacing:3px;margin-top:4px;}
-.playModeBtn{width:100%;background:#12001e;border:1px solid #3d1055;color:#f0e6ff;padding:14px 16px;font-family:monospace;font-size:12px;cursor:pointer;letter-spacing:2px;text-align:left;transition:border-color 0.15s,color 0.15s;margin-bottom:8px;box-sizing:border-box;}
-.playModeBtn:hover{border-color:#9b8fa8;color:#fff;}
-.playModeBtn .sub{font-size:9px;color:#5e2750;letter-spacing:1px;margin-top:4px;font-weight:normal;}
-.playStep{position:fixed;inset:0;background:rgba(10,0,20,0.88);display:none;flex-direction:column;justify-content:center;align-items:center;font-family:monospace;color:#f0e6ff;overflow-y:auto;}
+.playTitle{font-size:18px;letter-spacing:5px;color:#cce8ff;}
+.playSubtitle{font-size:9px;color:#3a7a9b;letter-spacing:3px;margin-top:4px;}
+.playModeBtn{width:100%;background:#060d16;border:1px solid #0a1e30;color:#cce8ff;padding:14px 16px;font-family:monospace;font-size:12px;cursor:pointer;letter-spacing:2px;text-align:left;transition:border-color 0.15s,color 0.15s;margin-bottom:8px;box-sizing:border-box;}
+.playModeBtn:hover{border-color:#6ab4d8;color:#fff;}
+.playModeBtn .sub{font-size:9px;color:#3a7a9b;letter-spacing:1px;margin-top:4px;font-weight:normal;}
+.playStep{position:fixed;inset:0;background:rgba(10,12,20,0.88);display:none;flex-direction:column;justify-content:center;align-items:center;font-family:monospace;color:#cce8ff;overflow-y:auto;}
 .timeChipRow{display:flex;gap:4px;flex-wrap:wrap;}
-.timeChip{background:#1e0535;border:1px solid #3d1055;color:#7a5a8a;padding:4px 8px;font-family:monospace;font-size:10px;cursor:pointer;border-radius:2px;letter-spacing:1px;transition:all 0.1s;}
-.timeChip:hover{color:#ce93d8;border-color:#6b2a80;}
-.timeChip.active{background:#2d0a4e;color:#ce93d8;border-color:#ce93d8;}
-.tierHeader{display:flex;justify-content:space-between;align-items:center;padding:9px 0;margin:8px 0 4px;cursor:pointer;user-select:none;border-top:1px solid #2d0a4e;}
-.tierHeaderLabel{font-size:9px;letter-spacing:3px;color:#5e2750;text-transform:uppercase;}
-.tierHeader:hover .tierHeaderLabel{color:#9b8fa8;}
-.tierArrow{font-size:10px;color:#5e2750;transition:transform 0.2s;}
+.timeChip{background:#040c16;border:1px solid #0a1e30;color:#4a8fb0;padding:4px 8px;font-family:monospace;font-size:10px;cursor:pointer;border-radius:2px;letter-spacing:1px;transition:all 0.1s;}
+.timeChip:hover{color:#00e5ff;border-color:#0077aa;}
+.timeChip.active{background:#061520;color:#00e5ff;border-color:#00e5ff;}
+.tierHeader{display:flex;justify-content:space-between;align-items:center;padding:9px 0;margin:8px 0 4px;cursor:pointer;user-select:none;border-top:1px solid #061520;}
+.tierHeaderLabel{font-size:9px;letter-spacing:3px;color:#3a7a9b;text-transform:uppercase;}
+.tierHeader:hover .tierHeaderLabel{color:#6ab4d8;}
+.tierArrow{font-size:10px;color:#3a7a9b;transition:transform 0.2s;}
 .tierArrow.open{transform:rotate(180deg);}
 .tierContent{overflow:hidden;}
 .tierContent.collapsed{display:none;}
 .notif-badge{display:inline-block;background:#ff4444;color:#fff;font-size:8px;border-radius:10px;padding:1px 5px;margin-left:4px;font-family:monospace;letter-spacing:0;vertical-align:middle;line-height:1.4;}
-#hudGearBtn{position:fixed;bottom:52px;left:12px;z-index:22;background:#1e0535;border:1px solid #3d1055;color:#5e2750;font-family:monospace;font-size:10px;letter-spacing:1px;padding:4px 8px;cursor:pointer;border-radius:2px;display:none;transition:color 0.15s,border-color 0.15s;}
-#hudGearBtn:hover{color:#ce93d8;border-color:#6b2a80;}
-#hudQuickPanel{position:fixed;bottom:82px;left:12px;background:#12001e;border:1px solid #3d1055;z-index:23;display:none;width:200px;font-family:monospace;font-size:11px;color:#9b8fa8;padding:10px 12px;box-shadow:0 4px 20px rgba(0,0,0,0.8);}
-#helpOverlay{position:fixed;inset:0;background:rgba(10,0,20,0.92);display:none;flex-direction:column;justify-content:center;align-items:center;z-index:44;font-family:monospace;color:#f0e6ff;overflow-y:auto;}
-#friendPanel{position:fixed;inset:0;background:rgba(10,0,20,0.92);z-index:74;display:none;flex-direction:column;justify-content:center;align-items:center;font-family:monospace;color:#f0e6ff;}
-.friendPanelBox{width:300px;max-height:88vh;background:#12001e;border:1px solid #3d1055;display:flex;flex-direction:column;overflow:hidden;}
-.friendPanelHeader{padding:14px 16px;border-bottom:1px solid #2d0a4e;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
-.friendItem{display:flex;justify-content:space-between;align-items:center;padding:7px 12px;border-bottom:1px solid #1e0535;font-size:11px;}
-.friendItem:hover{background:#1e0535;}
+#hudGearBtn{position:fixed;bottom:52px;left:12px;z-index:22;background:#040c16;border:1px solid #0a1e30;color:#3a7a9b;font-family:monospace;font-size:10px;letter-spacing:1px;padding:4px 8px;cursor:pointer;border-radius:2px;display:none;transition:color 0.15s,border-color 0.15s;}
+#hudGearBtn:hover{color:#00e5ff;border-color:#0077aa;}
+#hudQuickPanel{position:fixed;bottom:82px;left:12px;background:#060d16;border:1px solid #0a1e30;z-index:23;display:none;width:200px;font-family:monospace;font-size:11px;color:#6ab4d8;padding:10px 12px;box-shadow:0 4px 20px rgba(0,0,0,0.8);}
+#helpOverlay{position:fixed;inset:0;background:rgba(10,12,20,0.92);display:none;flex-direction:column;justify-content:center;align-items:center;z-index:44;font-family:monospace;color:#cce8ff;overflow-y:auto;}
+#friendPanel{position:fixed;inset:0;background:rgba(10,12,20,0.92);z-index:74;display:none;flex-direction:column;justify-content:center;align-items:center;font-family:monospace;color:#cce8ff;}
+.friendPanelBox{width:300px;max-height:88vh;background:#060d16;border:1px solid #0a1e30;display:flex;flex-direction:column;overflow:hidden;}
+.friendPanelHeader{padding:14px 16px;border-bottom:1px solid #061520;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
+.friendItem{display:flex;justify-content:space-between;align-items:center;padding:7px 12px;border-bottom:1px solid #040c16;font-size:11px;}
+.friendItem:hover{background:#040c16;}
 .fDot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-right:8px;display:inline-block;}
-.fDot.online{background:#00ff88;}.fDot.playing{background:#ffaa00;}.fDot.queued{background:#ffff00;}.fDot.offline{background:#3d1055;}
+.fDot.online{background:#00ff88;}.fDot.playing{background:#ffaa00;}.fDot.queued{background:#ffff00;}.fDot.offline{background:#0a1e30;}
 #playStepOnline{z-index:45;}
 /* ── Online TC selector (chess.com style) ── */
 .psoTCSec{margin-bottom:13px;}
@@ -1695,12 +1719,12 @@ body.gamepad-mode #gpHintBar { display: flex; }
 .psoTCDaily{color:#00ff8844 !important;}
 .psoTCBtns{display:flex;gap:5px;}
 .psoTCBtn{flex:1;background:#0d0010;border:1px solid #1a0a25;color:#666;font-family:monospace;font-size:12px;padding:11px 4px;cursor:pointer;border-radius:2px;transition:border-color 0.1s,color 0.1s,background 0.1s;touch-action:manipulation;}
-.psoTCBtn:hover,.psoTCBtn:active{border-color:#6b2a80;color:#f0e6ff;background:#1a0028;}
+.psoTCBtn:hover,.psoTCBtn:active{border-color:#0077aa;color:#cce8ff;background:#1a0028;}
 .psoTCBtn.corr{color:#1a4430;border-color:#0a2018;}
 .psoTCBtn.corr:hover,.psoTCBtn.corr:active{border-color:#00ff88;color:#00ff88;background:#001a08;}
 .psoToggle{position:relative;display:inline-block;width:38px;height:20px;flex-shrink:0;}
 .psoToggle input{opacity:0;width:0;height:0;}
-.psoToggleSlider{position:absolute;cursor:pointer;inset:0;background:#1a0a2a;border:1px solid #3d1055;border-radius:20px;transition:background 0.2s,border-color 0.2s;}
+.psoToggleSlider{position:absolute;cursor:pointer;inset:0;background:#1a0a2a;border:1px solid #0a1e30;border-radius:20px;transition:background 0.2s,border-color 0.2s;}
 .psoToggleSlider:before{content:'';position:absolute;height:12px;width:12px;left:3px;bottom:3px;background:#444;border-radius:50%;transition:transform 0.2s,background 0.2s;}
 .psoToggle input:checked + .psoToggleSlider{background:#002040;border-color:#00ccff55;}
 .psoToggle input:checked + .psoToggleSlider:before{transform:translateX(18px);background:#00ccff;}
@@ -1719,7 +1743,7 @@ body.gamepad-mode #gpHintBar { display: flex; }
   position:fixed;inset:0;background:transparent;
   display:flex;flex-direction:column;
   justify-content:center;align-items:center;
-  z-index:40;color:#f0e6ff;font-family:monospace;
+  z-index:40;color:#cce8ff;font-family:monospace;
   padding: env(safe-area-inset-top,12px) env(safe-area-inset-right,0) env(safe-area-inset-bottom,12px) env(safe-area-inset-left,0);
 ">
   <h1 style="margin:0 0 0.25em;position:relative;z-index:1;">AURORA CHESS</h1>
@@ -1729,16 +1753,18 @@ body.gamepad-mode #gpHintBar { display: flex; }
     <button class="modeBtn" id="mainPlayBtn"    style="margin-bottom:4px;">▶ Play</button>
     <button class="modeBtn" id="mainPuzzlesBtn" style="margin-bottom:4px;">🧩 Puzzles</button>
 
-    <div style="width:120px;border-top:1px solid #2d0a4e;margin:10px 0;"></div>
+    <div style="width:120px;border-top:1px solid #061520;margin:10px 0;"></div>
 
     <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;">
-      <button id="mainSettingsBtn" style="background:#1e0535;border:1px solid #3d1055;color:#9b8fa8;padding:6px 12px;font-family:monospace;font-size:11px;cursor:pointer;letter-spacing:1px;transition:border-color 0.15s,color 0.15s;">⚙</button>
-      <button id="mainProfileBtn"  style="background:#1e0535;border:1px solid #3d1055;color:#9b8fa8;padding:6px 12px;font-family:monospace;font-size:11px;cursor:pointer;letter-spacing:1px;transition:border-color 0.15s,color 0.15s;position:relative;">👤<span id="mainProfileBadge" class="notif-badge" style="display:none;"></span></button>
-      <button id="mainHelpBtn"     style="background:#1e0535;border:1px solid #3d1055;color:#9b8fa8;padding:6px 12px;font-family:monospace;font-size:11px;cursor:pointer;letter-spacing:1px;transition:border-color 0.15s,color 0.15s;">?</button>
-      <button id="mainSupportBtn"  style="background:#1e0535;border:1px solid #3d1055;color:#9b8fa8;padding:6px 12px;font-family:monospace;font-size:11px;cursor:pointer;letter-spacing:1px;transition:border-color 0.15s,color 0.15s;">♥</button>
+      <button id="mainSettingsBtn" style="background:#040c16;border:1px solid #0a1e30;color:#6ab4d8;padding:6px 12px;font-family:monospace;font-size:11px;cursor:pointer;letter-spacing:1px;transition:border-color 0.15s,color 0.15s;">⚙</button>
+      <button id="mainProfileBtn"  style="background:#040c16;border:1px solid #0a1e30;color:#6ab4d8;padding:6px 12px;font-family:monospace;font-size:11px;cursor:pointer;letter-spacing:1px;transition:border-color 0.15s,color 0.15s;position:relative;">👤<span id="mainProfileBadge" class="notif-badge" style="display:none;"></span></button>
+      <button id="mainHelpBtn"     style="background:#040c16;border:1px solid #0a1e30;color:#6ab4d8;padding:6px 12px;font-family:monospace;font-size:11px;cursor:pointer;letter-spacing:1px;transition:border-color 0.15s,color 0.15s;">?</button>
+      <button id="mainSupportBtn"  style="background:#040c16;border:1px solid #0a1e30;color:#6ab4d8;padding:6px 12px;font-family:monospace;font-size:11px;cursor:pointer;letter-spacing:1px;transition:border-color 0.15s,color 0.15s;">♥</button>
     </div>
 
-    <div id="serverStatusLine" style="margin-top:14px;font-size:9px;color:#4a2060;letter-spacing:1px;cursor:pointer;user-select:none;" title="Click to toggle server connection">⬤ OFFLINE MODE</div>
+    <div id="serverStatusLine" style="margin-top:14px;font-size:9px;color:rgba(0,229,255,0.35);letter-spacing:1px;cursor:pointer;user-select:none;" title="Click to toggle server connection">⬤ OFFLINE MODE</div>
+
+    <button id="mainLoginBtn" style="margin-top:10px;background:none;border:none;color:rgba(0,229,255,0.5);font-family:monospace;font-size:9px;letter-spacing:2px;cursor:pointer;padding:4px 8px;transition:color 0.15s;" onmouseover="this.style.color='#00e5ff'" onmouseout="this.style.color='rgba(0,229,255,0.5)'">⬡ LOGIN / SIGN UP</button>
 
     <!-- Hidden legacy buttons for backward compat -->
     <div style="display:none;">
@@ -1758,20 +1784,20 @@ body.gamepad-mode #gpHintBar { display: flex; }
   position:fixed;inset:0;background:transparent;
   display:none;flex-direction:column;
   justify-content:center;align-items:center;
-  z-index:40;color:#f0e6ff;font-family:monospace;
+  z-index:40;color:#cce8ff;font-family:monospace;
 ">
   <h2 style="margin:0 0 6px;letter-spacing:4px;font-size:16px;">PLAY</h2>
-  <div style="color:#5e2750;font-size:9px;letter-spacing:3px;margin-bottom:22px;">CHOOSE MODE</div>
+  <div style="color:#3a7a9b;font-size:9px;letter-spacing:3px;margin-bottom:22px;">CHOOSE MODE</div>
 
   <button class="modeBtn" data-start="local">Pass &amp; Play</button>
   <button class="modeBtn" data-start="botMenu">vs Computer</button>
 
   <!-- Pre-game time control -->
-  <div style="width:220px;border-top:1px solid #2d0a4e;margin:14px 0 8px;"></div>
-  <div id="localTimeRow" style="display:flex;align-items:center;justify-content:space-between;width:220px;font-size:12px;color:#7a5a8a;">
+  <div style="width:220px;border-top:1px solid #061520;margin:14px 0 8px;"></div>
+  <div id="localTimeRow" style="display:flex;align-items:center;justify-content:space-between;width:220px;font-size:12px;color:#4a8fb0;">
     <span>⏱ Time Control</span>
     <div style="display:flex;align-items:center;gap:6px;">
-      <select id="localTimeMins" style="background:#1e0535;color:#9b8fa8;border:1px solid #3d1055;font-family:monospace;font-size:11px;padding:2px 4px;display:none;">
+      <select id="localTimeMins" style="background:#040c16;color:#6ab4d8;border:1px solid #0a1e30;font-family:monospace;font-size:11px;padding:2px 4px;display:none;">
         <option value="1">1 min</option>
         <option value="3">3 min</option>
         <option value="5">5 min</option>
@@ -1779,11 +1805,11 @@ body.gamepad-mode #gpHintBar { display: flex; }
         <option value="15">15 min</option>
         <option value="30">30 min</option>
       </select>
-      <button id="localTimeToggle" style="background:#1e0535;border:1px solid #3d1055;color:#5e2750;padding:3px 10px;font-family:monospace;font-size:10px;cursor:pointer;letter-spacing:1px;">OFF</button>
+      <button id="localTimeToggle" style="background:#040c16;border:1px solid #0a1e30;color:#3a7a9b;padding:3px 10px;font-family:monospace;font-size:10px;cursor:pointer;letter-spacing:1px;">OFF</button>
     </div>
   </div>
 
-  <button id="backToMain" style="margin-top:20px;background:#1e0535;color:#7a5a8a;border:1px solid #3d1055;padding:8px 28px;font-family:monospace;cursor:pointer;font-size:12px;">← Back</button>
+  <button id="backToMain" style="margin-top:20px;background:#040c16;color:#4a8fb0;border:1px solid #0a1e30;padding:8px 28px;font-family:monospace;cursor:pointer;font-size:12px;">← Back</button>
 </div>
 
 <!-- ======================================================
@@ -1858,7 +1884,7 @@ body.gamepad-mode #gpHintBar { display: flex; }
     <button class="playModeBtn" id="ps1Standard">♟ STANDARD CHESS<div class="sub">Classic 3D chess — full rules</div></button>
     <button class="playModeBtn" id="ps1Arcade" style="border-color:#00ff88;color:#00ff88;">⚡ ARCADE<div class="sub" style="color:#2d5540;">Power orbs · Laser beams · Chaos events</div></button>
     <button class="playModeBtn" id="ps1CTF" style="border-color:#ff6600;color:#ff6600;">🚩 CAPTURE THE FLAG<div class="sub" style="color:#5e3300;">Steal the flag · Deliver to enemy base</div></button>
-    <div style="width:100%;border-top:1px solid #2d0a4e;margin:12px 0 8px;"></div>
+    <div style="width:100%;border-top:1px solid #061520;margin:12px 0 8px;"></div>
     <button class="modeBtn" id="ps1Back" style="width:100%;margin:0;">← Back</button>
   </div>
 </div>
@@ -1874,8 +1900,8 @@ body.gamepad-mode #gpHintBar { display: flex; }
     </div>
     <button class="playModeBtn" id="ps2Local">👥 PASS &amp; PLAY<div class="sub">Two players on one device</div></button>
     <button class="playModeBtn" id="ps2Bot">🤖 VS COMPUTER<div class="sub">Play against the AI</div></button>
-    <button class="playModeBtn" id="ps2Online" style="border-color:#ce93d8;color:#ce93d8;">🌐 PLAY ONLINE<div class="sub" id="ps2OnlineSub" style="color:#5e2750;">Quick match · Friends · Private game</div></button>
-    <div style="width:100%;border-top:1px solid #2d0a4e;margin:12px 0 8px;"></div>
+    <button class="playModeBtn" id="ps2Online" style="border-color:#00e5ff;color:#00e5ff;">🌐 PLAY ONLINE<div class="sub" id="ps2OnlineSub" style="color:#3a7a9b;">Quick match · Friends · Private game</div></button>
+    <div style="width:100%;border-top:1px solid #061520;margin:12px 0 8px;"></div>
     <button class="modeBtn" id="ps2Back" style="width:100%;margin:0;">← Back</button>
   </div>
 </div>
@@ -1890,8 +1916,8 @@ body.gamepad-mode #gpHintBar { display: flex; }
       <div class="playSubtitle">STEP 3 OF 3</div>
     </div>
 
-    <div id="ps3DiffSection" style="display:none;border-bottom:1px solid #2d0a4e;padding-bottom:12px;margin-bottom:12px;">
-      <div style="font-size:9px;color:#5e2750;letter-spacing:2px;margin-bottom:8px;">🤖 DIFFICULTY</div>
+    <div id="ps3DiffSection" style="display:none;border-bottom:1px solid #061520;padding-bottom:12px;margin-bottom:12px;">
+      <div style="font-size:9px;color:#3a7a9b;letter-spacing:2px;margin-bottom:8px;">🤖 DIFFICULTY</div>
       <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px;">
         <button class="chip active" data-ps3color="white">WHITE</button>
         <button class="chip" data-ps3color="black">BLACK</button>
@@ -1903,18 +1929,18 @@ body.gamepad-mode #gpHintBar { display: flex; }
         <button class="chip" data-ps3diff="hard">HARD</button>
         <button class="chip" data-ps3diff="max">MAX</button>
       </div>
-      <div style="margin-top:10px;display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#7a5a8a;">
+      <div style="margin-top:10px;display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#4a8fb0;">
         <span>Show Hint Button</span>
         <label class="toggle"><input type="checkbox" id="ps3HintToggle" checked><div class="track"></div><div class="thumb"></div></label>
       </div>
-      <div style="margin-top:6px;display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#7a5a8a;">
+      <div style="margin-top:6px;display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#4a8fb0;">
         <span>Show Undo Button</span>
         <label class="toggle"><input type="checkbox" id="ps3UndoToggle" checked><div class="track"></div><div class="thumb"></div></label>
       </div>
     </div>
 
-    <div style="border-bottom:1px solid #2d0a4e;padding-bottom:12px;margin-bottom:12px;">
-      <div style="font-size:9px;color:#5e2750;letter-spacing:2px;margin-bottom:8px;">⏱ TIME CONTROL</div>
+    <div style="border-bottom:1px solid #061520;padding-bottom:12px;margin-bottom:12px;">
+      <div style="font-size:9px;color:#3a7a9b;letter-spacing:2px;margin-bottom:8px;">⏱ TIME CONTROL</div>
       <div class="timeChipRow">
         <button class="timeChip active" data-time="0">OFF</button>
         <button class="timeChip" data-time="1">1</button>
@@ -1924,16 +1950,16 @@ body.gamepad-mode #gpHintBar { display: flex; }
         <button class="timeChip" data-time="15">15</button>
         <button class="timeChip" data-time="30">30</button>
       </div>
-      <div style="font-size:9px;color:#3d1055;letter-spacing:1px;margin-top:4px;">Minutes per player · OFF = no limit</div>
+      <div style="font-size:9px;color:#0a1e30;letter-spacing:1px;margin-top:4px;">Minutes per player · OFF = no limit</div>
     </div>
 
     <div id="ps3ArcadeSection" style="display:none;margin-bottom:12px;">
-      <div id="ps3ArcadeHeader" style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;cursor:pointer;border-top:1px solid #2d0a4e;margin-bottom:4px;">
-        <span style="font-size:9px;color:#5e2750;letter-spacing:2px;">⚡ ARCADE SETTINGS</span>
-        <span id="ps3ArcadeArrow" style="font-size:10px;color:#5e2750;transition:transform 0.2s;">▾</span>
+      <div id="ps3ArcadeHeader" style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;cursor:pointer;border-top:1px solid #061520;margin-bottom:4px;">
+        <span style="font-size:9px;color:#3a7a9b;letter-spacing:2px;">⚡ ARCADE SETTINGS</span>
+        <span id="ps3ArcadeArrow" style="font-size:10px;color:#3a7a9b;transition:transform 0.2s;">▾</span>
       </div>
       <div id="ps3ArcadeContent" style="display:none;">
-        <div style="font-size:8px;color:#3d1055;letter-spacing:1px;margin-bottom:6px;">EVENTS</div>
+        <div style="font-size:8px;color:#0a1e30;letter-spacing:1px;margin-bottom:6px;">EVENTS</div>
         <div class="arcadeRow"><span>Random Events</span><button class="arcadeToggleBtn on" data-ps3arc="randomEvents">ON</button></div>
         <div class="arcadeRow" style="margin-top:4px;">
           <span>Spawn Rate</span>
@@ -1943,7 +1969,7 @@ body.gamepad-mode #gpHintBar { display: flex; }
             <button class="arcadeRateBtn" data-ps3rate="high">HIGH</button>
           </div>
         </div>
-        <div style="font-size:8px;color:#3d1055;letter-spacing:1px;margin:10px 0 6px;">LASER</div>
+        <div style="font-size:8px;color:#0a1e30;letter-spacing:1px;margin:10px 0 6px;">LASER</div>
         <div class="arcadeRow">
           <span>Laser Mode</span>
           <div class="arcadeRateRow">
@@ -1954,7 +1980,7 @@ body.gamepad-mode #gpHintBar { display: flex; }
             <button class="arcadeRateBtn active" data-ps3laser="all">ALL</button>
           </div>
         </div>
-        <div style="font-size:8px;color:#3d1055;letter-spacing:1px;margin:10px 0 6px;">BOARD HOLES</div>
+        <div style="font-size:8px;color:#0a1e30;letter-spacing:1px;margin:10px 0 6px;">BOARD HOLES</div>
         <div class="arcadeRow">
           <span>Regeneration</span>
           <div class="arcadeRateRow">
@@ -1984,21 +2010,21 @@ body.gamepad-mode #gpHintBar { display: flex; }
       </div>
     </div>
 
-    <div id="ps3CTFSection" style="display:none;border-top:1px solid #2d0a4e;padding-top:12px;margin-bottom:12px;">
-      <div style="font-size:9px;color:#5e2750;letter-spacing:2px;margin-bottom:8px;">🚩 POINTS TO WIN</div>
+    <div id="ps3CTFSection" style="display:none;border-top:1px solid #061520;padding-top:12px;margin-bottom:12px;">
+      <div style="font-size:9px;color:#3a7a9b;letter-spacing:2px;margin-bottom:8px;">🚩 POINTS TO WIN</div>
       <div style="display:flex;gap:4px;margin-bottom:4px;">
         <button class="timeChip active" data-ctfpts="1">1</button>
         <button class="timeChip" data-ctfpts="2">2</button>
         <button class="timeChip" data-ctfpts="3">3</button>
       </div>
       <div id="ps3CTFAdvHeader" style="display:flex;justify-content:space-between;align-items:center;padding:6px 0 2px;cursor:pointer;">
-        <span style="font-size:9px;color:#3d1055;letter-spacing:1px;">▸ ADVANCED</span>
-        <span id="ps3CTFAdvArrow" style="font-size:10px;color:#3d1055;transition:transform 0.2s;">▾</span>
+        <span style="font-size:9px;color:#0a1e30;letter-spacing:1px;">▸ ADVANCED</span>
+        <span id="ps3CTFAdvArrow" style="font-size:10px;color:#0a1e30;transition:transform 0.2s;">▾</span>
       </div>
       <div id="ps3CTFAdvContent" style="display:none;padding-top:4px;">
-        <div style="font-size:9px;color:#5e2750;letter-spacing:1px;margin-bottom:4px;">POINTS: <span id="ps3CTFPtsLabel">1</span></div>
-        <input type="range" id="ps3CTFSlider" min="1" max="10" value="1" style="width:100%;accent-color:#ce93d8;margin-bottom:10px;">
-        <div style="font-size:9px;color:#5e2750;letter-spacing:2px;margin-bottom:6px;">INCREMENT (sec per move)</div>
+        <div style="font-size:9px;color:#3a7a9b;letter-spacing:1px;margin-bottom:4px;">POINTS: <span id="ps3CTFPtsLabel">1</span></div>
+        <input type="range" id="ps3CTFSlider" min="1" max="10" value="1" style="width:100%;accent-color:#00e5ff;margin-bottom:10px;">
+        <div style="font-size:9px;color:#3a7a9b;letter-spacing:2px;margin-bottom:6px;">INCREMENT (sec per move)</div>
         <div style="display:flex;gap:4px;flex-wrap:wrap;">
           <button class="timeChip active" data-ctfinc="0">+0</button>
           <button class="timeChip" data-ctfinc="1">+1</button>
@@ -2011,7 +2037,7 @@ body.gamepad-mode #gpHintBar { display: flex; }
 
     <div style="display:flex;gap:8px;margin-top:8px;">
       <button class="modeBtn" id="ps3Back" style="flex:1;margin:0;">← Back</button>
-      <button class="modeBtn" id="ps3Play" style="flex:1;margin:0;border-color:#ce93d8;color:#ce93d8;">▶ Play</button>
+      <button class="modeBtn" id="ps3Play" style="flex:1;margin:0;border-color:#00e5ff;color:#00e5ff;">▶ Play</button>
     </div>
   </div>
 </div>
@@ -2026,7 +2052,7 @@ body.gamepad-mode #gpHintBar { display: flex; }
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;">
       <div>
         <div class="playTitle" style="font-size:16px;">ONLINE</div>
-        <div id="psoStatus" style="font-size:9px;letter-spacing:2px;margin-top:4px;color:#5e2750;">OFFLINE</div>
+        <div id="psoStatus" style="font-size:9px;letter-spacing:2px;margin-top:4px;color:#3a7a9b;">OFFLINE</div>
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;padding-top:6px;">
         <label class="psoToggle">
@@ -2038,14 +2064,14 @@ body.gamepad-mode #gpHintBar { display: flex; }
     </div>
 
     <!-- Offline note -->
-    <div id="psoOfflineNote" style="font-size:10px;color:#7a5a8a;text-align:center;margin-bottom:16px;line-height:1.9;display:none;">
+    <div id="psoOfflineNote" style="font-size:10px;color:#4a8fb0;text-align:center;margin-bottom:16px;line-height:1.9;display:none;">
       Server offline — try again later<br>
-      <button id="psoRetryBtn" style="background:none;border:1px solid #3d1055;color:#7a5a8a;font-family:monospace;font-size:9px;padding:3px 12px;cursor:pointer;margin-top:6px;letter-spacing:1px;">RETRY</button>
+      <button id="psoRetryBtn" style="background:none;border:1px solid #0a1e30;color:#4a8fb0;font-family:monospace;font-size:9px;padding:3px 12px;cursor:pointer;margin-top:6px;letter-spacing:1px;">RETRY</button>
     </div>
 
     <!-- Auth required -->
-    <div id="psoAuthRequired" style="font-size:10px;color:#7a5a8a;text-align:center;margin-bottom:16px;line-height:1.9;display:none;">
-      <button id="psoLoginBtn" style="background:#1e0535;border:1px solid #ce93d8;color:#ce93d8;font-family:monospace;font-size:10px;padding:6px 18px;cursor:pointer;letter-spacing:1px;">LOGIN / REGISTER</button>
+    <div id="psoAuthRequired" style="font-size:10px;color:#4a8fb0;text-align:center;margin-bottom:16px;line-height:1.9;display:none;">
+      <button id="psoLoginBtn" style="background:#040c16;border:1px solid #00e5ff;color:#00e5ff;font-family:monospace;font-size:10px;padding:6px 18px;cursor:pointer;letter-spacing:1px;">LOGIN / REGISTER</button>
     </div>
 
     <!-- Time control grid (chess.com style) -->
@@ -2101,40 +2127,40 @@ body.gamepad-mode #gpHintBar { display: flex; }
 
       <!-- Secondary: Friend / Private side by side -->
       <div style="display:flex;gap:6px;margin-top:6px;margin-bottom:2px;">
-        <button id="psoFriendGame" style="flex:1;background:#12001e;border:1px solid #5e2750;color:#ce93d8;font-family:monospace;font-size:10px;padding:9px 6px;cursor:pointer;letter-spacing:1px;touch-action:manipulation;">👥 FRIEND</button>
-        <button id="psoPrivateGame" style="flex:1;background:#12001e;border:1px solid #3d1055;color:#777;font-family:monospace;font-size:10px;padding:9px 6px;cursor:pointer;letter-spacing:1px;touch-action:manipulation;">🔒 PRIVATE</button>
+        <button id="psoFriendGame" style="flex:1;background:#060d16;border:1px solid #3a7a9b;color:#00e5ff;font-family:monospace;font-size:10px;padding:9px 6px;cursor:pointer;letter-spacing:1px;touch-action:manipulation;">👥 FRIEND</button>
+        <button id="psoPrivateGame" style="flex:1;background:#060d16;border:1px solid #0a1e30;color:#777;font-family:monospace;font-size:10px;padding:9px 6px;cursor:pointer;letter-spacing:1px;touch-action:manipulation;">🔒 PRIVATE</button>
       </div>
     </div>
 
     <!-- Searching / seek posted state -->
     <div id="psoLobbyArea" style="display:none;text-align:center;padding:14px 0;">
       <div id="psoLobbyText" style="font-size:12px;color:#00ff88;letter-spacing:2px;margin-bottom:8px;"></div>
-      <div id="psoLobbyTimer" style="font-size:9px;color:#5e2750;letter-spacing:1px;margin-bottom:16px;min-height:14px;"></div>
-      <button id="psoCancelBtn" style="background:#1e0535;border:1px solid #ff4444;color:#ff4444;font-family:monospace;font-size:10px;padding:6px 18px;cursor:pointer;letter-spacing:1px;">CANCEL</button>
+      <div id="psoLobbyTimer" style="font-size:9px;color:#3a7a9b;letter-spacing:1px;margin-bottom:16px;min-height:14px;"></div>
+      <button id="psoCancelBtn" style="background:#040c16;border:1px solid #ff4444;color:#ff4444;font-family:monospace;font-size:10px;padding:6px 18px;cursor:pointer;letter-spacing:1px;">CANCEL</button>
     </div>
 
     <!-- Private room code -->
-    <div id="psoPrivateSection" style="display:none;border-top:1px solid #2d0a4e;padding-top:12px;margin-top:8px;">
-      <div style="font-size:9px;color:#5e2750;letter-spacing:2px;margin-bottom:8px;">ROOM CODE</div>
+    <div id="psoPrivateSection" style="display:none;border-top:1px solid #061520;padding-top:12px;margin-top:8px;">
+      <div style="font-size:9px;color:#3a7a9b;letter-spacing:2px;margin-bottom:8px;">ROOM CODE</div>
       <div style="display:flex;gap:6px;margin-bottom:6px;">
-        <div id="psoRoomCode" style="flex:1;background:#1e0535;border:1px solid #3d1055;color:#ce93d8;font-family:monospace;font-size:16px;padding:7px 10px;letter-spacing:4px;text-align:center;"></div>
-        <button id="psoCopyCode" style="background:#1e0535;border:1px solid #3d1055;color:#7a5a8a;font-family:monospace;font-size:9px;padding:6px 10px;cursor:pointer;white-space:nowrap;">COPY</button>
+        <div id="psoRoomCode" style="flex:1;background:#040c16;border:1px solid #0a1e30;color:#00e5ff;font-family:monospace;font-size:16px;padding:7px 10px;letter-spacing:4px;text-align:center;"></div>
+        <button id="psoCopyCode" style="background:#040c16;border:1px solid #0a1e30;color:#4a8fb0;font-family:monospace;font-size:9px;padding:6px 10px;cursor:pointer;white-space:nowrap;">COPY</button>
       </div>
-      <div style="font-size:9px;color:#3d1055;letter-spacing:1px;text-align:center;margin-bottom:8px;">Share this code with your friend</div>
-      <button id="psoCancelRoom" style="width:100%;background:#1e0535;border:1px solid #3d1055;color:#7a5a8a;font-family:monospace;font-size:9px;padding:5px;cursor:pointer;letter-spacing:1px;">CANCEL ROOM</button>
+      <div style="font-size:9px;color:#0a1e30;letter-spacing:1px;text-align:center;margin-bottom:8px;">Share this code with your friend</div>
+      <button id="psoCancelRoom" style="width:100%;background:#040c16;border:1px solid #0a1e30;color:#4a8fb0;font-family:monospace;font-size:9px;padding:5px;cursor:pointer;letter-spacing:1px;">CANCEL ROOM</button>
     </div>
 
     <!-- Join with code -->
-    <div id="psoJoinSection" style="border-top:1px solid #2d0a4e;padding-top:12px;margin-top:8px;">
-      <div style="font-size:9px;color:#5e2750;letter-spacing:2px;margin-bottom:8px;">JOIN WITH CODE</div>
+    <div id="psoJoinSection" style="border-top:1px solid #061520;padding-top:12px;margin-top:8px;">
+      <div style="font-size:9px;color:#3a7a9b;letter-spacing:2px;margin-bottom:8px;">JOIN WITH CODE</div>
       <div style="display:flex;gap:6px;">
         <input id="psoJoinInput" type="text" placeholder="ENTER CODE" maxlength="8"
-          style="flex:1;background:#1e0535;border:1px solid #3d1055;color:#f0e6ff;font-family:monospace;font-size:13px;padding:6px 8px;outline:none;letter-spacing:3px;text-transform:uppercase;">
-        <button id="psoJoinBtn" style="background:#1e0535;border:1px solid #ce93d8;color:#ce93d8;font-family:monospace;font-size:10px;padding:6px 12px;cursor:pointer;white-space:nowrap;letter-spacing:1px;">JOIN</button>
+          style="flex:1;background:#040c16;border:1px solid #0a1e30;color:#cce8ff;font-family:monospace;font-size:13px;padding:6px 8px;outline:none;letter-spacing:3px;text-transform:uppercase;">
+        <button id="psoJoinBtn" style="background:#040c16;border:1px solid #00e5ff;color:#00e5ff;font-family:monospace;font-size:10px;padding:6px 12px;cursor:pointer;white-space:nowrap;letter-spacing:1px;">JOIN</button>
       </div>
     </div>
 
-    <div style="width:100%;border-top:1px solid #2d0a4e;margin:14px 0 8px;"></div>
+    <div style="width:100%;border-top:1px solid #061520;margin:14px 0 8px;"></div>
     <button class="modeBtn" id="psoBack" style="width:100%;margin:0;">← Back</button>
 
   </div>
@@ -2144,56 +2170,56 @@ body.gamepad-mode #gpHintBar { display: flex; }
      UI: HELP OVERLAY
 ====================================================== -->
 <div id="helpOverlay">
-  <div style="width:300px;max-height:88vh;overflow-y:auto;background:#12001e;border:1px solid #3d1055;padding:20px;box-sizing:border-box;">
+  <div style="width:300px;max-height:88vh;overflow-y:auto;background:#060d16;border:1px solid #0a1e30;padding:20px;box-sizing:border-box;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
-      <div style="font-size:14px;letter-spacing:4px;color:#ce93d8;">? HELP</div>
-      <button id="helpClose" style="background:none;border:none;color:#5e2750;cursor:pointer;font-size:14px;">✕</button>
+      <div style="font-size:14px;letter-spacing:4px;color:#00e5ff;">? HELP</div>
+      <button id="helpClose" style="background:none;border:none;color:#3a7a9b;cursor:pointer;font-size:14px;">✕</button>
     </div>
     <div style="margin-bottom:14px;">
-      <button id="helpTutorialBtn" style="width:100%;background:#1e0535;border:1px solid #6b2a80;color:#f0e6ff;padding:12px 14px;font-family:monospace;font-size:11px;cursor:pointer;letter-spacing:2px;text-align:left;box-sizing:border-box;">
-        📖 TUTORIAL<div style="font-size:9px;color:#5e2750;letter-spacing:1px;margin-top:3px;">Learn the rules of 3D chess step by step</div>
+      <button id="helpTutorialBtn" style="width:100%;background:#040c16;border:1px solid #0077aa;color:#cce8ff;padding:12px 14px;font-family:monospace;font-size:11px;cursor:pointer;letter-spacing:2px;text-align:left;box-sizing:border-box;">
+        📖 TUTORIAL<div style="font-size:9px;color:#3a7a9b;letter-spacing:1px;margin-top:3px;">Learn the rules of 3D chess step by step</div>
       </button>
     </div>
     <div style="margin-bottom:14px;">
-      <div style="font-size:9px;color:#5e2750;letter-spacing:2px;margin-bottom:7px;">IN-GAME CONTROLS</div>
+      <div style="font-size:9px;color:#3a7a9b;letter-spacing:2px;margin-bottom:7px;">IN-GAME CONTROLS</div>
       <table style="width:100%;border-collapse:collapse;font-size:9px;letter-spacing:1px;">
-        <tr><td style="color:#5e2750;padding:3px 0;width:44%;">Q / E or ↑↓</td><td style="color:#9b8fa8;">Layer down / up</td></tr>
-        <tr><td style="color:#5e2750;padding:3px 0;">1 – 8</td><td style="color:#9b8fa8;">Jump to layer</td></tr>
-        <tr><td style="color:#5e2750;padding:3px 0;">R or F</td><td style="color:#9b8fa8;">Flip board 180°</td></tr>
-        <tr><td style="color:#5e2750;padding:3px 0;">V</td><td style="color:#9b8fa8;">Cycle camera mode</td></tr>
-        <tr><td style="color:#5e2750;padding:3px 0;">Esc</td><td style="color:#9b8fa8;">Deselect / Pause</td></tr>
-        <tr><td style="color:#5e2750;padding:3px 0;">← / →</td><td style="color:#9b8fa8;">Review prev / next move</td></tr>
-        <tr><td style="color:#5e2750;padding:3px 0;">M</td><td style="color:#9b8fa8;">Toggle move list</td></tr>
+        <tr><td style="color:#3a7a9b;padding:3px 0;width:44%;">Q / E or ↑↓</td><td style="color:#6ab4d8;">Layer down / up</td></tr>
+        <tr><td style="color:#3a7a9b;padding:3px 0;">1 – 8</td><td style="color:#6ab4d8;">Jump to layer</td></tr>
+        <tr><td style="color:#3a7a9b;padding:3px 0;">R or F</td><td style="color:#6ab4d8;">Flip board 180°</td></tr>
+        <tr><td style="color:#3a7a9b;padding:3px 0;">V</td><td style="color:#6ab4d8;">Cycle camera mode</td></tr>
+        <tr><td style="color:#3a7a9b;padding:3px 0;">Esc</td><td style="color:#6ab4d8;">Deselect / Pause</td></tr>
+        <tr><td style="color:#3a7a9b;padding:3px 0;">← / →</td><td style="color:#6ab4d8;">Review prev / next move</td></tr>
+        <tr><td style="color:#3a7a9b;padding:3px 0;">M</td><td style="color:#6ab4d8;">Toggle move list</td></tr>
       </table>
     </div>
     <div style="margin-bottom:14px;">
-      <div style="font-size:9px;color:#5e2750;letter-spacing:2px;margin-bottom:7px;">HUD BUTTON GUIDE</div>
+      <div style="font-size:9px;color:#3a7a9b;letter-spacing:2px;margin-bottom:7px;">HUD BUTTON GUIDE</div>
       <table style="width:100%;border-collapse:collapse;font-size:9px;letter-spacing:1px;">
-        <tr><td style="color:#5e2750;padding:3px 0;width:44%;">⟳ 180°</td><td style="color:#9b8fa8;">Rotate board 180°</td></tr>
-        <tr><td style="color:#5e2750;padding:3px 0;">💡 Hint</td><td style="color:#9b8fa8;">Highlight best move</td></tr>
-        <tr><td style="color:#5e2750;padding:3px 0;">↩ Undo</td><td style="color:#9b8fa8;">Take back last move</td></tr>
-        <tr><td style="color:#5e2750;padding:3px 0;">VIEW</td><td style="color:#9b8fa8;">Cycle camera view modes</td></tr>
+        <tr><td style="color:#3a7a9b;padding:3px 0;width:44%;">⟳ 180°</td><td style="color:#6ab4d8;">Rotate board 180°</td></tr>
+        <tr><td style="color:#3a7a9b;padding:3px 0;">💡 Hint</td><td style="color:#6ab4d8;">Highlight best move</td></tr>
+        <tr><td style="color:#3a7a9b;padding:3px 0;">↩ Undo</td><td style="color:#6ab4d8;">Take back last move</td></tr>
+        <tr><td style="color:#3a7a9b;padding:3px 0;">VIEW</td><td style="color:#6ab4d8;">Cycle camera view modes</td></tr>
       </table>
     </div>
     <div style="margin-bottom:14px;">
-      <div style="font-size:9px;color:#5e2750;letter-spacing:2px;margin-bottom:7px;">ABOUT AURORA CHESS</div>
-      <div style="font-size:9px;color:#7a5a8a;line-height:2;">
+      <div style="font-size:9px;color:#3a7a9b;letter-spacing:2px;margin-bottom:7px;">ABOUT AURORA CHESS</div>
+      <div style="font-size:9px;color:#4a8fb0;line-height:2;">
         Aurora Chess is played on an 8×8×4 board.<br>
         Pieces move in all three dimensions.<br>
         Knights jump in 3D L-shapes.
       </div>
     </div>
     <div style="margin-bottom:14px;">
-      <div style="font-size:9px;color:#5e2750;letter-spacing:2px;margin-bottom:7px;">3D MODEL CREDITS</div>
-      <div style="font-size:9px;color:#7a5a8a;line-height:2;">
-        Chess pieces by <a href="https://sketchfab.com/robie1" target="_blank" style="color:#9b59b6;">Chris (sketchfab.com/robie1)</a><br>
+      <div style="font-size:9px;color:#3a7a9b;letter-spacing:2px;margin-bottom:7px;">3D MODEL CREDITS</div>
+      <div style="font-size:9px;color:#4a8fb0;line-height:2;">
+        Chess pieces by <a href="https://sketchfab.com/robie1" target="_blank" style="color:#0099bb;">Chris (sketchfab.com/robie1)</a><br>
         License: CC-BY-4.0
       </div>
     </div>
     <div style="margin-bottom:14px;">
-      <div style="font-size:9px;color:#5e2750;letter-spacing:2px;margin-bottom:7px;">LEGAL</div>
-      <div style="font-size:9px;color:#7a5a8a;line-height:2;">
-        <a href="privacy.html" target="_blank" style="color:#9b59b6;">Privacy Policy</a>
+      <div style="font-size:9px;color:#3a7a9b;letter-spacing:2px;margin-bottom:7px;">LEGAL</div>
+      <div style="font-size:9px;color:#4a8fb0;line-height:2;">
+        <a href="privacy.html" target="_blank" style="color:#0099bb;">Privacy Policy</a>
       </div>
     </div>
     <button id="helpBackBtn" class="modeBtn" style="width:100%;margin:0;">← Back</button>
@@ -2206,21 +2232,21 @@ body.gamepad-mode #gpHintBar { display: flex; }
 <div id="friendPanel">
   <div class="friendPanelBox">
     <div class="friendPanelHeader">
-      <div style="font-size:12px;letter-spacing:3px;color:#ce93d8;">FRIENDS</div>
+      <div style="font-size:12px;letter-spacing:3px;color:#00e5ff;">FRIENDS</div>
       <div style="display:flex;gap:8px;align-items:center;">
-        <button id="friendPanelAddBtn" style="background:#1e0535;border:1px solid #ce93d8;color:#ce93d8;font-family:monospace;font-size:9px;padding:3px 10px;cursor:pointer;letter-spacing:1px;">+ ADD</button>
-        <button id="friendPanelClose" style="background:none;border:none;color:#5e2750;cursor:pointer;font-size:16px;line-height:1;padding:0 2px;">✕</button>
+        <button id="friendPanelAddBtn" style="background:#040c16;border:1px solid #00e5ff;color:#00e5ff;font-family:monospace;font-size:9px;padding:3px 10px;cursor:pointer;letter-spacing:1px;">+ ADD</button>
+        <button id="friendPanelClose" style="background:none;border:none;color:#3a7a9b;cursor:pointer;font-size:16px;line-height:1;padding:0 2px;">✕</button>
       </div>
     </div>
-    <div id="friendPanelAddSection" style="display:none;padding:10px 12px;border-bottom:1px solid #2d0a4e;flex-shrink:0;">
+    <div id="friendPanelAddSection" style="display:none;padding:10px 12px;border-bottom:1px solid #061520;flex-shrink:0;">
       <div style="display:flex;gap:6px;margin-bottom:6px;">
         <input id="friendPanelInput" type="text" placeholder="Search by username" maxlength="20"
-          style="flex:1;background:#1e0535;border:1px solid #3d1055;color:#f0e6ff;font-family:monospace;font-size:10px;padding:5px 8px;outline:none;">
-        <button id="friendPanelSearchBtn" style="background:#1e0535;border:1px solid #ce93d8;color:#ce93d8;font-family:monospace;font-size:9px;padding:5px 10px;cursor:pointer;white-space:nowrap;letter-spacing:1px;">SEND</button>
+          style="flex:1;background:#040c16;border:1px solid #0a1e30;color:#cce8ff;font-family:monospace;font-size:10px;padding:5px 8px;outline:none;">
+        <button id="friendPanelSearchBtn" style="background:#040c16;border:1px solid #00e5ff;color:#00e5ff;font-family:monospace;font-size:9px;padding:5px 10px;cursor:pointer;white-space:nowrap;letter-spacing:1px;">SEND</button>
       </div>
-      <div id="friendPanelSearchResult" style="font-size:9px;color:#5e2750;min-height:14px;"></div>
+      <div id="friendPanelSearchResult" style="font-size:9px;color:#3a7a9b;min-height:14px;"></div>
     </div>
-    <div id="friendPanelOffline" style="padding:16px;text-align:center;font-size:10px;color:#5e2750;letter-spacing:1px;display:none;flex-shrink:0;">
+    <div id="friendPanelOffline" style="padding:16px;text-align:center;font-size:10px;color:#3a7a9b;letter-spacing:1px;display:none;flex-shrink:0;">
       Connect to a server to see your friends
     </div>
     <div id="friendPanelRequests" style="flex-shrink:0;"></div>

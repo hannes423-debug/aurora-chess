@@ -366,7 +366,7 @@ function _makePasswordToggle(btnId, inputId) {
     e.preventDefault();
     var show = inp.type === 'password';
     inp.type = show ? 'text' : 'password';
-    btn.style.color = show ? '#ce93d8' : '#6b3080';
+    btn.style.color = show ? '#00e5ff' : '#0077aa';
   };
 }
 _makePasswordToggle('acctPwToggle', 'acctPassword');
@@ -968,7 +968,9 @@ function showOfflineBannerIfStub() {
       return;  // resume session, stay on main menu
     }
   }
-  // No valid session — show login screen
-  showAccountOverlay();
+  // No valid session — start as guest silently; user logs in via main menu button.
+  ACC_active = { username: GUEST_USER, avatar: '♟', stats: {played:0,wins:0,losses:0,draws:0,botWins:0,puzzlesSolved:0} };
+  accSetSession(GUEST_USER);
+  accUpdateBadge();
 })();
 
