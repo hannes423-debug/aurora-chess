@@ -295,6 +295,19 @@ function _onBotWorkerResult(data) {
   executeMove(piece, move);
 }
 
+/* ── Debounced bot-move scheduler — cancels any pending timer before queuing a new one.
+   Prevents double-move when two code paths both try to trigger the bot (e.g. normal
+   turn flip + power-orb resolvePromotion both calling setTimeout(botMove) in the same
+   turn pipeline). ── */
+var _botMoveTimer = null;
+function scheduleBotMove(delay) {
+  if (_botMoveTimer !== null) clearTimeout(_botMoveTimer);
+  _botMoveTimer = setTimeout(function() {
+    _botMoveTimer = null;
+    botMove();
+  }, delay !== undefined ? delay : 900);
+}
+
 /* ── Main bot entry point — now async via Web Worker ── */
 function botMove() {
   if (!botColor) return;

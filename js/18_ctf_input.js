@@ -189,6 +189,7 @@ var CTF = {
       place(newP, sx, sy, sz);
       newP.userData.moved = true;
       arcadeAnnounce('♻ '+r.color.toUpperCase()+' '+r.type.toUpperCase()+' RESPAWNED!', r.color==='white'?0x88aaff:0xff8844);
+      arcadeLogEntry('['+r.type.toUpperCase()+' RESPAWNED at '+squareName(sx,sy,sz)+']', r.color==='white'?'#88aaff':'#ff8844');
     });
   },
 
@@ -258,6 +259,7 @@ executeMove = function(piece, t) {
     _ctfBaseExecMove.call(this, piece, t);
     oppFlag.carrier = piece;
     arcadeAnnounce('🚩 '+movingColor.toUpperCase()+' PICKED UP THE FLAG!', movingColor==='white'?0x00aaff:0xff6600);
+    arcadeLogEntry('[FLAG CAPTURED by '+movingColor+']', movingColor==='white'?'#00aaff':'#ff6600');
     CTF.refreshSprites();
     // Queue respawn of captured piece if there was one at dest (base move handled capture)
     if (destPiece && destPiece !== piece) {
@@ -296,6 +298,7 @@ executeMove = function(piece, t) {
       oppFlag.reset();
       CTF.respawnQueue.push({type:captured.userData.type,color:captured.userData.color,startX:captured.userData.x,startY:captured.userData.y,startZ:captured.userData.z,respawnOnTurn:CTF.turnCount+CTF.RESPAWN_TURNS});
       arcadeAnnounce('🛡 FLAG RECOVERED! Returns to start!', oppColor==='white'?0x00aaff:0xff6600);
+      arcadeLogEntry('[FLAG RETURNED]', oppColor==='white'?'#00aaff':'#ff6600');
     }
     CTF.refreshSprites();
     CTF.tickRespawns();
@@ -316,6 +319,7 @@ executeMove = function(piece, t) {
       CTF.respawnQueue.push({type:captured2.userData.type,color:captured2.userData.color,startX:captured2.userData.x,startY:captured2.userData.y,startZ:captured2.userData.z,respawnOnTurn:CTF.turnCount+CTF.RESPAWN_TURNS});
     }
     arcadeAnnounce('🛡 FLAG RECOVERED! Returns to start!', movingColor==='white'?0x00aaff:0xff6600);
+    arcadeLogEntry('[FLAG RETURNED]', movingColor==='white'?'#00aaff':'#ff6600');
     CTF.refreshSprites();
     CTF.tickRespawns();
     CTF._addIncrement(movingColor);
@@ -342,12 +346,13 @@ executeMove = function(piece, t) {
 var _ctfBaseReset = resetBoard;
 resetBoard = function(c) {
   _ctfBaseReset(c);
+  // Always purge sprites and carrier state so they don't bleed into other modes
+  CTF.reset();
+  ctfHudEl.style.display = 'none';
   if (ctfMode) {
-    CTF.reset();
     // Place flag sprites after pieces settle
     setTimeout(function(){ CTF.refreshSprites(); }, 200);
-    // Suppress king-check logic — no kings in CTF
-    // (handled by the no-king board setup below)
+    setTimeout(function(){ updateCTFHud(); }, 250);
   }
 };
 
@@ -422,6 +427,22 @@ resetBoard = function(c) {
   _ctfHudResetBase(c);
   ctfHudEl.style.display = 'none';
 };
+
+/* ── Patch startPuzzle: force ctfMode off before entering puzzle mode.
+   Without this, CTF patches to hasLegalMoves/isInCheck remain active and
+   break checkmate detection, and flag sprites persist on the board. ── */
+(function() {
+  var _ctfBasePuzzle = typeof startPuzzle !== 'undefined' ? startPuzzle : null;
+  if (!_ctfBasePuzzle) return;
+  startPuzzle = function(index, tutKey) {
+    if (ctfMode) {
+      ctfMode = false;
+      CTF.reset();
+      ctfHudEl.style.display = 'none';
+    }
+    _ctfBasePuzzle(index, tutKey);
+  };
+})();
 
 
 /* ================================================================

@@ -586,7 +586,8 @@ body { min-height: -webkit-fill-available; -webkit-touch-callout: none; -webkit-
 .chip:hover  { border-color: rgba(0,229,255,0.6) !important; color: #cce8ff !important; }
 /* Main menu title — aurora style */
 #mainMenu h1 {
-  font-size: clamp(2rem,5vw,4.5rem) !important;
+  /* clamp min raised to 1.4rem so title never overflows narrow portrait viewports */
+  font-size: clamp(1.4rem,5vw,4.5rem) !important;
   font-weight: 300 !important;
   letter-spacing: 0.35em !important;
   background: none !important;
@@ -595,6 +596,8 @@ body { min-height: -webkit-fill-available; -webkit-touch-callout: none; -webkit-
   text-shadow: 0 0 40px rgba(100,200,255,0.35), 0 0 80px rgba(100,180,255,0.15) !important;
   filter: none !important;
   margin-bottom: 0.2em !important;
+  text-align: center !important;
+  white-space: nowrap !important;
 }
 /* UI scale — applied by uiScaleSlider JS via --ui-scale custom property */
 :root { --ui-scale: 1; }
@@ -690,6 +693,28 @@ body.gamepad-mode #gpHintBar { display: flex; }
   #viewToggle  { right:  4px !important; font-size: 10px !important; padding: 4px 8px !important; }
 }
 
+/* ── Portrait ≤430px: move puzzle-specific toolbar buttons to a second row so
+   they don't collide with MOVES/VIEW buttons anchored on the right.
+   The info toggle (ℹ) at left:210px would hide behind MOVES (right:80) on ≤390px. ── */
+@media (max-width: 430px) and (orientation: portrait) {
+  #hintBtn {
+    top: calc(48px + env(safe-area-inset-top)) !important;
+    left: 12px !important;
+  }
+  #undoBtn {
+    top: calc(48px + env(safe-area-inset-top)) !important;
+    left: 56px !important;
+  }
+  #puzzleInfoToggle {
+    top: calc(48px + env(safe-area-inset-top)) !important;
+    left: 100px !important;
+  }
+  /* Push puzzle info popup below second toolbar row */
+  #puzzleInfoPopup {
+    top: calc(82px + env(safe-area-inset-top)) !important;
+  }
+}
+
 /* ═══════════════════════ WELCOME WIZARD ═══════════════════════ */
 #welcomeWizard{position:fixed;inset:0;background:rgba(10,12,20,0.96);display:flex;align-items:flex-start;justify-content:center;z-index:1000;font-family:monospace;overflow-y:auto;padding:20px 0;}
 .ww-card{width:min(520px,92vw);background:rgba(5,6,15,0.99);border:1px solid rgba(0,229,255,0.2);border-radius:6px;padding:32px 36px 24px;position:relative;margin:auto;}
@@ -732,7 +757,7 @@ body.gamepad-mode #gpHintBar { display: flex; }
 /* ═══════════════════════ HELP PANEL ═══════════════════════ */
 #gameHelpBtn{position:fixed;bottom:56px;right:10px;z-index:30;width:26px;height:26px;background:rgba(5,6,15,0.9);border:1px solid rgba(0,229,255,0.22);color:#4a8fb0;font-family:monospace;font-size:12px;cursor:pointer;border-radius:50%;display:none;line-height:1;padding:0;transition:border-color .15s,color .15s;}
 #gameHelpBtn:hover,#gameHelpBtn.open{border-color:#00e5ff;color:#00e5ff;}
-#gameHelpPanel{position:fixed;top:0;right:-410px;width:360px;height:100%;background:rgba(5,6,15,0.97);border-left:1px solid rgba(0,229,255,0.12);z-index:31;overflow-y:auto;padding:18px 16px;font-family:monospace;transition:right .22s ease;}
+#gameHelpPanel{position:fixed;top:0;right:-410px;width:min(360px,100vw);height:100%;background:rgba(5,6,15,0.97);border-left:1px solid rgba(0,229,255,0.12);z-index:31;overflow-y:auto;padding:18px 16px;font-family:monospace;transition:right .22s ease;}
 #gameHelpPanel.open{right:0;}
 .hp-heading{font-size:9px;letter-spacing:3px;color:#cce8ff;margin:0 0 14px;display:flex;justify-content:space-between;align-items:center;}
 .hp-close{background:none;border:none;color:rgba(0,229,255,0.4);font-size:14px;cursor:pointer;padding:0 2px;line-height:1;}
@@ -1812,7 +1837,7 @@ body.gamepad-mode #gpHintBar { display: flex; }
   padding: env(safe-area-inset-top,12px) env(safe-area-inset-right,0) env(safe-area-inset-bottom,12px) env(safe-area-inset-left,0);
 ">
   <h1 style="margin:0 0 0.25em;position:relative;z-index:1;">AURORA CHESS</h1>
-  <div style="font-size:clamp(0.6rem,1.4vw,1rem);letter-spacing:0.55em;text-transform:uppercase;color:rgba(160,200,240,0.5);margin-bottom:36px;position:relative;z-index:1;">A NEW DIMENSION</div>
+  <div style="font-size:clamp(0.6rem,1.4vw,1rem);letter-spacing:0.55em;text-transform:uppercase;color:rgba(160,200,240,0.5);margin-bottom:36px;position:relative;z-index:1;text-align:center;">A NEW DIMENSION</div>
 
   <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:0;">
     <button class="modeBtn" id="mainPlayBtn"    style="margin-bottom:4px;">▶ Play</button>

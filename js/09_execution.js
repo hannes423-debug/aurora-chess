@@ -74,7 +74,7 @@ function executeMove(piece,t) {
         showThreatLines(turn);
         SND.check(); HAP.vib('check');
       }
-      if(!reviewing&&turn===botColor){setTimeout(botMove,900);}
+      if(!reviewing&&turn===botColor){scheduleBotMove(900);}
     }
   }
 }
@@ -117,7 +117,7 @@ newPiece.position.set(
   -half + (pawn.userData.x + 0.5) * SPACING,
   0,
   -half + (pawn.userData.y + 0.5) * SPACING
-);newPiece.userData.x=pawn.userData.x;newPiece.userData.y=pawn.userData.y;newPiece.userData.z=pawn.userData.z;newPiece.userData.moved=true;pieces.splice(pieces.indexOf(pawn),1);pawn.parent.remove(pawn);pieces.push(newPiece);boardMap[key(newPiece.userData.x,newPiece.userData.y,newPiece.userData.z)]=newPiece;promotionGroup.clear();promotionActive=false;if(typeof ONLINE!=="undefined"&&ONLINE&&ONLINE.inMatch&&!ONLINE._syncing&&pawn.userData.color===playerColor){onlineDCSend('promotion',{pieceType:type,x:pawn.userData.x,y:pawn.userData.y,z:pawn.userData.z});}turn=turn==="white"?"black":"white";document.getElementById("hud").textContent=turn.charAt(0).toUpperCase()+turn.slice(1)+" to move";if(!hasLegalMoves(turn)){if(isInCheck(turn)){boardText("CHECKMATE",0xff4444);SND.end(turn!==playerColor);setTimeout(()=>endGame(turn==="white"?"Black wins by checkmate":"White wins by checkmate"),1200);}else{boardText("STALEMATE",0xaaaaaa);SND.end(false);setTimeout(()=>endGame("Draw by stalemate"),1200);}}else{if(isInCheck(turn)){boardText("CHECK",0xff4444);showThreatLines(turn);SND.check();HAP.vib('check');}if(!reviewing&&turn===botColor){setTimeout(botMove,900);}}}
+);newPiece.userData.x=pawn.userData.x;newPiece.userData.y=pawn.userData.y;newPiece.userData.z=pawn.userData.z;newPiece.userData.moved=true;pieces.splice(pieces.indexOf(pawn),1);pawn.parent.remove(pawn);pieces.push(newPiece);boardMap[key(newPiece.userData.x,newPiece.userData.y,newPiece.userData.z)]=newPiece;promotionGroup.clear();promotionActive=false;if(!reviewing&&typeof addMoveAnnotation==='function'){var _pm={queen:'Q',rook:'R',bishop:'B',knight:'N'};addMoveAnnotation('='+(_pm[type]||type.charAt(0).toUpperCase()));}if(typeof ONLINE!=="undefined"&&ONLINE&&ONLINE.inMatch&&!ONLINE._syncing&&pawn.userData.color===playerColor){onlineDCSend('promotion',{pieceType:type,x:pawn.userData.x,y:pawn.userData.y,z:pawn.userData.z});}turn=turn==="white"?"black":"white";document.getElementById("hud").textContent=turn.charAt(0).toUpperCase()+turn.slice(1)+" to move";if(!hasLegalMoves(turn)){if(isInCheck(turn)){boardText("CHECKMATE",0xff4444);SND.end(turn!==playerColor);setTimeout(()=>endGame(turn==="white"?"Black wins by checkmate":"White wins by checkmate"),1200);}else{boardText("STALEMATE",0xaaaaaa);SND.end(false);setTimeout(()=>endGame("Draw by stalemate"),1200);}}else{if(isInCheck(turn)){boardText("CHECK",0xff4444);showThreatLines(turn);SND.check();HAP.vib('check');}if(!reviewing&&turn===botColor){scheduleBotMove(900);}}}
 
 /* ======================================================
    BOARD RESET
