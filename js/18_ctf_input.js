@@ -429,7 +429,7 @@ resetBoard = function(c) {
    - LMB: select piece / execute move (mirrors touchstart logic)
    - RMB hold + drag: rotate board (FREE mode only)
    - Mouse wheel: scroll layer (1 step per notch)
-   - Keys 1-8: jump to layer N directly
+   - Keys 1-4: jump to layer N directly
    - Arrow Up/Down: layer +1 / -1
    - Escape: deselect / open pause menu
    - Tab (hold): show all-layers ghost overlay
@@ -524,6 +524,75 @@ resetBoard = function(c) {
     if (selPlate) { pivot.remove(selPlate); selPlate = null; }
   }
 
+  // Collect all layer hit planes into a flat array for multi-layer raycasting
+  function _allLayerPlanes() {
+    var a = [];
+    for (var _z = 0; _z < LAYERS; _z++) {
+      if (!layerPlanes[_z]) continue;
+      for (var _p = 0; _p < layerPlanes[_z].length; _p++) a.push(layerPlanes[_z][_p]);
+    }
+    return a;
+  }
+
+  // Find and switch to the first non-active layer hit by this ray.
+  // After switching, tries to select a friendly piece at the hit square.
+  // Returns true if a layer switch was triggered.
+  function _autoJumpToLayer(ndcX, ndcY) {
+    if (botThinking) return false;
+    mv.x = ndcX; mv.y = ndcY;
+    rc.setFromCamera(mv, camera);
+    var _hits = rc.intersectObjects(_allLayerPlanes());
+    for (var _hi = 0; _hi < _hits.length; _hi++) {
+      var _hd = _hits[_hi].object.userData;
+      if (_hd.z === activeZ) continue;
+      var _tz = _hd.z; var _hx = _hd.x; var _hy = _hd.y;
+      clearSelection();
+      animLayerCrawl(activeZ, _tz, 200, function() {
+        activeZ = _tz;
+        var sl = document.getElementById('zSlider'); if (sl) sl.value = activeZ;
+        update(); coords(); camOnLayerChange();
+        var sp = occ(_hx, _hy, _tz);
+        if (sp && sp.userData.color === turn &&
+            ((!botColor && typeof ONLINE !== 'undefined' && !ONLINE.inMatch) || sp.userData.color === playerColor)) {
+          selectPiece(sp);
+        }
+      });
+      return true;
+    }
+    return false;
+  }
+
+  // Raycast all layer planes, find the first non-activeZ legal move, execute cross-layer switch.
+  // Returns true if a cross-layer move was found and executed.
+  function _execCrossLayer(ndcX, ndcY) {
+    if (!selectedPawn) return false;
+    var legal2c = getLegalMoves(selectedPawn);
+    mv.x = ndcX; mv.y = ndcY;
+    rc.setFromCamera(mv, camera);
+    var _hits = rc.intersectObjects(_allLayerPlanes());
+    for (var _hi = 0; _hi < _hits.length; _hi++) {
+      var _hd = _hits[_hi].object.userData;
+      if (_hd.z === activeZ) continue;
+      var _cm = legal2c.find(function(m2) { return m2.x === _hd.x && m2.y === _hd.y && m2.z === _hd.z; });
+      if (_cm) {
+        var _ps = selectedPawn; var _m = _cm;
+        clearSelection();
+        animLayerCrawl(activeZ, _m.z, 200, function() {
+          activeZ = _m.z;
+          var sl = document.getElementById('zSlider'); if (sl) sl.value = activeZ;
+          update(); coords(); camOnLayerChange();
+          if (_ps.userData.type === 'king' && _m.castle) executeCastle(_m, _ps);
+          executeMove(_ps, _m);
+          fadeHighlight(_m.x, _m.y, _m.z, _ps);
+          if (!gameStarted) gameStarted = true;
+          document.getElementById('hud').textContent = turn.charAt(0).toUpperCase() + turn.slice(1) + ' to move';
+        });
+        return true;
+      }
+    }
+    return false;
+  }
+
   function executeClick(ndcX, ndcY) {
     if (!gameStarted && renderer.domElement.style.pointerEvents === 'none') return;
     if (reviewing) return;
@@ -540,7 +609,14 @@ resetBoard = function(c) {
 
     // Selection and moves only via board square
     var sq = raycastSquare(ndcX, ndcY);
-    if (!sq) { if (!botThinking) clearSelection(); return; }
+    if (!sq) {
+      if (!botThinking && typeof UI_PREFS !== 'undefined' && UI_PREFS.autoLayerSwitch) {
+        if (selectedPawn && _execCrossLayer(ndcX, ndcY)) return;
+        if (_autoJumpToLayer(ndcX, ndcY)) return;
+      }
+      if (!botThinking) clearSelection();
+      return;
+    }
 
     if (!selectedPawn) {
       // Maybe a friendly piece is on this square but wasn't directly hit
@@ -561,24 +637,9 @@ resetBoard = function(c) {
     var move2 = legal2.find(function(mv2) { return mv2.x === sq.x && mv2.y === sq.y && mv2.z === sq.z; });
 
     if (!move2) {
-      // Auto-layer-switch: if enabled and the clicked (x,y) matches a legal move on another layer, animate there and execute
       if (typeof UI_PREFS !== 'undefined' && UI_PREFS.autoLayerSwitch) {
-        var crossMove = legal2.find(function(mv2) { return mv2.x === sq.x && mv2.y === sq.y && mv2.z !== sq.z; });
-        if (crossMove) {
-          var _prevSel3 = selectedPawn;
-          clearSelection();
-          animLayerCrawl(activeZ, crossMove.z, 200, function() {
-            activeZ = crossMove.z;
-            var sl = document.getElementById('zSlider'); if (sl) sl.value = activeZ;
-            update(); coords(); camOnLayerChange();
-            if (_prevSel3.userData.type === 'king' && crossMove.castle) executeCastle(crossMove, _prevSel3);
-            executeMove(_prevSel3, crossMove);
-            fadeHighlight(crossMove.x, crossMove.y, crossMove.z, _prevSel3);
-            if (!gameStarted) gameStarted = true;
-            document.getElementById('hud').textContent = turn.charAt(0).toUpperCase() + turn.slice(1) + ' to move';
-          });
-          return;
-        }
+        if (_execCrossLayer(ndcX, ndcY)) return;
+        if (_autoJumpToLayer(ndcX, ndcY)) return;
       }
       // Clicked empty square or non-move square — check if own piece is there to switch
       var sp2 = occ(sq.x, sq.y, sq.z);
@@ -663,6 +724,16 @@ resetBoard = function(c) {
     if (_dnd.handled) { _dnd.handled = false; return; }
     if (window.gpCursor) { window.gpCursor.kbActive = false; }
     var ndc = screenToNDC(e.clientX, e.clientY);
+    // Shift+click OR toggle-mode tap → show threat vision instead of moving
+    if ((e.shiftKey || window._tvModeActive) && typeof window._threatVisionClick === 'function') {
+      window._threatVisionClick(ndc.x, ndc.y); return;
+    }
+    // Normal click clears threat vision (unless always-on or toggle mode)
+    if (!e.shiftKey && !window._tvModeActive && typeof window._clearThreatVision === 'function') {
+      if (typeof UI_PREFS === 'undefined' || !UI_PREFS.threatVisionAlways) {
+        window._clearThreatVision();
+      }
+    }
     executeClick(ndc.x, ndc.y);
   });
 
@@ -956,11 +1027,11 @@ resetBoard = function(c) {
       return;
     }
 
-    // Q / E: layer down / up (ergonomic, left hand)
+    // Q / E: layer down / up with wrap-around (1→4→3→…→1)
     if (key === 'q' || key === 'Q') {
       if (menuOpen()) return;
       e.preventDefault();
-      var qz = Math.max(0, activeZ - 1); if (qz === activeZ) return;
+      var qz = (activeZ - 1 + LAYERS) % LAYERS;
       activeZ = qz; var qsl = document.getElementById('zSlider'); if (qsl) qsl.value = qz;
       update(); coords(); SND.layer(qz); flashLayerIndicator(qz); camOnLayerChange();
       return;
@@ -968,7 +1039,7 @@ resetBoard = function(c) {
     if (key === 'e' || key === 'E') {
       if (menuOpen()) return;
       e.preventDefault();
-      var ez = Math.min(7, activeZ + 1); if (ez === activeZ) return;
+      var ez = (activeZ + 1) % LAYERS;
       activeZ = ez; var esl = document.getElementById('zSlider'); if (esl) esl.value = ez;
       update(); coords(); SND.layer(ez); flashLayerIndicator(ez); camOnLayerChange();
       return;

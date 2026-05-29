@@ -52,6 +52,7 @@ const pivot = new THREE.Group();
 scene.add(pivot);
 pivot.rotation.x = 0.1;
 pivot.rotation.y = 3;
+pivot.position.y = 2.2;
 
 // Scene lighting — ignored by MeshBasicMaterial board geometry,
 // required for MeshPhysicalMaterial piece presets

@@ -764,7 +764,9 @@ var UI_PREFS = (function() {
   opponentLayerAnim: true,
   glow:              true,
   layerHL:           true,
-  arcadeAuras:       true
+  arcadeAuras:       true,
+  autoLayerSwitch:   false,
+  threatVisionAlways:false
   };
   try { var saved = JSON.parse(localStorage.getItem('cc_ui_prefs') || 'null'); if (saved) Object.assign(defaults, saved); } catch(e) {}
   return defaults;

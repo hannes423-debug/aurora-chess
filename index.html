@@ -110,7 +110,7 @@ body { min-height: -webkit-fill-available; -webkit-touch-callout: none; -webkit-
   #tutorialOverlay .tut-panel,
   #puzzleOverlay .puz-panel { max-width: 92vw; max-height: 80vh; }
   /* In landscape the screen is wide enough that PAN stays left — keep it clear of the bars */
-  #panBoardBtn { left: 116px !important; right: auto !important; }
+  #panBoardBtn { left: 160px !important; right: auto !important; }
 }
 
 /* ── Portrait phone layout ── */
@@ -265,7 +265,7 @@ body { min-height: -webkit-fill-available; -webkit-touch-callout: none; -webkit-
   background: #040c16;
   color: #cce8ff; font-family: monospace;
   width: min(420px, 100vw - 24px);
-  max-height: calc(100vh - 24px);
+  max-height: calc((100vh - 24px) / var(--ui-scale, 1));
   display: flex; flex-direction: column;
   border-radius: 6px;
   border: 1px solid #3a7a9b;
@@ -689,6 +689,65 @@ body.gamepad-mode #gpHintBar { display: flex; }
   #moveToggle { right: 56px !important; font-size: 10px !important; padding: 4px 8px !important; letter-spacing: 0 !important; }
   #viewToggle  { right:  4px !important; font-size: 10px !important; padding: 4px 8px !important; }
 }
+
+/* ═══════════════════════ WELCOME WIZARD ═══════════════════════ */
+#welcomeWizard{position:fixed;inset:0;background:rgba(10,12,20,0.96);display:flex;align-items:flex-start;justify-content:center;z-index:1000;font-family:monospace;overflow-y:auto;padding:20px 0;}
+.ww-card{width:min(520px,92vw);background:rgba(5,6,15,0.99);border:1px solid rgba(0,229,255,0.2);border-radius:6px;padding:32px 36px 24px;position:relative;margin:auto;}
+.ww-skip{position:absolute;top:14px;right:14px;background:none;border:none;color:rgba(0,229,255,0.3);font-family:monospace;font-size:9px;letter-spacing:2px;cursor:pointer;padding:4px 8px;transition:color .15s;}
+.ww-skip:hover{color:rgba(0,229,255,0.7);}
+.ww-dots{display:flex;gap:7px;justify-content:center;margin-bottom:26px;}
+.ww-dot{width:7px;height:7px;border-radius:50%;background:rgba(0,229,255,0.12);border:1px solid rgba(0,229,255,0.2);transition:all .2s;}
+.ww-dot.active{background:#00e5ff;border-color:#00e5ff;box-shadow:0 0 8px rgba(0,229,255,0.45);}
+.ww-dot.done{background:rgba(0,229,255,0.35);border-color:rgba(0,229,255,0.45);}
+.ww-heading{font-size:clamp(1rem,2.5vw,1.35rem);letter-spacing:.1em;color:#fff;margin:0 0 8px;font-weight:300;}
+.ww-sub{font-size:11px;color:rgba(180,220,255,0.65);line-height:1.75;margin-bottom:22px;}
+.ww-btn-primary{display:block;width:100%;padding:13px 16px;margin-bottom:9px;background:rgba(0,40,60,0.8);border:1px solid #00e5ff;color:#00e5ff;font-family:monospace;font-size:11px;letter-spacing:2px;cursor:pointer;text-align:left;transition:all .15s;}
+.ww-btn-primary:hover{background:rgba(0,60,90,0.9);color:#fff;}
+.ww-btn-secondary{display:block;width:100%;padding:11px 16px;background:none;border:1px solid rgba(0,229,255,0.18);color:rgba(180,220,255,0.55);font-family:monospace;font-size:11px;letter-spacing:2px;cursor:pointer;text-align:left;transition:all .15s;}
+.ww-btn-secondary:hover{border-color:rgba(0,229,255,0.45);color:#cce8ff;}
+.ww-presets{display:flex;gap:8px;margin-bottom:4px;}
+.ww-preset{flex:1;padding:13px 9px;border:1px solid rgba(0,229,255,0.13);border-radius:4px;cursor:pointer;text-align:center;background:rgba(10,12,20,0.8);transition:all .15s;display:flex;flex-direction:column;gap:5px;}
+.ww-preset:hover{border-color:rgba(0,229,255,0.4);background:rgba(0,20,30,0.9);}
+.ww-preset.sel{border-color:#00e5ff;background:rgba(0,40,60,0.8);}
+.ww-preset-icon{font-size:18px;}
+.ww-preset-name{font-size:10px;letter-spacing:2px;color:#cce8ff;}
+.ww-preset-desc{font-size:9px;color:rgba(140,200,255,0.55);line-height:1.5;}
+.ww-opt{padding:11px 0;border-bottom:1px solid rgba(0,229,255,0.07);display:flex;align-items:flex-start;gap:12px;}
+.ww-opt:last-child{border-bottom:none;}
+.ww-opt-label{flex:1;}
+.ww-opt-name{font-size:10px;letter-spacing:1px;color:#cce8ff;margin-bottom:3px;}
+.ww-opt-desc{font-size:9px;color:rgba(140,200,255,0.55);line-height:1.5;}
+.ww-opt-ctrl{flex-shrink:0;padding-top:2px;}
+.ww-chips{display:flex;gap:3px;}
+.ww-chip{padding:4px 9px;font-family:monospace;font-size:8px;letter-spacing:1px;border:1px solid rgba(0,229,255,0.18);color:rgba(180,220,255,0.55);background:rgba(10,12,20,0.8);cursor:pointer;border-radius:2px;transition:all .12s;}
+.ww-chip.sel{border-color:#00e5ff;color:#00e5ff;background:rgba(0,40,60,0.8);}
+.ww-scale-box{text-align:center;padding:14px;border:1px solid rgba(0,229,255,0.1);border-radius:4px;margin-bottom:14px;background:rgba(0,10,20,0.5);}
+.ww-scale-box p{font-size:calc(12px * var(--ww-scale,1));color:rgba(180,220,255,0.75);margin:0;transition:font-size .1s;}
+.ww-nav{display:flex;gap:7px;justify-content:flex-end;margin-top:20px;align-items:center;}
+.ww-back{background:none;border:1px solid rgba(0,229,255,0.14);color:rgba(180,220,255,0.45);font-family:monospace;font-size:9px;letter-spacing:2px;cursor:pointer;padding:8px 16px;transition:all .15s;}
+.ww-back:hover{border-color:rgba(0,229,255,0.4);color:#cce8ff;}
+.ww-next{background:rgba(0,40,60,0.8);border:1px solid #00e5ff;color:#00e5ff;font-family:monospace;font-size:9px;letter-spacing:2px;cursor:pointer;padding:8px 20px;transition:all .15s;}
+.ww-next:hover{background:rgba(0,60,90,0.9);color:#fff;}
+
+/* ═══════════════════════ HELP PANEL ═══════════════════════ */
+#gameHelpBtn{position:fixed;bottom:56px;right:10px;z-index:30;width:26px;height:26px;background:rgba(5,6,15,0.9);border:1px solid rgba(0,229,255,0.22);color:#4a8fb0;font-family:monospace;font-size:12px;cursor:pointer;border-radius:50%;display:none;line-height:1;padding:0;transition:border-color .15s,color .15s;}
+#gameHelpBtn:hover,#gameHelpBtn.open{border-color:#00e5ff;color:#00e5ff;}
+#gameHelpPanel{position:fixed;top:0;right:-410px;width:360px;height:100%;background:rgba(5,6,15,0.97);border-left:1px solid rgba(0,229,255,0.12);z-index:31;overflow-y:auto;padding:18px 16px;font-family:monospace;transition:right .22s ease;}
+#gameHelpPanel.open{right:0;}
+.hp-heading{font-size:9px;letter-spacing:3px;color:#cce8ff;margin:0 0 14px;display:flex;justify-content:space-between;align-items:center;}
+.hp-close{background:none;border:none;color:rgba(0,229,255,0.4);font-size:14px;cursor:pointer;padding:0 2px;line-height:1;}
+.hp-section{margin-bottom:16px;}
+.hp-section-title{font-size:8px;letter-spacing:2px;color:rgba(0,229,255,0.5);margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid rgba(0,229,255,0.07);}
+.hp-row{display:flex;gap:8px;padding:5px 0;font-size:9px;border-bottom:1px solid rgba(0,229,255,0.04);}
+.hp-row:last-child{border-bottom:none;}
+.hp-action{flex:0 0 120px;color:rgba(140,200,255,0.65);}
+.hp-ctrl{flex:1;color:rgba(80,160,200,0.55);}
+.hp-tip{font-size:9px;color:rgba(0,229,255,0.35);line-height:1.6;margin-top:10px;padding:8px;border:1px solid rgba(0,229,255,0.08);border-radius:3px;}
+
+/* ═══════════════════════ THREAT VISION ═══════════════════════ */
+#threatVisionToggle{position:fixed;z-index:22;background:#111;color:#aaa;border:1px solid #333;padding:4px 8px;font-family:monospace;font-size:10px;cursor:pointer;letter-spacing:1px;border-radius:2px;touch-action:manipulation;display:none;}
+#threatVisionToggle.active{border-color:#ff8800;color:#ff8800;background:#1a0e00;}
+#threatCountBadge{position:fixed;background:rgba(5,6,15,0.9);border:1px solid rgba(255,136,0,0.5);color:#ff8800;font-family:monospace;font-size:9px;letter-spacing:1px;padding:3px 8px;border-radius:2px;z-index:35;pointer-events:none;display:none;white-space:nowrap;}
 </style>
 </head>
 <body>
@@ -1426,8 +1485,13 @@ body.gamepad-mode #gpHintBar { display: flex; }
               <div class="settingRow"><label>Board Rotation</label><div class="controls"><label class="toggle"><input type="checkbox" id="advBoardRotate" checked><div class="track"></div><div class="thumb"></div></label></div></div>
               <div class="settingRow"><label>Pinch Zoom</label><div class="controls"><label class="toggle"><input type="checkbox" id="advPinchZoom" checked><div class="track"></div><div class="thumb"></div></label></div></div>
               <div class="settingRow"><label>Swipe Layer</label><div class="controls"><label class="toggle"><input type="checkbox" id="advSwipeLayer" checked><div class="track"></div><div class="thumb"></div></label></div></div>
-              <div class="settingRow"><label>Auto-Switch Layer on Move</label><div class="controls"><label class="toggle"><input type="checkbox" id="advAutoLayerSwitch"><div class="track"></div><div class="thumb"></div></label></div></div>
               <div class="settingRow"><label>Opponent Layer Anim</label><div class="controls"><label class="toggle"><input type="checkbox" id="advOpponentLayerAnim" checked><div class="track"></div><div class="thumb"></div></label></div></div>
+            </div>
+            <div class="settingSection">
+              <h3>Gameplay</h3>
+              <div class="settingRow" title="Clicking a move on a different layer auto-switches to it"><label>Auto-Switch Layer by Click/Touch</label><div class="controls"><label class="toggle"><input type="checkbox" id="advAutoLayerSwitch"><div class="track"></div><div class="thumb"></div></label></div></div>
+              <div class="settingRow" title="Always show all squares the opponent can attack"><label>Threat Vision (always on)</label><div class="controls"><label class="toggle"><input type="checkbox" id="advThreatVisionAlways"><div class="track"></div><div class="thumb"></div></label></div></div>
+              <div class="settingRow" title="Also show your own attack coverage in blue"><label>Threat Vision (show own side)</label><div class="controls"><label class="toggle"><input type="checkbox" id="advThreatVisionOwn"><div class="track"></div><div class="thumb"></div></label></div></div>
             </div>
           </div>
 
@@ -1600,8 +1664,9 @@ body.gamepad-mode #gpHintBar { display: flex; }
               <h3>Scale</h3>
               <div class="settingRow"><label>UI Scale (<span id="uiScaleLabel">1.0</span>×)</label><div class="controls"><input class="settingSlider" type="range" id="uiScaleSlider" min="70" max="150" value="100" title="0.7–1.5×"></div></div>
             </div>
-            <div style="margin-top:10px;">
+            <div style="margin-top:10px;display:flex;flex-direction:column;gap:6px;">
               <button id="uiStyleResetBtn" style="width:100%;background:#111;border:1px solid #333;color:#555;padding:7px;font-family:monospace;font-size:10px;cursor:pointer;letter-spacing:1px;">RESET UI STYLE</button>
+              <button id="replayWelcomeBtn" style="width:100%;background:rgba(0,40,60,0.6);border:1px solid rgba(0,229,255,0.25);color:rgba(0,229,255,0.7);padding:7px;font-family:monospace;font-size:10px;cursor:pointer;letter-spacing:1px;">↺ REPLAY WELCOME SETUP</button>
             </div>
           </div>
 
@@ -2376,9 +2441,10 @@ body.gamepad-mode #gpHintBar { display: flex; }
 <button id="hintBtn" style="position:fixed;top:calc(12px + env(safe-area-inset-top));left:134px;display:none;z-index:22;background:#111;color:#ffaa00;border:1px solid #444;padding:6px 10px;font-family:monospace;font-size:11px;cursor:pointer;letter-spacing:1px;border-radius:2px;touch-action:manipulation;" title="Show hint">💡</button>
 <button id="undoBtn" style="position:fixed;top:calc(12px + env(safe-area-inset-top));left:172px;display:none;z-index:22;background:#111;color:#aaa;border:1px solid #444;padding:6px 10px;font-family:monospace;font-size:11px;cursor:pointer;letter-spacing:1px;border-radius:2px;touch-action:manipulation;" title="Undo last move">↩</button>
 <button id="puzzleInfoToggle" style="position:fixed;top:calc(12px + env(safe-area-inset-top));left:210px;display:none;z-index:22;background:#111;color:#88aaff;border:1px solid #334;padding:6px 10px;font-family:monospace;font-size:11px;cursor:pointer;letter-spacing:1px;border-radius:2px;touch-action:manipulation;" title="Puzzle objective">ℹ</button>
-<button id="panBoardBtn" style="position:fixed;top:calc(48px + env(safe-area-inset-top));left:116px;display:none;z-index:22;background:#111;color:#aaa;border:1px solid #333;padding:4px 8px;font-family:monospace;font-size:10px;cursor:pointer;letter-spacing:1px;border-radius:2px;touch-action:manipulation;" title="Pan board — Alt+drag or click to toggle. Double-click to reset.">✥ PAN</button>
-<button id="uiHideBtn" style="position:fixed;bottom:60px;right:12px;z-index:9999;background:rgba(10,10,10,0.85);color:#666;border:1px solid #333;padding:6px 9px;font-family:monospace;font-size:13px;cursor:pointer;border-radius:3px;line-height:1;touch-action:manipulation;" title="Toggle UI visibility">◻</button>
+<button id="panBoardBtn" style="position:fixed;top:calc(48px + env(safe-area-inset-top));left:160px;display:none;z-index:22;background:#111;color:#aaa;border:1px solid #333;padding:4px 8px;font-family:monospace;font-size:10px;cursor:pointer;letter-spacing:1px;border-radius:2px;touch-action:manipulation;" title="Pan board — Alt+drag or click to toggle. Double-click to reset.">✥ PAN</button>
+<button id="uiHideBtn" style="position:fixed;bottom:26px;right:12px;z-index:9999;background:rgba(10,10,10,0.85);color:#666;border:1px solid #333;padding:6px 9px;font-family:monospace;font-size:13px;cursor:pointer;border-radius:3px;line-height:1;touch-action:manipulation;" title="Toggle UI visibility">◻</button>
 <button id="layerVisToggle" style="position:fixed;top:calc(48px + env(safe-area-inset-top));left:12px;display:none;z-index:22;background:#111;color:#aaa;border:1px solid #333;padding:4px 8px;font-family:monospace;font-size:10px;cursor:pointer;letter-spacing:1px;border-radius:2px;touch-action:manipulation;" title="Cycle layer visibility">◈ LTD</button>
+<button id="threatVisionToggle" title="TTS — Tile Threat Scan: tap a tile to see every piece that can reach it" style="top:calc(48px + env(safe-area-inset-top));left:90px;">⚑ TTS</button>
 
 <!-- ======================================================
      LAYOUT EDITOR OVERLAY
@@ -6322,7 +6388,7 @@ function _b64ToArrayBuffer(b64) {
 <script src="js/18_ctf_input.js?v=20260509e"></script>
 <script src="js/19_online.js?v=20260509e"></script>
 <script>
-/* ── Aurora Waves animation — runs on both menu bg and gameplay frame ── */
+/* ── Aurora Waves — optimized: half-res canvas, no blur filters, 30fps cap, star cache ── */
 (function() {
   var PALETTES = [
     { r:[0,40],   g:[180,240], b:[200,255], a:0.22 },
@@ -6332,121 +6398,195 @@ function _b64ToArrayBuffer(b64) {
     { r:[200,255],g:[100,160], b:[80,140],  a:0.10 },
     { r:[180,220],g:[210,240], b:[240,255], a:0.08 },
   ];
+  // blurFactor replaces ctx.filter — drives soft pre-pass thickness for glow simulation
   var ribbonDefs = [
-    {yPct:0.55,amp:70,thick:120,speed:0.25,freq:4.5,pal:3,phase:0,   blur:18},
-    {yPct:0.40,amp:55,thick:100,speed:0.20,freq:3.8,pal:2,phase:2.0, blur:14},
-    {yPct:0.50,amp:50,thick:55, speed:0.35,freq:5.2,pal:0,phase:0.5, blur:6 },
-    {yPct:0.58,amp:45,thick:45, speed:0.40,freq:5.8,pal:1,phase:1.2, blur:4 },
-    {yPct:0.45,amp:40,thick:50, speed:0.30,freq:4.0,pal:2,phase:3.1, blur:5 },
-    {yPct:0.62,amp:35,thick:35, speed:0.45,freq:6.5,pal:4,phase:4.0, blur:3 },
-    {yPct:0.52,amp:35,thick:22, speed:0.50,freq:6.0,pal:0,phase:0.8, blur:0 },
-    {yPct:0.48,amp:30,thick:18, speed:0.55,freq:7.0,pal:5,phase:1.5, blur:0 },
-    {yPct:0.56,amp:28,thick:16, speed:0.60,freq:7.5,pal:1,phase:2.5, blur:0 },
+    {yPct:0.55,amp:70,thick:120,speed:0.25,freq:4.5,pal:3,phase:0,   blurFactor:0.50},
+    {yPct:0.40,amp:55,thick:100,speed:0.20,freq:3.8,pal:2,phase:2.0, blurFactor:0.42},
+    {yPct:0.50,amp:50,thick:55, speed:0.35,freq:5.2,pal:0,phase:0.5, blurFactor:0.18},
+    {yPct:0.58,amp:45,thick:45, speed:0.40,freq:5.8,pal:1,phase:1.2, blurFactor:0.12},
+    {yPct:0.45,amp:40,thick:50, speed:0.30,freq:4.0,pal:2,phase:3.1, blurFactor:0.15},
+    {yPct:0.62,amp:35,thick:35, speed:0.45,freq:6.5,pal:4,phase:4.0, blurFactor:0.09},
+    {yPct:0.52,amp:35,thick:22, speed:0.50,freq:6.0,pal:0,phase:0.8, blurFactor:0   },
+    {yPct:0.48,amp:30,thick:18, speed:0.55,freq:7.0,pal:5,phase:1.5, blurFactor:0   },
+    {yPct:0.56,amp:28,thick:16, speed:0.60,freq:7.5,pal:1,phase:2.5, blurFactor:0   },
+  ];
+  var orbDefs = [
+    {x:0.25,by:0.45,r:250,c:[60,200,230], s:0.07,d:60},
+    {x:0.70,by:0.55,r:300,c:[140,60,220], s:0.05,d:80},
+    {x:0.50,by:0.40,r:220,c:[40,220,140], s:0.06,d:50},
+    {x:0.85,by:0.35,r:180,c:[200,130,100],s:0.04,d:70},
   ];
 
-  function lerp(range, t) { return Math.round(range[0] + (range[1]-range[0])*t); }
+  // Mode state — shared across both canvas instances
+  var currentYOffset = 0;
+  var modeStartOffset = 0, modeTargetOffset = 0, modeChangeAt = 0;
+  var MODE_DURATION   = 1500; // ms for the center→bottom (or back) transition
+  var GAMEPLAY_SHIFT  = 0.34; // yPct offset that moves ribbons into bottom 25–30%
+  var GAMEPLAY_AMP    = 1.2;  // amplitude scale at full gameplay shift
+
+  window.waveBackground = {
+    setMode: function(mode) {
+      modeTargetOffset = (mode === 'gameplay') ? GAMEPLAY_SHIFT : 0;
+      // Snap immediately — no transition animation
+      currentYOffset  = modeTargetOffset;
+      modeStartOffset = modeTargetOffset;
+      modeChangeAt    = performance.now();
+    }
+  };
+
+  function lerpRange(range, t) { return Math.round(range[0] + (range[1]-range[0])*t); }
+  function smoothstep(t) { return t * t * (3 - 2 * t); }
 
   function initAurora(canvasId) {
     var canvas = document.getElementById(canvasId);
     if (!canvas) return;
     var ctx = canvas.getContext('2d');
     var W, H, dpr, stars = [];
+    var lastFrameTime = 0, frameCount = 0, starCache = null;
 
     function resize() {
       dpr = Math.min(window.devicePixelRatio||1, 2);
       W = window.innerWidth; H = window.innerHeight;
-      canvas.width = W*dpr; canvas.height = H*dpr;
-      ctx.setTransform(dpr,0,0,dpr,0,0);
+      // Half-resolution: canvas pixel buffer is 0.5× — CSS scales it back up
+      canvas.width  = Math.floor(W * dpr * 0.5);
+      canvas.height = Math.floor(H * dpr * 0.5);
+      canvas.style.width = '100%'; canvas.style.height = '100%';
+      ctx.setTransform(dpr * 0.5, 0, 0, dpr * 0.5, 0, 0);
+      starCache = null;
       genStars();
     }
+
     function genStars() {
       stars = [];
-      var count = Math.floor((W*H)/3500);
-      for (var i=0;i<count;i++) {
+      var count = Math.floor((W * H) / 5000);
+      for (var i = 0; i < count; i++) {
         stars.push({x:Math.random()*W, y:Math.random()*H,
           r:Math.random()*1.2+0.3, brightness:Math.random(),
           speed:Math.random()*0.4+0.1, phase:Math.random()*Math.PI*2});
       }
     }
+
+    // Rebuild the star offscreen cache — called every 3rd rendered frame
+    function rebuildStarCache(t) {
+      if (!starCache) {
+        starCache = document.createElement('canvas');
+        starCache.width = canvas.width; starCache.height = canvas.height;
+      }
+      var sc = starCache.getContext('2d');
+      sc.clearRect(0, 0, starCache.width, starCache.height);
+      sc.setTransform(dpr * 0.5, 0, 0, dpr * 0.5, 0, 0);
+      for (var i = 0; i < stars.length; i++) {
+        var s = stars[i];
+        var fl = 0.4 + 0.6 * (0.5 + 0.5 * Math.sin(t * s.speed + s.phase));
+        sc.beginPath(); sc.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        sc.fillStyle = 'rgba(200,220,255,' + (s.brightness * fl * 0.7).toFixed(3) + ')';
+        sc.fill();
+      }
+    }
+
     function drawStars(t) {
-      for (var i=0;i<stars.length;i++) {
-        var s=stars[i];
-        var fl=0.4+0.6*(0.5+0.5*Math.sin(t*s.speed+s.phase));
-        ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
-        ctx.fillStyle='rgba(200,220,255,'+(s.brightness*fl*0.7).toFixed(3)+')';
-        ctx.fill();
+      if (frameCount % 3 === 0 || !starCache) rebuildStarCache(t);
+      if (starCache) ctx.drawImage(starCache, 0, 0, W, H);
+    }
+
+    function drawOrbs(t, yOff) {
+      for (var i = 0; i < orbDefs.length; i++) {
+        var o = orbDefs[i];
+        var cx = o.x * W + Math.sin(t * o.s) * o.d;
+        var cy = (o.by + yOff) * H + Math.cos(t * o.s * 0.8 + 1) * o.d * 0.6;
+        var pulse = 0.8 + 0.2 * Math.sin(t * o.s * 2);
+        var g = ctx.createRadialGradient(cx, cy, 0, cx, cy, o.r * pulse);
+        g.addColorStop(0,   'rgba(' + o.c.join(',') + ',0.08)');
+        g.addColorStop(0.5, 'rgba(' + o.c.join(',') + ',0.03)');
+        g.addColorStop(1,   'rgba(' + o.c.join(',') + ',0)');
+        ctx.fillStyle = g; ctx.fillRect(cx - o.r, cy - o.r, o.r * 2, o.r * 2);
       }
     }
-    function drawOrbs(t) {
-      var orbs=[
-        {x:0.25,y:0.45,r:250,c:[60,200,230], s:0.07,d:60},
-        {x:0.70,y:0.55,r:300,c:[140,60,220], s:0.05,d:80},
-        {x:0.50,y:0.40,r:220,c:[40,220,140], s:0.06,d:50},
-        {x:0.85,y:0.35,r:180,c:[200,130,100],s:0.04,d:70},
-      ];
-      for (var i=0;i<orbs.length;i++) {
-        var o=orbs[i];
-        var cx=o.x*W+Math.sin(t*o.s)*o.d;
-        var cy=o.y*H+Math.cos(t*o.s*0.8+1)*o.d*0.6;
-        var pulse=0.8+0.2*Math.sin(t*o.s*2);
-        var g=ctx.createRadialGradient(cx,cy,0,cx,cy,o.r*pulse);
-        g.addColorStop(0,'rgba('+o.c.join(',')+',0.08)');
-        g.addColorStop(0.5,'rgba('+o.c.join(',')+',0.03)');
-        g.addColorStop(1,'rgba('+o.c.join(',')+',0)');
-        ctx.fillStyle=g; ctx.fillRect(cx-o.r,cy-o.r,o.r*2,o.r*2);
+
+    function drawRibbon(rd, t, yOff, ampScale) {
+      var p  = PALETTES[rd.pal % PALETTES.length];
+      var ti = t * rd.speed + rd.phase;
+      var ey = rd.yPct + yOff;
+      var pts = [], seg = 100;
+      for (var i = 0; i <= seg; i++) {
+        var ratio = i / seg, x = ratio * (W + 40) - 20;
+        var y = ey * H
+          + Math.sin(ratio * rd.freq + ti)                       * rd.amp * (H/900) * ampScale
+          + Math.sin(ratio * rd.freq * 1.7 + ti * 0.6 + 1.3)    * rd.amp * (H/900) * 0.35 * ampScale
+          + Math.sin(ratio * rd.freq * 0.4 + ti * 0.3 + 2.7)    * rd.amp * (H/900) * 0.5  * ampScale
+          + Math.sin(ti * 0.15 + ratio * 0.8)                    * rd.amp * (H/900) * 0.15 * ampScale;
+        pts.push({x:x, y:y});
       }
-    }
-    function drawRibbon(rd, t) {
-      var p=PALETTES[rd.pal%PALETTES.length];
-      var ti=t*rd.speed+rd.phase;
-      ctx.save();
-      if (rd.blur>0) ctx.filter='blur('+rd.blur+'px)';
-      var pts=[], seg=200;
-      for (var i=0;i<=seg;i++) {
-        var ratio=i/seg, x=ratio*(W+40)-20;
-        var y=rd.yPct*H
-          +Math.sin(ratio*rd.freq+ti)*rd.amp*(H/900)
-          +Math.sin(ratio*rd.freq*1.7+ti*0.6+1.3)*rd.amp*(H/900)*0.35
-          +Math.sin(ratio*rd.freq*0.4+ti*0.3+2.7)*rd.amp*(H/900)*0.5
-          +Math.sin(ti*0.15+ratio*0.8)*rd.amp*(H/900)*0.15;
-        pts.push({x:x,y:y});
-      }
-      var th=rd.thick*(H/900);
-      var gr=ctx.createLinearGradient(0,0,W,0);
-      var ctr=0.4+0.2*Math.sin(ti*0.1);
-      gr.addColorStop(0,'rgba('+p.r[0]+','+p.g[0]+','+p.b[0]+',0)');
-      gr.addColorStop(Math.max(0.05,ctr-0.25),'rgba('+lerp(p.r,0.5)+','+lerp(p.g,0.5)+','+lerp(p.b,0.5)+','+p.a+')');
+      var th  = rd.thick * (H / 900);
+      var ctr = 0.4 + 0.2 * Math.sin(ti * 0.1);
+      var gr  = ctx.createLinearGradient(0, 0, W, 0);
+      gr.addColorStop(0, 'rgba('+p.r[0]+','+p.g[0]+','+p.b[0]+',0)');
+      gr.addColorStop(Math.max(0.05,ctr-0.25),'rgba('+lerpRange(p.r,0.5)+','+lerpRange(p.g,0.5)+','+lerpRange(p.b,0.5)+','+p.a+')');
       gr.addColorStop(ctr,'rgba('+p.r[1]+','+p.g[1]+','+p.b[1]+','+(p.a*1.3)+')');
-      gr.addColorStop(Math.min(0.95,ctr+0.25),'rgba('+lerp(p.r,0.5)+','+lerp(p.g,0.5)+','+lerp(p.b,0.5)+','+p.a+')');
-      gr.addColorStop(1,'rgba('+p.r[0]+','+p.g[0]+','+p.b[0]+',0)');
-      ctx.beginPath();
-      ctx.moveTo(pts[0].x,pts[0].y-th/2);
-      for (var i=1;i<pts.length-1;i++) {
-        ctx.quadraticCurveTo(pts[i].x,pts[i].y-th/2,(pts[i].x+pts[i+1].x)/2,(pts[i].y+pts[i+1].y-th)/2);
+      gr.addColorStop(Math.min(0.95,ctr+0.25),'rgba('+lerpRange(p.r,0.5)+','+lerpRange(p.g,0.5)+','+lerpRange(p.b,0.5)+','+p.a+')');
+      gr.addColorStop(1, 'rgba('+p.r[0]+','+p.g[0]+','+p.b[0]+',0)');
+
+      // Soft glow pre-pass (replaces ctx.filter blur) — wider path, lower alpha
+      if (rd.blurFactor > 0) {
+        var thG = th * (1 + rd.blurFactor * 3);
+        ctx.save(); ctx.globalAlpha = rd.blurFactor * 0.45;
+        ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y - thG/2);
+        for (var i = 1; i < pts.length-1; i++) {
+          ctx.quadraticCurveTo(pts[i].x, pts[i].y-thG/2,
+            (pts[i].x+pts[i+1].x)/2, (pts[i].y+pts[i+1].y-thG)/2);
+        }
+        for (var i = pts.length-1; i > 0; i--) {
+          ctx.quadraticCurveTo(pts[i].x, pts[i].y+thG/2,
+            (pts[i].x+pts[i-1].x)/2, (pts[i].y+pts[i-1].y+thG)/2);
+        }
+        ctx.closePath(); ctx.fillStyle = gr; ctx.fill(); ctx.restore();
       }
-      for (var i=pts.length-1;i>0;i--) {
-        ctx.quadraticCurveTo(pts[i].x,pts[i].y+th/2,(pts[i].x+pts[i-1].x)/2,(pts[i].y+pts[i-1].y+th)/2);
+
+      // Main ribbon body
+      ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y - th/2);
+      for (var i = 1; i < pts.length-1; i++) {
+        ctx.quadraticCurveTo(pts[i].x, pts[i].y-th/2,
+          (pts[i].x+pts[i+1].x)/2, (pts[i].y+pts[i+1].y-th)/2);
       }
-      ctx.closePath(); ctx.fillStyle=gr; ctx.fill();
-      ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y);
-      for (var i=1;i<pts.length-1;i++) {
-        ctx.quadraticCurveTo(pts[i].x,pts[i].y,(pts[i].x+pts[i+1].x)/2,(pts[i].y+pts[i+1].y)/2);
+      for (var i = pts.length-1; i > 0; i--) {
+        ctx.quadraticCurveTo(pts[i].x, pts[i].y+th/2,
+          (pts[i].x+pts[i-1].x)/2, (pts[i].y+pts[i-1].y+th)/2);
       }
-      ctx.strokeStyle=gr; ctx.lineWidth=1.2; ctx.globalAlpha=0.6; ctx.stroke(); ctx.globalAlpha=1;
-      ctx.restore();
+      ctx.closePath(); ctx.fillStyle = gr; ctx.fill();
+
+      // Centerline stroke
+      ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y);
+      for (var i = 1; i < pts.length-1; i++) {
+        ctx.quadraticCurveTo(pts[i].x, pts[i].y,
+          (pts[i].x+pts[i+1].x)/2, (pts[i].y+pts[i+1].y)/2);
+      }
+      ctx.strokeStyle = gr; ctx.lineWidth = 1.2; ctx.globalAlpha = 0.6; ctx.stroke(); ctx.globalAlpha = 1;
     }
+
     function frame(ts) {
-      var t=ts*0.001;
-      var bg=ctx.createRadialGradient(W*0.5,H*0.45,0,W*0.5,H*0.5,Math.max(W,H)*0.8);
-      bg.addColorStop(0,'#0a0e1a'); bg.addColorStop(0.5,'#060a14'); bg.addColorStop(1,'#020308');
-      ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
-      drawStars(t); drawOrbs(t);
-      for (var i=0;i<ribbonDefs.length;i++) drawRibbon(ribbonDefs[i],t);
-      var vig=ctx.createRadialGradient(W/2,H/2,H*0.3,W/2,H/2,Math.max(W,H)*0.75);
-      vig.addColorStop(0,'rgba(0,0,0,0)'); vig.addColorStop(1,'rgba(0,0,0,0.55)');
-      ctx.fillStyle=vig; ctx.fillRect(0,0,W,H);
       requestAnimationFrame(frame);
+      if (ts - lastFrameTime < 33) return; // 30fps cap
+      lastFrameTime = ts; frameCount++;
+      var t = ts * 0.001;
+
+      // Time-based smooth Y offset transition (1.5s)
+      var tAnim      = smoothstep(Math.min(1, (ts - modeChangeAt) / MODE_DURATION));
+      currentYOffset = modeStartOffset + (modeTargetOffset - modeStartOffset) * tAnim;
+      var ampScale   = 1 + (GAMEPLAY_SHIFT > 0 ? (currentYOffset / GAMEPLAY_SHIFT) * (GAMEPLAY_AMP - 1) : 0);
+
+      var bg = ctx.createRadialGradient(W*0.5, H*0.45, 0, W*0.5, H*0.5, Math.max(W,H)*0.8);
+      bg.addColorStop(0,'#0a0e1a'); bg.addColorStop(0.5,'#060a14'); bg.addColorStop(1,'#020308');
+      ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+
+      drawStars(t);
+      drawOrbs(t, currentYOffset);
+      for (var i = 0; i < ribbonDefs.length; i++) drawRibbon(ribbonDefs[i], t, currentYOffset, ampScale);
+
+      var vig = ctx.createRadialGradient(W/2, H/2, H*0.3, W/2, H/2, Math.max(W,H)*0.75);
+      vig.addColorStop(0,'rgba(0,0,0,0)'); vig.addColorStop(1,'rgba(0,0,0,0.55)');
+      ctx.fillStyle = vig; ctx.fillRect(0, 0, W, H);
     }
+
     window.addEventListener('resize', resize);
     resize();
     requestAnimationFrame(frame);
@@ -6456,9 +6596,9 @@ function _b64ToArrayBuffer(b64) {
   initAurora('auroraGameBg');
 })();
 
-/* ── Auto-show/hide #menuBg + #auroraGameBg based on menu state ── */
+/* ── Auto-show/hide #menuBg + #auroraGameBg; drive wave mode transitions ── */
 (function(){
-  var bg = document.getElementById('menuBg');
+  var bg     = document.getElementById('menuBg');
   var gameBg = document.getElementById('auroraGameBg');
   var watchIds = ['mainMenu','modeMenu','botMenu','gameModesMenu','arcadeMenu','ctfMenu',
                   'playStep1','playStep2','playStep3','playStepOnline'];
@@ -6467,8 +6607,9 @@ function _b64ToArrayBuffer(b64) {
       var e = document.getElementById(id);
       return e && e.style.display !== 'none';
     });
-    bg.style.display = any ? 'block' : 'none';
-    gameBg.style.display = any ? 'none' : 'block';
+    bg.style.display     = any ? 'block' : 'none';
+    gameBg.style.display = any ? 'none'  : 'block';
+    if (window.waveBackground) window.waveBackground.setMode(any ? 'menu' : 'gameplay');
   }
   var obs = new MutationObserver(update);
   watchIds.forEach(function(id){
@@ -6476,6 +6617,676 @@ function _b64ToArrayBuffer(b64) {
     if (e) obs.observe(e, {attributes:true, attributeFilter:['style']});
   });
   update();
+})();
+</script>
+
+<script>
+/* ── Service Worker registration (PWA offline support) ── */
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('./service-worker.js').catch(function(e) {
+      console.warn('SW registration failed:', e);
+    });
+  });
+}
+</script>
+
+<!-- ======================================================
+     WELCOME WIZARD
+====================================================== -->
+<div id="welcomeWizard" style="display:none;">
+  <div class="ww-card">
+    <button class="ww-skip" id="wwSkip">SKIP ✕</button>
+    <div class="ww-dots">
+      <div class="ww-dot active" id="wwDot0"></div>
+      <div class="ww-dot" id="wwDot1"></div>
+      <div class="ww-dot" id="wwDot2"></div>
+      <div class="ww-dot" id="wwDot3"></div>
+    </div>
+
+    <!-- Step 0: Welcome -->
+    <div id="wwStep0">
+      <div class="ww-heading">Welcome to Aurora Chess</div>
+      <div class="ww-sub">A 3D chess variant played across 4 vertical layers. Even experienced chess players find the 3D movement takes a moment to click — we recommend starting with the tutorial.</div>
+      <button class="ww-btn-primary" id="wwTutBtn">▶  Play Tutorial First</button>
+      <button class="ww-btn-secondary" id="wwSkipTutBtn">Skip to Game →</button>
+    </div>
+
+    <!-- Step 1: Visual Preset -->
+    <div id="wwStep1" style="display:none;">
+      <div class="ww-heading">Pick a visual style</div>
+      <div class="ww-sub">Sets layer spacing, transparency, and effects. Everything can be tweaked later in Settings.</div>
+      <div class="ww-presets">
+        <div class="ww-preset" data-wwpreset="simple">
+          <div class="ww-preset-icon">◈</div>
+          <div class="ww-preset-name">SIMPLE</div>
+          <div class="ww-preset-desc">High contrast, wider layers, minimal effects. Best for learning.</div>
+        </div>
+        <div class="ww-preset sel" data-wwpreset="balanced">
+          <div class="ww-preset-icon">⬡</div>
+          <div class="ww-preset-name">BALANCED</div>
+          <div class="ww-preset-desc">Good aesthetics, clear readability. Recommended for most players.</div>
+        </div>
+        <div class="ww-preset" data-wwpreset="cinematic">
+          <div class="ww-preset-icon">✦</div>
+          <div class="ww-preset-name">CINEMATIC</div>
+          <div class="ww-preset-desc">Full effects, tight layers, aurora glass. Beautiful but complex.</div>
+        </div>
+      </div>
+      <div class="ww-nav"><button class="ww-next" id="wwNext1">NEXT →</button></div>
+    </div>
+
+    <!-- Step 2: Gameplay Options -->
+    <div id="wwStep2" style="display:none;">
+      <div class="ww-heading">Gameplay options</div>
+      <div class="ww-sub">Key settings most players never find. All can be changed later in Settings → Controls → Gameplay.</div>
+      <div class="ww-opt">
+        <div class="ww-opt-label">
+          <div class="ww-opt-name">AUTO-SWITCH LAYER BY CLICK/TOUCH</div>
+          <div class="ww-opt-desc">Clicking a valid move on a different layer automatically switches to it and executes. Advanced players prefer manual control.</div>
+        </div>
+        <div class="ww-opt-ctrl"><label class="toggle"><input type="checkbox" id="wwAutoLayer"><div class="track"></div><div class="thumb"></div></label></div>
+      </div>
+      <div class="ww-opt">
+        <div class="ww-opt-label">
+          <div class="ww-opt-name">LAYER VISIBILITY</div>
+          <div class="ww-opt-desc">"All" shows the full board. "Adjacent" shows nearby layers. "Single" is the cleanest view.</div>
+        </div>
+        <div class="ww-opt-ctrl">
+          <div class="ww-chips">
+            <button class="ww-chip sel" data-wwlv="all">ALL</button>
+            <button class="ww-chip" data-wwlv="limited">ADJ</button>
+            <button class="ww-chip" data-wwlv="current">SINGLE</button>
+          </div>
+        </div>
+      </div>
+      <div class="ww-opt">
+        <div class="ww-opt-label">
+          <div class="ww-opt-name">CAMERA AUTO-ROTATE</div>
+          <div class="ww-opt-desc">Board slowly spins when idle. Looks great; some players prefer it off.</div>
+        </div>
+        <div class="ww-opt-ctrl"><label class="toggle"><input type="checkbox" id="wwAutoRotate"><div class="track"></div><div class="thumb"></div></label></div>
+      </div>
+      <div class="ww-opt">
+        <div class="ww-opt-label">
+          <div class="ww-opt-name">THREAT VISION (ALWAYS ON)</div>
+          <div class="ww-opt-desc">Permanently highlights all squares the opponent can capture in red. Toggle in Settings → Gameplay anytime.</div>
+        </div>
+        <div class="ww-opt-ctrl"><label class="toggle"><input type="checkbox" id="wwTvAlways"><div class="track"></div><div class="thumb"></div></label></div>
+      </div>
+      <div class="ww-opt">
+        <div class="ww-opt-label">
+          <div class="ww-opt-name">SHOW OWN THREATS</div>
+          <div class="ww-opt-desc">Also overlay your own attack coverage in blue. Useful for spotting undefended squares.</div>
+        </div>
+        <div class="ww-opt-ctrl"><label class="toggle"><input type="checkbox" id="wwTvOwnSide"><div class="track"></div><div class="thumb"></div></label></div>
+      </div>
+      <div class="ww-nav">
+        <button class="ww-back" id="wwBack2">← BACK</button>
+        <button class="ww-next" id="wwNext2">NEXT →</button>
+      </div>
+    </div>
+
+    <!-- Step 3: UI Scale -->
+    <div id="wwStep3" style="display:none;">
+      <div class="ww-heading">Adjust text size</div>
+      <div class="ww-sub">Drag the slider to scale all menus and HUD text. Useful on 4K screens or tablets.</div>
+      <div class="ww-scale-box"><p id="wwScalePreview">This is how text will appear in menus and HUD</p></div>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:4px;">
+        <span style="font-size:9px;color:rgba(140,200,255,0.4);letter-spacing:1px;">0.7×</span>
+        <input type="range" class="settingSlider" id="wwScaleSlider" min="70" max="150" value="100" style="flex:1;">
+        <span style="font-size:9px;color:rgba(140,200,255,0.4);letter-spacing:1px;">1.5×</span>
+      </div>
+      <div style="text-align:center;margin-top:6px;font-size:9px;color:rgba(0,229,255,0.45);" id="wwScaleVal">1.0×</div>
+      <div class="ww-nav">
+        <button class="ww-back" id="wwBack3">← BACK</button>
+        <button class="ww-next" id="wwFinish">LOOKS GOOD ✓</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================================
+     GAMEPLAY HELP BUTTON + PANEL
+====================================================== -->
+<button id="gameHelpBtn" title="Controls reference">?</button>
+
+<div id="gameHelpPanel">
+  <div class="hp-heading">CONTROLS <button class="hp-close" id="gameHelpClose">✕</button></div>
+
+  <div class="hp-section" id="hpDesktop">
+    <div class="hp-section-title">MOUSE &amp; KEYBOARD</div>
+    <div class="hp-row"><span class="hp-action">Select piece</span><span class="hp-ctrl">Left-click piece</span></div>
+    <div class="hp-row"><span class="hp-action">Move piece</span><span class="hp-ctrl">Click highlighted tile</span></div>
+    <div class="hp-row"><span class="hp-action">Drag &amp; drop</span><span class="hp-ctrl">Hold + drag piece</span></div>
+    <div class="hp-row"><span class="hp-action">Layer switch</span><span class="hp-ctrl">Scroll wheel · Keys 1–4</span></div>
+    <div class="hp-row"><span class="hp-action">Camera rotate</span><span class="hp-ctrl">Right-click drag</span></div>
+    <div class="hp-row"><span class="hp-action">Camera zoom</span><span class="hp-ctrl">Scroll + hold RMB</span></div>
+    <div class="hp-row"><span class="hp-action">Threat vision</span><span class="hp-ctrl">Shift + click any tile</span></div>
+  </div>
+
+  <div class="hp-section" id="hpTouch">
+    <div class="hp-section-title">TOUCH</div>
+    <div class="hp-row"><span class="hp-action">Select piece</span><span class="hp-ctrl">Tap piece</span></div>
+    <div class="hp-row"><span class="hp-action">Move piece</span><span class="hp-ctrl">Tap highlighted tile</span></div>
+    <div class="hp-row"><span class="hp-action">Layer switch</span><span class="hp-ctrl">Swipe up/down · Tap minimap</span></div>
+    <div class="hp-row"><span class="hp-action">Camera rotate</span><span class="hp-ctrl">Two-finger drag</span></div>
+    <div class="hp-row"><span class="hp-action">Camera zoom</span><span class="hp-ctrl">Pinch</span></div>
+    <div class="hp-row"><span class="hp-action">Threat vision</span><span class="hp-ctrl">⚠ THR button (top-left)</span></div>
+  </div>
+
+  <div class="hp-section">
+    <div class="hp-section-title">HUD</div>
+    <div class="hp-row"><span class="hp-action">Layer visibility</span><span class="hp-ctrl">◈ toggle (top-left)</span></div>
+    <div class="hp-row"><span class="hp-action">Camera preset</span><span class="hp-ctrl">Camera button (top-right)</span></div>
+    <div class="hp-row"><span class="hp-action">Quick settings</span><span class="hp-ctrl">⚙ gear (bottom-left)</span></div>
+  </div>
+
+  <div class="hp-tip">Tip: Settings → Controls → Gameplay has layer spacing, auto-switch, and more.</div>
+</div>
+
+<!-- Threat count badge (DOM overlay near cursor) -->
+<div id="threatCountBadge"></div>
+
+<!-- ======================================================
+     FEATURE JS: Wizard · Help · Threat Vision
+====================================================== -->
+<script>
+/* ── Feature 2: autoLayerSwitch default fix (also in 16_account.js) ── */
+if (typeof UI_PREFS !== 'undefined' && UI_PREFS.autoLayerSwitch === undefined) {
+  UI_PREFS.autoLayerSwitch = false;
+}
+
+/* ════════════════════════════════════════════════════════
+   WELCOME WIZARD
+════════════════════════════════════════════════════════ */
+(function() {
+  var WW = {
+    step: 0, playTutorial: false, preset: 'balanced',
+    autoLayer: false, layerVis: 'all', autoRotate: false, scale: 1.0,
+    tvAlways: false, tvOwnSide: false
+  };
+
+  var PRESETS = {
+    simple:    { boardTheme:'midnight', layerSpacing:3.0, layerVisMode:'limited', layerVisCount:2, piecePreset:'plastic', trails:false, ghosts:false },
+    balanced:  { boardTheme:'classic',  layerSpacing:1.8, layerVisMode:'all',     layerVisCount:4, piecePreset:'plastic', trails:false, ghosts:false },
+    cinematic: { boardTheme:'cosmic-glass', layerSpacing:1.2, layerVisMode:'all', layerVisCount:4, piecePreset:'ghost', trails:true, ghosts:true }
+  };
+
+  function goTo(n) {
+    for (var i = 0; i < 4; i++) {
+      var s = document.getElementById('wwStep'+i); if (s) s.style.display = 'none';
+      var d = document.getElementById('wwDot'+i);
+      if (d) d.className = 'ww-dot' + (i < n ? ' done' : i === n ? ' active' : '');
+    }
+    var cur = document.getElementById('wwStep'+n); if (cur) cur.style.display = 'block';
+    WW.step = n;
+  }
+
+  function applyPreset(name) {
+    var p = PRESETS[name]; if (!p) return;
+    try {
+      if (p.boardTheme === 'cosmic-glass') {
+        if (typeof applyCosmicGlassTheme === 'function') applyCosmicGlassTheme();
+      } else {
+        if (typeof applySquareTheme === 'function') applySquareTheme(p.boardTheme);
+        if (typeof revertCosmicGlassTheme === 'function') revertCosmicGlassTheme();
+      }
+    } catch(e) {}
+    try {
+      if (typeof LAYER_SPACING !== 'undefined') {
+        window.LAYER_SPACING = p.layerSpacing;
+        localStorage.setItem('cc_layer_spacing', p.layerSpacing);
+        if (typeof rebuildLayerPositions === 'function') rebuildLayerPositions();
+        var ls = document.getElementById('layerSpacingSlider'); if (ls) ls.value = Math.round(p.layerSpacing * 10);
+        var ll = document.getElementById('layerSpacingLabel'); if (ll) ll.textContent = p.layerSpacing.toFixed(1);
+      }
+    } catch(e) {}
+    try {
+      if (typeof CFG !== 'undefined') {
+        CFG.pieces.white.materialPreset = p.piecePreset;
+        CFG.pieces.black.materialPreset = p.piecePreset;
+        if (typeof applyPieceAppearance === 'function') applyPieceAppearance();
+        if (typeof saveCFGToStorage === 'function') saveCFGToStorage();
+      }
+    } catch(e) {}
+    try {
+      if (typeof applyUIPref === 'function') {
+        applyUIPref('trails', p.trails);
+        applyUIPref('ghosts', p.ghosts);
+      }
+    } catch(e) {}
+    try {
+      if (typeof LAYER_VIS !== 'undefined') {
+        LAYER_VIS.mode = p.layerVisMode;
+        LAYER_VIS.count = p.layerVisCount;
+        if (typeof saveLayerVis === 'function') saveLayerVis();
+        if (typeof update === 'function') update();
+      }
+    } catch(e) {}
+  }
+
+  function finish() {
+    try { applyPreset(WW.preset); } catch(e) {}
+    try {
+      if (typeof applyUIPref === 'function') {
+        applyUIPref('autoLayerSwitch', WW.autoLayer);
+        applyUIPref('autoRotate', WW.autoRotate);
+      }
+      var alChk = document.getElementById('advAutoLayerSwitch'); if (alChk) alChk.checked = WW.autoLayer;
+      var arChk = document.getElementById('advAutoRotate'); if (arChk) arChk.checked = WW.autoRotate;
+      applyUIPref('threatVisionAlways', WW.tvAlways);
+      applyUIPref('threatVisionOwnSide', WW.tvOwnSide);
+      var tvAlwChk = document.getElementById('advThreatVisionAlways'); if (tvAlwChk) tvAlwChk.checked = WW.tvAlways;
+      var tvOwnChk = document.getElementById('advThreatVisionOwn'); if (tvOwnChk) tvOwnChk.checked = WW.tvOwnSide;
+      if (WW.tvAlways && typeof window._showAllThreats === 'function') setTimeout(window._showAllThreats, 400);
+    } catch(e) {}
+    try {
+      if (typeof LAYER_VIS !== 'undefined') {
+        LAYER_VIS.mode = WW.layerVis;
+        LAYER_VIS.count = WW.layerVis === 'limited' ? 2 : 4;
+        if (typeof saveLayerVis === 'function') saveLayerVis();
+        if (typeof update === 'function') update();
+      }
+    } catch(e) {}
+    document.documentElement.style.setProperty('--ui-scale', WW.scale);
+    localStorage.setItem('cc_ui_scale', WW.scale);
+    var sl = document.getElementById('uiScaleSlider'); if (sl) sl.value = Math.round(WW.scale * 100);
+    var slLbl = document.getElementById('uiScaleLabel'); if (slLbl) slLbl.textContent = WW.scale.toFixed(1);
+
+    localStorage.setItem('hasCompletedWelcome', '1');
+    document.getElementById('welcomeWizard').style.display = 'none';
+
+    if (WW.playTutorial && typeof openTutorial === 'function') {
+      openTutorial();
+    } else {
+      var mm = document.getElementById('mainMenu'); if (mm) mm.style.display = 'flex';
+    }
+  }
+
+  function show() {
+    document.getElementById('welcomeWizard').style.display = 'flex';
+    var mm = document.getElementById('mainMenu'); if (mm) mm.style.display = 'none';
+    goTo(0);
+  }
+
+  function wire() {
+    document.getElementById('wwSkip').onclick = function() { finish(); };
+    document.getElementById('wwTutBtn').onclick = function() { WW.playTutorial = true; goTo(1); };
+    document.getElementById('wwSkipTutBtn').onclick = function() { WW.playTutorial = false; goTo(1); };
+
+    document.querySelectorAll('[data-wwpreset]').forEach(function(c) {
+      c.onclick = function() {
+        document.querySelectorAll('[data-wwpreset]').forEach(function(x) { x.classList.remove('sel'); });
+        c.classList.add('sel'); WW.preset = c.dataset.wwpreset;
+      };
+    });
+    document.getElementById('wwNext1').onclick = function() { goTo(2); };
+
+    document.getElementById('wwAutoLayer').onchange = function() { WW.autoLayer = this.checked; };
+    document.getElementById('wwAutoRotate').onchange = function() { WW.autoRotate = this.checked; };
+    document.getElementById('wwTvAlways').onchange = function() { WW.tvAlways = this.checked; };
+    document.getElementById('wwTvOwnSide').onchange = function() { WW.tvOwnSide = this.checked; };
+    document.querySelectorAll('[data-wwlv]').forEach(function(b) {
+      b.onclick = function() {
+        document.querySelectorAll('[data-wwlv]').forEach(function(x) { x.classList.remove('sel'); });
+        b.classList.add('sel'); WW.layerVis = b.dataset.wwlv;
+      };
+    });
+    document.getElementById('wwBack2').onclick = function() { goTo(1); };
+    document.getElementById('wwNext2').onclick = function() { goTo(3); };
+
+    var scaleSlider = document.getElementById('wwScaleSlider');
+    scaleSlider.oninput = function() {
+      WW.scale = parseInt(this.value) / 100;
+      document.getElementById('wwScaleVal').textContent = WW.scale.toFixed(1) + '×';
+      document.getElementById('welcomeWizard').style.setProperty('--ww-scale', WW.scale);
+    };
+    document.getElementById('wwBack3').onclick = function() { goTo(2); };
+    document.getElementById('wwFinish').onclick = function() { finish(); };
+  }
+
+  // Replay button in Settings
+  var replayBtn = document.getElementById('replayWelcomeBtn');
+  if (replayBtn) {
+    replayBtn.onclick = function() {
+      var so = document.getElementById('settingsOverlay'); if (so) so.style.display = 'none';
+      localStorage.removeItem('hasCompletedWelcome');
+      WW.step = 0; WW.playTutorial = false; WW.preset = 'balanced';
+      WW.autoLayer = false; WW.layerVis = 'all'; WW.autoRotate = false; WW.scale = 1.0;
+      WW.tvAlways = false; WW.tvOwnSide = false;
+      // Reset wizard UI state
+      document.querySelectorAll('[data-wwpreset]').forEach(function(c) { c.classList.toggle('sel', c.dataset.wwpreset === 'balanced'); });
+      document.querySelectorAll('[data-wwlv]').forEach(function(b) { b.classList.toggle('sel', b.dataset.wwlv === 'all'); });
+      var wwAL = document.getElementById('wwAutoLayer'); if (wwAL) wwAL.checked = false;
+      var wwAR = document.getElementById('wwAutoRotate'); if (wwAR) wwAR.checked = false;
+      var wwTvA = document.getElementById('wwTvAlways'); if (wwTvA) wwTvA.checked = false;
+      var wwTvO = document.getElementById('wwTvOwnSide'); if (wwTvO) wwTvO.checked = false;
+      var wwSS = document.getElementById('wwScaleSlider'); if (wwSS) wwSS.value = 100;
+      document.getElementById('wwScaleVal').textContent = '1.0×';
+      show();
+    };
+  }
+
+  setTimeout(function() {
+    try {
+      wire();
+      if (!localStorage.getItem('hasCompletedWelcome')) show();
+    } catch(e) { console.error('Wizard init error:', e); }
+  }, 300);
+})();
+
+/* ════════════════════════════════════════════════════════
+   GAMEPLAY HELP BUTTON + PANEL
+════════════════════════════════════════════════════════ */
+(function() {
+  var btn   = document.getElementById('gameHelpBtn');
+  var panel = document.getElementById('gameHelpPanel');
+  var close = document.getElementById('gameHelpClose');
+  if (!btn || !panel) return;
+
+  // Show/hide mirroring layerVisToggle
+  var lvt = document.getElementById('layerVisToggle');
+  if (lvt) {
+    new MutationObserver(function() {
+      btn.style.display = lvt.style.display === 'block' ? 'flex' : 'none';
+    }).observe(lvt, { attributes:true, attributeFilter:['style'] });
+  }
+
+  // Detect touch vs. mouse to show relevant section
+  var isTouch = window.matchMedia('(pointer: coarse)').matches;
+  var hpDesktop = document.getElementById('hpDesktop');
+  var hpTouch   = document.getElementById('hpTouch');
+  if (hpDesktop) hpDesktop.style.display = isTouch ? 'none' : 'block';
+  if (hpTouch)   hpTouch.style.display   = isTouch ? 'block' : 'none';
+
+  function openPanel()  { panel.classList.add('open'); btn.classList.add('open'); panel.style.display = 'block'; }
+  function closePanel() { panel.classList.remove('open'); btn.classList.remove('open'); setTimeout(function() { if (!panel.classList.contains('open')) panel.style.display = 'none'; }, 240); }
+
+  btn.addEventListener('click', function() {
+    panel.classList.contains('open') ? closePanel() : openPanel();
+  });
+  close.addEventListener('click', closePanel);
+  document.addEventListener('click', function(e) {
+    if (panel.classList.contains('open') && !panel.contains(e.target) && e.target !== btn) closePanel();
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && panel.classList.contains('open')) closePanel();
+  });
+})();
+
+/* ════════════════════════════════════════════════════════
+   THREAT VISION
+════════════════════════════════════════════════════════ */
+(function() {
+  var tvMeshes = [];  // Three.js plates/lines added to pivot
+  var tvActive  = false; // touch toggle mode
+  var tvAlways  = false; // "always on" from Settings
+  var tvTile    = null;  // currently inspected tile
+
+  function boardPos(x, y, z) {
+    // Same formula as square() in 08_animation.js
+    return new THREE.Vector3(
+      -half + (x + 0.5) * SPACING,
+      layers[z].position.y + 0.05,
+      -half + (y + 0.5) * SPACING
+    );
+  }
+
+  function clearTV() {
+    tvMeshes.forEach(function(m) { if (m.parent) m.parent.remove(m); });
+    tvMeshes = [];
+    tvTile = null;
+    var badge = document.getElementById('threatCountBadge');
+    if (badge) badge.style.display = 'none';
+  }
+  window._clearThreatVision = clearTV;
+
+  function showTV(tx, ty, tz) {
+    clearTV();
+    tvTile = { x: tx, y: ty, z: tz };
+    if (typeof getLegalMoves === 'undefined' || typeof pieces === 'undefined') return;
+
+    // Find all pieces that have the target tile in their legal moves
+    var targHasPiece = !!(typeof occ === 'function' && occ(tx, ty, tz));
+    var threats = [];
+    pieces.forEach(function(p) {
+      try {
+        if (p.userData.type === 'pawn') {
+          // Pawn attacks are fixed geometry — don't use getLegalMoves (it only generates captures
+          // when an enemy piece is present, so empty squares would never show pawn threats).
+          var pd = p.userData.color === 'white' ? 1 : -1;
+          var px = p.userData.x, py = p.userData.y, pz = p.userData.z;
+          var threatens =
+            (Math.abs(tx - px) === 1 && ty === py + pd && tz === pz) ||        // same-layer diagonal
+            (Math.abs(tx - px) === 1 && ty === py       && tz === pz + pd) ||   // cross-layer x-diagonal
+            (Math.abs(tx - px) === 1 && ty === py + pd  && tz === pz + pd);     // 3D diagonal
+          if (threatens) threats.push(p);
+          return;
+        }
+        var moves = getLegalMoves(p);
+        if (moves.some(function(m) { return m.x === tx && m.y === ty && m.z === tz; })) {
+          threats.push(p);
+        }
+      } catch(e) {}
+    });
+
+    // Target tile highlight (bright orange pulse)
+    var targetMat = new THREE.MeshBasicMaterial({ color: 0xff8800, transparent:true, opacity:0.55, side:THREE.DoubleSide });
+    var targetMesh = new THREE.Mesh(new THREE.PlaneGeometry(SPACING*0.9, SPACING*0.9), targetMat);
+    targetMesh.rotation.x = -Math.PI/2;
+    targetMesh.position.copy(boardPos(tx, ty, tz));
+    targetMesh.userData = { tvTarget: true, baseOpacity: 0.55, tvTick: 0 };
+    pivot.add(targetMesh); tvMeshes.push(targetMesh);
+
+    // Threatening piece highlights + lines
+    var lineColor = targHasPiece ? 0xff2200 : 0xff8800;
+    var plateColor = targHasPiece ? 0xff2200 : 0xff8800;
+    threats.forEach(function(p) {
+      var plateMat = new THREE.MeshBasicMaterial({ color: plateColor, transparent:true, opacity:0.4, side:THREE.DoubleSide });
+      var plateMesh = new THREE.Mesh(new THREE.PlaneGeometry(SPACING*0.85, SPACING*0.85), plateMat);
+      plateMesh.rotation.x = -Math.PI/2;
+      plateMesh.position.copy(boardPos(p.userData.x, p.userData.y, p.userData.z));
+      plateMesh.userData = { tvPiece: true, baseOpacity: 0.4 };
+      pivot.add(plateMesh); tvMeshes.push(plateMesh);
+
+      // Thick 3D arrow from piece to target
+      var aStart = boardPos(p.userData.x, p.userData.y, p.userData.z);
+      var aEnd   = boardPos(tx, ty, tz);
+      var aDir   = new THREE.Vector3().subVectors(aEnd, aStart);
+      var aDist  = aDir.length();
+      if (aDist > 0.05) {
+        aDir.normalize();
+        var aQuat = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0), aDir);
+        var aMat  = new THREE.MeshBasicMaterial({ color: lineColor, transparent:true, opacity:0.82 });
+        var coneH = Math.min(0.30, aDist * 0.22);
+        var shaftL = aDist - coneH;
+        // Shaft
+        var shaftMesh = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.038, 0.038, shaftL, 7),
+          aMat.clone()
+        );
+        shaftMesh.position.copy(aStart).addScaledVector(aDir, shaftL * 0.5);
+        shaftMesh.quaternion.copy(aQuat);
+        shaftMesh.userData = { tvPiece: true, baseOpacity: 0.82 };
+        pivot.add(shaftMesh); tvMeshes.push(shaftMesh);
+        // Arrowhead
+        var coneMesh = new THREE.Mesh(
+          new THREE.ConeGeometry(0.10, coneH, 7),
+          aMat.clone()
+        );
+        coneMesh.position.copy(aEnd).addScaledVector(aDir, -coneH * 0.5);
+        coneMesh.quaternion.copy(aQuat);
+        coneMesh.userData = { tvPiece: true, baseOpacity: 0.82 };
+        pivot.add(coneMesh); tvMeshes.push(coneMesh);
+      }
+    });
+
+    // Count badge
+    var badge = document.getElementById('threatCountBadge');
+    if (badge && threats.length > 0) {
+      badge.textContent = threats.length + (targHasPiece ? ' attackers' : ' pieces can reach');
+      badge.style.display = 'block';
+    }
+  }
+  window._showThreatVision = showTV;
+
+  // Collect all squares a given color's pieces can attack
+  function _collectAttacks(color) {
+    var out = {};
+    pieces.forEach(function(p) {
+      if (p.userData.color !== color) return;
+      try {
+        if (p.userData.type === 'pawn') {
+          var pd = p.userData.color === 'white' ? 1 : -1;
+          var px = p.userData.x, py = p.userData.y, pz = p.userData.z;
+          [ [px-1,py+pd,pz],[px+1,py+pd,pz],
+            [px-1,py,pz+pd],[px+1,py,pz+pd],
+            [px-1,py+pd,pz+pd],[px+1,py+pd,pz+pd] ].forEach(function(a) {
+              if (a[0]>=0&&a[0]<8&&a[1]>=0&&a[1]<8&&a[2]>=0&&a[2]<LAYERS)
+                out[a[0]+','+a[1]+','+a[2]] = true;
+            });
+          return;
+        }
+        var moves = (typeof getPseudoMoves === 'function' ? getPseudoMoves : getLegalMoves)(p);
+        moves.forEach(function(m) { out[m.x+','+m.y+','+m.z] = true; });
+      } catch(e) {}
+    });
+    return out;
+  }
+
+  // Render a threat overlay with a given hex color
+  function _renderAttackOverlay(threatened, hexColor) {
+    Object.keys(threatened).forEach(function(key) {
+      var parts = key.split(',');
+      var tx = +parts[0], ty = +parts[1], tz = +parts[2];
+      var mat = new THREE.MeshBasicMaterial({ color: hexColor, transparent:true, opacity:0.28, side:THREE.DoubleSide });
+      var mesh = new THREE.Mesh(new THREE.PlaneGeometry(SPACING*0.82, SPACING*0.82), mat);
+      mesh.rotation.x = -Math.PI/2;
+      mesh.position.copy(boardPos(tx, ty, tz));
+      mesh.userData = { tvTarget: true, baseOpacity: 0.28 };
+      pivot.add(mesh); tvMeshes.push(mesh);
+    });
+  }
+
+  // Show ALL threat squares — opponent in red, own side in blue if enabled
+  function showAllThreats() {
+    clearTV();
+    if (typeof pieces === 'undefined') return;
+    var oppColor = (typeof playerColor !== 'undefined' && playerColor)
+      ? (playerColor === 'white' ? 'black' : 'white')
+      : (typeof turn !== 'undefined' ? (turn === 'white' ? 'black' : 'white') : 'black');
+    var ownColor = oppColor === 'white' ? 'black' : 'white';
+    _renderAttackOverlay(_collectAttacks(oppColor), 0xff2200);
+    if (typeof UI_PREFS !== 'undefined' && UI_PREFS.threatVisionOwnSide) {
+      _renderAttackOverlay(_collectAttacks(ownColor), 0x0088ff);
+    }
+  }
+  window._showAllThreats = showAllThreats;
+
+  // Pulse animation for threat tiles
+  (function tickTV() {
+    requestAnimationFrame(tickTV);
+    if (!tvMeshes.length) return;
+    var t = typeof pulseT !== 'undefined' ? pulseT : Date.now() * 0.003;
+    tvMeshes.forEach(function(m) {
+      if (!m.material || !m.userData.baseOpacity) return;
+      m.visible = true; // always visible regardless of layer
+      m.material.opacity = m.userData.baseOpacity + Math.sin(t * 1.5) * 0.12;
+    });
+  })();
+
+  // Threat count badge follows cursor
+  document.addEventListener('mousemove', function(e) {
+    var badge = document.getElementById('threatCountBadge');
+    if (badge && badge.style.display !== 'none') {
+      badge.style.left = (e.clientX + 14) + 'px';
+      badge.style.top  = (e.clientY - 10) + 'px';
+    }
+  });
+
+  // Touch HUD toggle
+  var tvToggle = document.getElementById('threatVisionToggle');
+  if (tvToggle) {
+    // Mirror layerVisToggle visibility
+    var lvt = document.getElementById('layerVisToggle');
+    if (lvt) {
+      new MutationObserver(function() {
+        tvToggle.style.display = lvt.style.display === 'block' ? 'block' : 'none';
+      }).observe(lvt, { attributes:true, attributeFilter:['style'] });
+    }
+    tvToggle.onclick = function() {
+      tvActive = !tvActive;
+      window._tvModeActive = tvActive; // expose so click/touch handlers can route to threat vision
+      tvToggle.classList.toggle('active', tvActive);
+      if (!tvActive) clearTV();
+    };
+  }
+
+  // "Always on" Settings toggle
+  var alwaysChk = document.getElementById('advThreatVisionAlways');
+  if (alwaysChk) {
+    // Persist
+    var stored = localStorage.getItem('cc_ui_prefs');
+    try { var sp = JSON.parse(stored); if (sp && sp.threatVisionAlways !== undefined) alwaysChk.checked = sp.threatVisionAlways; } catch(e) {}
+    alwaysChk.addEventListener('change', function() {
+      tvAlways = alwaysChk.checked;
+      if (typeof applyUIPref === 'function') applyUIPref('threatVisionAlways', tvAlways);
+      if (tvAlways) showAllThreats(); else clearTV();
+    });
+    if (typeof UI_PREFS !== 'undefined' && UI_PREFS.threatVisionAlways) {
+      tvAlways = true; alwaysChk.checked = true;
+      setTimeout(showAllThreats, 300);
+    }
+  }
+
+  // Expose shift-click / toggle-mode handler for 18_ctf_input.js to call
+  window._threatVisionClick = function(ndcX, ndcY) {
+    if (typeof layerPlanes === 'undefined' || typeof rc === 'undefined' || typeof mv === 'undefined') return;
+    // Always raycast the active layer — same tile the player is looking at
+    mv.x = ndcX; mv.y = ndcY;
+    rc.setFromCamera(mv, camera);
+    var hits = rc.intersectObjects(layerPlanes[activeZ]);
+    if (hits.length) {
+      var ud = hits[0].object.userData;
+      showTV(ud.x, ud.y, activeZ);
+    } else {
+      clearTV();
+    }
+  };
+
+  // Clear TV on move; restore always-on overlay after move completes
+  var _tvBaseExec = typeof executeMove !== 'undefined' ? executeMove : null;
+  if (_tvBaseExec) {
+    executeMove = function(piece, t) {
+      clearTV();
+      _tvBaseExec.call(this, piece, t);
+      if (tvAlways) setTimeout(showAllThreats, 80);
+    };
+  }
+})();
+
+/* ── Wire advThreatVisionAlways + advThreatVisionOwn to UI_PREFS ── */
+(function() {
+  if (typeof UI_PREFS !== 'undefined' && typeof applyUIPref === 'function') {
+    var chk = document.getElementById('advThreatVisionAlways');
+    if (chk) {
+      chk.checked = !!UI_PREFS.threatVisionAlways;
+      chk.addEventListener('change', function() {
+        applyUIPref('threatVisionAlways', chk.checked);
+      });
+    }
+    var ownChk = document.getElementById('advThreatVisionOwn');
+    if (ownChk) {
+      ownChk.checked = !!UI_PREFS.threatVisionOwnSide;
+      ownChk.addEventListener('change', function() {
+        applyUIPref('threatVisionOwnSide', ownChk.checked);
+        if (typeof window._showAllThreats === 'function' && typeof UI_PREFS !== 'undefined' && UI_PREFS.threatVisionAlways) {
+          window._showAllThreats();
+        }
+      });
+    }
+  }
 })();
 </script>
 

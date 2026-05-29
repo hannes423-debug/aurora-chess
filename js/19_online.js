@@ -2800,18 +2800,33 @@ drawSettingsPreview = function(page) {
   const btn = document.getElementById('uiHideBtn');
   if (!btn) return;
 
+  // Snapshot display state before hiding so we restore exactly what was there
+  var _savedDisplays = {};
+
   btn.addEventListener('click', function() {
     window._uiHidden = !window._uiHidden;
     btn.textContent = window._uiHidden ? '▣' : '◻';
     btn.style.color = window._uiHidden ? '#00ccff' : '#666';
     btn.style.borderColor = window._uiHidden ? '#00ccff55' : '#333';
 
-    // Static elements
-    UI_HIDE_IDS.forEach(function(id) {
-      const el = document.getElementById(id);
-      if (!el) return;
-      el.style.setProperty('display', window._uiHidden ? 'none' : '', 'important');
-    });
+    if (window._uiHidden) {
+      // Save each element's current display before hiding
+      UI_HIDE_IDS.forEach(function(id) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        _savedDisplays[id] = el.style.display;
+        el.style.setProperty('display', 'none', 'important');
+      });
+    } else {
+      // Restore exactly what each element showed before the hide
+      UI_HIDE_IDS.forEach(function(id) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        var saved = _savedDisplays[id];
+        el.style.removeProperty('display');
+        if (saved) el.style.display = saved;
+      });
+    }
 
     // Minimap and offlineBanner are managed by their own intervals —
     // use a CSS class on body so their logic can gate on it

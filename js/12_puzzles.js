@@ -793,14 +793,14 @@ const TUTS = [
     section:'ctf',
     title: "What is Capture the Flag?",
     text:  "Each team has a FLAG on their home square. Capture the enemy flag with any piece and carry it to your home row to score. Captured pieces respawn after a few turns — the game keeps going!",
-    demo:   "White flag: (4,0,0) — white home row\nBlack flag: (4,7,7) — black home row\nCapture and deliver to win!",
+    demo:   "White flag: (4,0,0) — white home row\nBlack flag: (4,7,3) — black home row\nCapture and deliver to win!",
     puzzle: null, highlight: null
   },
   {
     section:'ctf',
     title: "Flag Rules",
-    text:  "Move onto the enemy flag square to pick it up. Deliver the flag to your home row (Y=7 for white, Y=0 for black) on layers 1–3 to score. If the carrier is captured, the flag drops and can be picked up again.",
-    demo:   "Pick up:  move onto the flag square\nCarry:    the piece holds the flag\nDeliver:  reach your home row on L1-L3\nDrop:     carrier captured → flag falls",
+    text:  "Move onto the enemy flag square to pick it up. Deliver the flag to your home row (Y=7 for white, Y=0 for black) on any layer to score. If the carrier is captured, the flag drops and can be picked up again.",
+    demo:   "Pick up:  move onto the flag square\nCarry:    the piece holds the flag\nDeliver:  reach your home row (any layer)\nDrop:     carrier captured → flag falls",
     puzzle: null, highlight: null
   },
   {

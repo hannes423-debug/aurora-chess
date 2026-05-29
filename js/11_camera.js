@@ -37,7 +37,7 @@ function camGetTarget(mode, z) {
   const side = (playerColor === 'black') ? -1 : 1;
   switch(mode){
     case CAMERA_MODES.FREE:
-      return { pos: new THREE.Vector3(0, 18, 30 * side), look: new THREE.Vector3(0,0,0) };
+      return { pos: new THREE.Vector3(0, 18, 30 * side), look: new THREE.Vector3(0, 0, 0) };
     case CAMERA_MODES.TILT:
       return { pos: new THREE.Vector3(0, 11, 11 * side), look: new THREE.Vector3(0, 0, 0) };
     case CAMERA_MODES.FLAT: {
@@ -279,9 +279,30 @@ function animOpponentLayerSequence(startZ, botDestZ, returnZ) {
 
 let _animLastT = performance.now();
 let _animId    = null;
+// FPS counter — enable with: window.showFPS = true
+let _fpsFrames = 0, _fpsLastT = performance.now(), _fpsEl = null;
+function _tickFPS(now) {
+  _fpsFrames++;
+  if (now - _fpsLastT >= 1000) {
+    var fps = Math.round(_fpsFrames * 1000 / (now - _fpsLastT));
+    _fpsFrames = 0; _fpsLastT = now;
+    if (window.showFPS) {
+      if (!_fpsEl) {
+        _fpsEl = document.createElement('div');
+        _fpsEl.style.cssText = 'position:fixed;bottom:4px;left:4px;z-index:9999;font-family:monospace;font-size:10px;color:#00e5ff;background:rgba(0,0,0,0.65);padding:2px 6px;border-radius:2px;pointer-events:none;letter-spacing:1px;';
+        document.body.appendChild(_fpsEl);
+      }
+      _fpsEl.style.display = 'block';
+      _fpsEl.textContent = fps + ' fps';
+    } else if (_fpsEl) {
+      _fpsEl.style.display = 'none';
+    }
+  }
+}
 function anim(){
   _animId = requestAnimationFrame(anim);
   const now = performance.now();
+  _tickFPS(now);
   const dt  = Math.min(now - _animLastT, 100); // cap at 100ms (tab hidden etc)
   _animLastT = now;
   _pieceMaterialClock += dt * 0.001; // ms → s

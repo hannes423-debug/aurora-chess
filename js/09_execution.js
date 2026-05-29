@@ -149,6 +149,11 @@ renderer.domElement.addEventListener("touchstart",function(e){
   // In review mode: allow touch for board rotation (handled in touchmove) but block piece interaction
   if(reviewing) return;
 
+  // Threat vision toggle mode: route taps to threat vision instead of move
+  if(window._tvModeActive && typeof window._threatVisionClick === 'function'){
+    window._threatVisionClick(mv.x, mv.y); return;
+  }
+
   const hit=rc.intersectObjects(layerPlanes[activeZ]);
   if(!hit.length) return;
   const t=hit[0].object.userData;
