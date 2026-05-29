@@ -715,29 +715,26 @@ body.gamepad-mode #gpHintBar { display: flex; }
   }
 }
 
-/* ── ≤430px portrait: secondary action buttons into row 2 gap (after TTS) ──
-   TTS button ends at ~145px; PAN button (right:12px) starts at ~296px on 360px.
-   This leaves 150px of clear space for hint / undo / puzzle-info. ── */
+/* ── ≤430px portrait: shrink MOVES/FREE so row 1 has room for action buttons ── */
 @media (max-width: 430px) and (orientation: portrait) {
-  /* On ~320-380px CSS viewports the MOVES button was hiding the top-row buttons;
-     shrink it so it never overlaps. */
   #moveToggle { right: 56px !important; font-size: 10px !important; padding: 4px 8px !important; letter-spacing: 0 !important; }
   #viewToggle  { right:  4px !important; font-size: 10px !important; padding: 4px 8px !important; }
 
-  /* Action buttons: row 2, positioned after ⚑ TTS (which ends ≈145px) */
+  /* Hint / undo / puzzle-info sit in row 1 in the gap between ⟳180° and MOVES.
+     ⟳180° ends ≈130px; MOVES starts ≈282px at right:56 — 150px of free space. */
   #hintBtn {
-    top: calc(48px + env(safe-area-inset-top)) !important;
-    left: 152px !important;
+    top: calc(12px + env(safe-area-inset-top)) !important;
+    left: 138px !important;
   }
   #undoBtn {
-    top: calc(48px + env(safe-area-inset-top)) !important;
-    left: 196px !important;
+    top: calc(12px + env(safe-area-inset-top)) !important;
+    left: 178px !important;
   }
   #puzzleInfoToggle {
-    top: calc(48px + env(safe-area-inset-top)) !important;
-    left: 240px !important;
+    top: calc(12px + env(safe-area-inset-top)) !important;
+    left: 218px !important;
   }
-  /* Puzzle objective popup: below HUD (row 3+) */
+  /* Puzzle objective popup: below HUD */
   #puzzleInfoPopup {
     top: calc(120px + env(safe-area-inset-top)) !important;
   }
