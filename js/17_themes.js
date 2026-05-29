@@ -1151,6 +1151,21 @@ executeMove = function(piece, t) {
   _execBeforeAutoLayer.call(this, piece, t);
   if (!reviewing && wasPlayerTurn) {
     playerLastLayer = t.z;
+    // Follow the piece to its destination layer so cross-layer moves are
+    // visible — without this the piece silently vanishes from the source layer
+    // and the player thinks the move never happened.
+    if (t.z !== activeZ) {
+      var _destZ = t.z;
+      setTimeout(function() {
+        if (reviewing) return;
+        animLayerCrawl(activeZ, _destZ, 180, function() {
+          activeZ = _destZ;
+          var sl = document.getElementById('zSlider');
+          if (sl) sl.value = activeZ;
+          update(); coords(); camOnLayerChange();
+        });
+      }, 60);
+    }
   }
 };
 
