@@ -1003,7 +1003,7 @@ function applyCosmicGlassTheme() {
 function revertCosmicGlassTheme() {
   if (!cosmicGlassActive) return;
   cosmicGlassActive = false;
-  localStorage.removeItem('cc_cosmic_glass');
+  localStorage.setItem('cc_cosmic_glass', '0'); // explicit opt-out; '0' prevents default-on restore
 
   // Remove glass slabs
   _removeCgSlabs();
@@ -1080,8 +1080,8 @@ document.querySelectorAll('#squareThemeChips .chip').forEach(btn => {
     BG.apply(saved);
   }
 })();
-// Restore Cosmic Glass theme on reload
-if (localStorage.getItem('cc_cosmic_glass') === '1') applyCosmicGlassTheme();
+// Restore Cosmic Glass theme on reload — default ON; only skip if user explicitly opted out ('0')
+if (localStorage.getItem('cc_cosmic_glass') !== '0') applyCosmicGlassTheme();
 
 // Wire manual color pickers
 const _lsq = document.getElementById('lightSquareColor');
