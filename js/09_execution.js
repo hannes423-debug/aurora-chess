@@ -146,8 +146,8 @@ renderer.domElement.addEventListener("touchstart",function(e){
 
   if(promotionActive) return;
 
-  // In review mode: allow touch for board rotation (handled in touchmove) but block piece interaction
-  if(reviewing) return;
+  // In review mode: snap to live on any board tap, then let normal interaction proceed
+  if(reviewing){ if(typeof _snapToLive==='function')_snapToLive(); return; }
 
   // Threat vision toggle mode: route taps to threat vision instead of move
   if(window._tvModeActive && typeof window._threatVisionClick === 'function'){

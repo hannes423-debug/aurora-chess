@@ -595,7 +595,7 @@ resetBoard = function(c) {
 
   function executeClick(ndcX, ndcY) {
     if (!gameStarted && renderer.domElement.style.pointerEvents === 'none') return;
-    if (reviewing) return;
+    if (reviewing) { _snapToLive(); return; }
     // Online: block all interaction when it's the opponent's turn
     if (typeof ONLINE !== 'undefined' && ONLINE.inMatch && turn !== ONLINE.myColor) return;
 
@@ -1540,6 +1540,17 @@ function _fmtKey(k) {
   }
   window.changeLayer = changeLayer;
 
+  /* ── Snap back to live position (same as clicking the Live button) ── */
+  function _snapToLive() {
+    if (!reviewing) return;
+    setReviewing(false);
+    reviewIndex = history.length - 1;
+    loadHistory(reviewIndex);
+    if (typeof reviewArrows !== 'undefined') { reviewArrows.forEach(function(a) { pivot.remove(a); }); reviewArrows = []; }
+    if (typeof syncMoveNumBar === 'function') syncMoveNumBar();
+    _reviewMode = false;
+  }
+
   /* ── Review mode (View button toggle) ── */
   function _enterReview() {
     if (!history || !history.length) return;
@@ -1563,13 +1574,14 @@ function _fmtKey(k) {
   }
   window.enterPreview   = _enterReview;
   window.exitPreview    = _exitReview;
+  window._snapToLive    = _snapToLive;
   window.prevMove       = function() { var e = document.getElementById('prevMove'); if (e) e.click(); };
   window.nextMove       = function() { var e = document.getElementById('nextMove'); if (e) e.click(); };
   window.goToLatestMove = _exitReview;
 
   /* ── Gameplay confirm / cancel ── */
   function handleGamepadSelect(x, y) {
-    if (reviewing) return;
+    if (reviewing) { _snapToLive(); return; }
     if (typeof ONLINE !== 'undefined' && ONLINE.inMatch && turn !== ONLINE.myColor) return;
     if (typeof promotionActive !== 'undefined' && promotionActive) return; // handled via menu nav
 
