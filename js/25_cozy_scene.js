@@ -633,6 +633,16 @@
     opacityBoost: 1.22
   };
 
+  /* Board arrows — the move arrow drawn on review and the check-threat arrow.
+     Both were hardcoded neon (0xff8800 / 0xff2200) picked to read against the
+     old cyan grid; on the pastel board they are the loudest thing on screen.
+     Mapped to the same two colours the TTS overlay uses, so every "this is a
+     threat" mark in the game is rose and every neutral move mark is gold. */
+  window.CZ_ARROWS = {
+    move:   0xf2d08a,   /* --cz-gold */
+    threat: 0xf5919f    /* --cz-rose */
+  };
+
   /* ======================================================================
      BOOT — install the hooks once the game's own modules have all run.
      ====================================================================== */

@@ -68,7 +68,8 @@ function showThreatLines(color){clearThreatLines();if(!CFG.hl.threats.on)return;
       const dir=new THREE.Vector3().subVectors(end,start);
       const len=dir.length();if(len<0.01)return;
       const hl=Math.max(0.4,len*0.25),hw=hl*0.55;
-      const arr=new THREE.ArrowHelper(dir.normalize(),start,len,0xff2200,hl,hw);
+      const _thCol=(window.CZ_ARROWS&&window.CZ_ARROWS.threat)||0xff2200;
+      const arr=new THREE.ArrowHelper(dir.normalize(),start,len,_thCol,hl,hw);
       arr.traverse(o=>{if(o.material){o.material.depthTest=false;o.material.depthWrite=false;o.renderOrder=98;}});
       arr.renderOrder=98;pivot.add(arr);threatPlates.push(arr);
     }
@@ -277,8 +278,13 @@ function drawMoveArrow(from,to){
   if (len < 0.01) return;
   const headLen   = Math.max(0.55, len * 0.32);
   const headWidth = headLen * 0.60;
-  // Bright orange-white — visible against any board color, distinct from cyan grid
-  const arrow = new THREE.ArrowHelper(dir.normalize(), start, len, 0xff8800, headLen, headWidth);
+  // The last un-retinted gameplay colour: a neon orange chosen to stand out
+  // against the old cyan grid, which now lands on a pastel board. The cozy
+  // layer publishes window.CZ_ARROWS (js/25_cozy_scene.js); with no override
+  // the original neon applies exactly as before, the same arrangement
+  // CZ_TV / CZ_GLOW / CZ_BG_ACTIVE already use.
+  const _mvCol = (window.CZ_ARROWS && window.CZ_ARROWS.move) || 0xff8800;
+  const arrow = new THREE.ArrowHelper(dir.normalize(), start, len, _mvCol, headLen, headWidth);
   // Force render on top of all geometry — never occluded
   arrow.traverse(obj => {
     if (obj.material) {
