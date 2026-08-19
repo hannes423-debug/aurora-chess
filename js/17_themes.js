@@ -124,6 +124,15 @@ function getBoardHash() {
 }
 
 function checkThreefold() {
+  /* Guard at FIRE time, not only where this is scheduled.
+     js/23_replay_export.js re-simulates a pasted move list through the real
+     engine with endGame/boardText/SND swapped for no-ops, then restores them.
+     That window is synchronous, but the callback below is deferred 200ms and
+     the DRAW it triggers a further 1200ms — so anything queued during the
+     muted run lands long after restore() has put the REAL endGame back, and
+     announces a draw over a finished game. Observed: a game White had won
+     reopened from a pasted move list as "Draw by threefold repetition". */
+  if (window._replayResim) return false;
   const hash = getBoardHash();
   positionHistory[hash] = (positionHistory[hash] || 0) + 1;
   if (positionHistory[hash] >= 3) {
@@ -141,7 +150,17 @@ function checkThreefold() {
 const _execBeforeThreefold = executeMove;
 executeMove = function(piece, t) {
   _execBeforeThreefold.call(this, piece, t);
-  if (!reviewing && !PUZZLE_MODE) setTimeout(() => checkThreefold(), 200);
+  // `reviewing` cannot carry the re-simulation case: the reconstruction needs
+  // reviewing=false so executeMove still records moveLog/history/snapshots
+  // (09_execution.js:44 gates those on it), which is the whole point of the
+  // re-run. Hence a separate flag.
+  if (!reviewing && !PUZZLE_MODE && !window._replayResim) setTimeout(() => checkThreefold(), 200);
+};
+
+/* Position counts are per-game. Exposed because the replay reconstruction has
+   to clear them after re-running someone else's game through this engine. */
+window.resetThreefoldHistory = function () {
+  for (const k in positionHistory) delete positionHistory[k];
 };
 
 // Reset position history on new game
@@ -1601,6 +1620,18 @@ function drawSettingsPreview(page) {
   if (navBtns)  navBtns.style.display  = isPieces ? 'flex'  : 'none';
 
   if (isPieces) {
+    /* _initPreviewRenderer() refuses to build a second WebGL context on mobile
+       (browsers cap them, and the board's context is the one that matters), and
+       its comment says to "rely on 2D fallback" — but draw2dPreview() never had
+       a pieces branch, so on every phone this panel was an empty box with a
+       PAWN label and two arrows that changed nothing. Route mobile to the 2D
+       silhouette instead of a canvas nothing ever draws into. */
+    if (IS_MOBILE) {
+      if (canvas3d) canvas3d.style.display = 'none';
+      if (canvas2d) canvas2d.style.display = 'block';
+      draw2dPieces();
+      return;
+    }
     // Only restart if not already running — avoids flicker when settings controls fire change events
     if (!_prevRafId) {
       requestAnimationFrame(() => requestAnimationFrame(startPiecePreview));
@@ -1609,6 +1640,72 @@ function drawSettingsPreview(page) {
     stopPiecePreview();
     draw2dPreview(effectivePage);
   }
+}
+
+/* ── 2D piece silhouettes ── the mobile stand-in for the 3D preview ────────
+   Outlines only, at the configured colours, so the panel previews what it is
+   actually there to preview: base colour, outline colour and outline
+   thickness. Coordinates are in a 0..1 box scaled to the canvas, so the same
+   path data works at any preview size. */
+const PREV_2D_SHAPES = {
+  pawn:   [[0.50,0.20,0.105],  null, [[0.375,0.315],[0.625,0.315],[0.585,0.53],[0.415,0.53]]],
+  knight: [null, null, [[0.34,0.80],[0.34,0.60],[0.40,0.44],[0.35,0.36],[0.42,0.245],[0.55,0.175],
+                        [0.66,0.22],[0.71,0.35],[0.70,0.52],[0.62,0.62],[0.60,0.80]]],
+  bishop: [[0.50,0.185,0.075], null, [[0.40,0.30],[0.60,0.30],[0.575,0.56],[0.425,0.56]]],
+  rook:   [null, null, [[0.35,0.215],[0.415,0.215],[0.415,0.28],[0.472,0.28],[0.472,0.215],
+                        [0.528,0.215],[0.528,0.28],[0.585,0.28],[0.585,0.215],[0.65,0.215],
+                        [0.62,0.40],[0.62,0.56],[0.38,0.56],[0.38,0.40]]],
+  queen:  [null, [[0.32,0.20],[0.385,0.34],[0.435,0.175],[0.50,0.33],[0.565,0.175],
+                  [0.615,0.34],[0.68,0.20],[0.635,0.56],[0.365,0.56]], null],
+  king:   [null, null, [[0.385,0.24],[0.47,0.24],[0.47,0.155],[0.53,0.155],[0.53,0.24],
+                        [0.615,0.24],[0.645,0.36],[0.60,0.44],[0.625,0.56],[0.375,0.56],
+                        [0.40,0.44],[0.355,0.36]]]
+};
+
+function draw2dPieces() {
+  const c = document.getElementById('previewCanvas2d');
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  const W = c.width, H = c.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const type  = PREV_TYPES[_prevIdx] || 'pawn';
+  const shape = PREV_2D_SHAPES[type] || PREV_2D_SHAPES.pawn;
+  const cfg   = CFG.pieces.white;
+  const fill    = intToHex(cfg.color);
+  const stroke  = intToHex(cfg.outlineColor);
+  // The 3D outline is a shell scaled off the mesh; on a flat silhouette the
+  // equivalent is line width, mapped over the same slider range.
+  const lw = Math.max(1, Math.min(6, (cfg.thickness || 0.038) * 90));
+
+  const S = Math.min(W, H);
+  const px = v => v * S + (W - S) / 2;
+  const py = v => v * S + (H - S) / 2;
+
+  ctx.lineJoin = ctx.lineCap = 'round';
+  ctx.fillStyle = fill;
+  ctx.strokeStyle = stroke;
+  ctx.lineWidth = lw;
+
+  const [head, crown, body] = shape;
+  const poly = pts => {
+    ctx.beginPath();
+    pts.forEach((pt, i) => (i ? ctx.lineTo(px(pt[0]), py(pt[1])) : ctx.moveTo(px(pt[0]), py(pt[1]))));
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+  };
+  /* Order matters: each shape is filled opaque, so a later one hides the
+     outline of the earlier one it overlaps. The stem goes down first and the
+     body and base are laid over its ends, which is what makes the three read
+     as one turned piece instead of three stacked cut-outs. */
+  poly([[0.435,0.46],[0.565,0.46],[0.60,0.72],[0.40,0.72]]);   // stem
+  if (head)  { ctx.beginPath(); ctx.arc(px(head[0]), py(head[1]), head[2] * S, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); }
+  if (crown) poly(crown);
+  if (body)  poly(body);
+  // Shared base — every piece stands on the same plinth.
+  poly([[0.30,0.815],[0.70,0.815],[0.62,0.63],[0.38,0.63]]);
+
+  const label = document.getElementById('previewLabel');
+  if (label) label.textContent = type.toUpperCase();
 }
 
 // 2D live preview for non-Pieces tabs
@@ -1735,11 +1832,13 @@ function draw2dPreview(page) {
 
 // Called by nav buttons and settings changes
 function previewPiece(type) {
+  if (IS_MOBILE) { draw2dPieces(); return; }   // no 3D context on phones
   _loadPrevPiece(type);
 }
 
 // Refresh piece colors after CFG change
 function _refreshPreviewColors() {
+  if (IS_MOBILE) { draw2dPieces(); return; }
   if (!_prevMesh) return;
   const wColor   = CFG.pieces.white.color;
   const wOutline = CFG.pieces.white.outlineColor;

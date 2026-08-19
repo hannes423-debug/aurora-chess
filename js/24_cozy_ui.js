@@ -351,6 +351,32 @@
     sync();
   }
 
+  /* Marks <body> while a game is actually on screen.
+
+     Several in-game controls have no menu-state gating at all — #hud,
+     #moveToggle and #viewToggle are created visible and only ever hidden by
+     the UI-hide toggle — so the main menu was showing "White to move", MOVES
+     and TILT over the title, and #onlineStatusBar's pill collided with the
+     LOGIN / SIGN UP button beneath it. The controls the game does manage
+     (#rotateBoardBtn, #hintBtn, #hudGearBtn …) are display:none in the markup
+     and revealed by startLocalGame(), which is why they never leaked.
+
+     The signal is the canvas's own pointer-events, which is what 11_camera.js
+     already uses to decide pivot.visible — i.e. the codebase's existing
+     definition of "a game is on screen", true for replay playback too. A class
+     on <body> rather than imperative display writes, because 17_themes.js
+     applyUIStyle() rewrites inline styles on these very elements on every call
+     and would undo anything set here. */
+  function watchGameActive() {
+    if (typeof renderer === 'undefined' || !renderer.domElement) return;
+    var canvas = renderer.domElement;
+    function sync() {
+      document.body.classList.toggle('cz-ingame', canvas.style.pointerEvents !== 'none');
+    }
+    new MutationObserver(sync).observe(canvas, { attributes: true, attributeFilter: ['style'] });
+    sync();
+  }
+
   /* ======================================================================
      5. LEGACY PALETTE SWEEP
      ----------------------------------------------------------------------
@@ -576,6 +602,7 @@
     initHud();
     buildDock();
     watchDockVisibility();
+    watchGameActive();
     czWatchOverlays();
 
     window.addEventListener('resize', function () {

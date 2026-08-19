@@ -52,6 +52,20 @@ class Page:
         self.send('Runtime.enable')
         self.send('Page.enable')
         self.send('Log.enable')
+        self._size = size
+
+    def emulate(self, w, h, dpr=3, mobile=True):
+        """Set the real CSS viewport. --window-size is the OS WINDOW, which
+        includes browser chrome — asking for 390 gave a 500px viewport, so
+        phone-width layout bugs were invisible to every earlier probe. This
+        overrides what the page actually sees."""
+        self.send('Emulation.setDeviceMetricsOverride', width=w, height=h,
+                  deviceScaleFactor=dpr, mobile=mobile)
+        if mobile:
+            self.send('Emulation.setTouchEmulationEnabled', enabled=True, maxTouchPoints=5)
+            self.send('Emulation.setUserAgentOverride', userAgent=(
+                'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) '
+                'AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1'))
 
     def send(self, method, **params):
         self.msg_id += 1
@@ -119,8 +133,17 @@ def main():
     url = 'http://localhost:8123/index.html'
     if '--url' in args: url = args[args.index('--url') + 1]
 
-    p = Page(url, size=size or (1280, 800))
+    mobile = '--mobile' in args
+    p = Page('about:blank' if (size and mobile) else url, size=size or (1280, 800))
     try:
+        if size and mobile:
+            # Emulation must be in place BEFORE the app boots: 03_scene.js reads
+            # the UA once at load for IS_MOBILE, and 11_camera.js picks its
+            # default camera mode from the viewport aspect on first evaluation.
+            p.emulate(size[0], size[1])
+            p.send('Page.navigate', url=url)
+        elif size:
+            p.emulate(size[0], size[1], dpr=1, mobile=False)
         time.sleep(wait / 1000)
         p.pump()
         time.sleep(0.4)

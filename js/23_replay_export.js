@@ -220,6 +220,15 @@
     function mute() {
       // Reconstruct as a standard game (kings kept, no CTF rules). A copied move
       // list carries no mode flag, and standard chess is the safe default.
+      //
+      // This flag is NOT redundant with the no-ops below. Swapping endGame and
+      // boardText out only silences calls made INSIDE the muted window; the
+      // threefold-repetition hook in 17_themes.js defers its check by 200ms and
+      // the draw it declares by a further 1200ms, so a repetition anywhere in
+      // the pasted game used to announce itself over the replay with the REAL
+      // functions, after restore() had swapped them back. Any side effect that
+      // outlives this window has to be suppressed at its own source.
+      window._replayResim = true;
       botColor = null; ctfMode = false; window.TUT_NOFOG = true;
       if (sv.endGame) endGame = noop;
       if (sv.announce) arcadeAnnounce = noop;
@@ -243,6 +252,14 @@
       if (window.CTFFinale && sv.finale) CTFFinale.play = sv.finale;
       for (var k in sndSaved) SND[k] = sndSaved[k];
       if (typeof animations !== 'undefined') animations.length = 0;
+      // The re-run walked the whole game through the live engine, so its
+      // position counts are sitting in the threefold tracker. Clear them or the
+      // next real game inherits them and can draw early.
+      if (typeof window.resetThreefoldHistory === 'function') window.resetThreefoldHistory();
+      // Held past the deferred window above (200ms + 1200ms) rather than
+      // cleared here, so a late callback still finds the flag set. Nothing can
+      // start a real game inside that gap — the replay viewer is opening.
+      setTimeout(function () { window._replayResim = false; }, 1600);
     }
     try {
       mute();
