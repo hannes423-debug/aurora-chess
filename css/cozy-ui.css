@@ -1500,3 +1500,115 @@ input[type="range"] { accent-color: var(--cz-mint) !important; }
   -webkit-backdrop-filter: var(--cz-blur);
   backdrop-filter: var(--cz-blur);
 }
+
+/* ==========================================================================
+   8. HELP OVERLAY + LEFTOVER DUPLICATE STATUS
+   ========================================================================== */
+
+/* ── Only one connection indicator ─────────────────────────────────────────
+   19_online.js ships TWO readouts of the same ONLINE._status: #onlineStatusBar
+   (the bottom strip) and #onlineWidget (a card floating at mid-left). Both are
+   updated by the same function on the same tick, so they always said the same
+   thing — "CONNECTING" twice on one screen, one of them right across the
+   board. The bottom strip is the keeper: it is positioned against the dock, so
+   it belongs to the UI furniture instead of hovering over the scene.
+
+   display needs !important because onlineUpdateStatusBar() writes
+   style.display = 'block' on the widget on every update. */
+#onlineWidget { display: none !important; }
+
+/* ── Help overlay ── the last panel still wearing the pre-redesign skin ────
+   Reachable from the dock's ? during a match, so it is not a rarely-seen
+   corner. Every element inside carries a hardcoded inline style="" and most
+   have no id or class, hence the structural selectors and the !important. */
+#helpOverlay {
+  background: rgba(20, 16, 46, 0.72) !important;
+  -webkit-backdrop-filter: blur(10px) saturate(1.1);
+  backdrop-filter: blur(10px) saturate(1.1);
+  font-family: var(--cz-font) !important;
+  color: var(--cz-ink) !important;
+}
+/* The card */
+#helpOverlay > div {
+  width: min(360px, calc(100vw - 32px)) !important;
+  background: var(--cz-surface-strong) !important;
+  border: 1px solid var(--cz-hairline) !important;
+  border-radius: var(--cz-r-xl) !important;
+  box-shadow: var(--cz-shadow-lg), var(--cz-bevel) !important;
+  -webkit-backdrop-filter: var(--cz-blur);
+  backdrop-filter: var(--cz-blur);
+  padding: 22px 20px !important;
+}
+/* Title row: "? HELP" */
+#helpOverlay > div > div:first-child > div:first-child {
+  font-family: var(--cz-font) !important;
+  font-weight: 800 !important;
+  font-size: 16px !important;
+  letter-spacing: 0.6px !important;
+  color: var(--cz-ink) !important;
+}
+#helpClose {
+  color: var(--cz-ink-soft) !important;
+  font-size: 0 !important;
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: var(--cz-r-pill) !important;
+  background: var(--cz-surface-soft) !important;
+  border: 1px solid var(--cz-hairline) !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23cdc5ee' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='6.5' y1='6.5' x2='17.5' y2='17.5'/%3E%3Cline x1='17.5' y1='6.5' x2='6.5' y2='17.5'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  background-size: 15px 15px !important;
+  transition: transform 0.13s var(--cz-press) !important;
+}
+#helpClose:active { transform: scale(0.9); }
+
+#helpTutorialBtn {
+  font-family: var(--cz-font) !important;
+  font-weight: 800 !important;
+  font-size: 13px !important;
+  letter-spacing: 0.4px !important;
+  color: var(--cz-ink) !important;
+  background: linear-gradient(180deg,
+              rgba(159, 224, 210, 0.26), rgba(143, 178, 232, 0.20)) !important;
+  border: 1px solid rgba(159, 224, 210, 0.42) !important;
+  border-radius: var(--cz-r-lg) !important;
+  box-shadow: var(--cz-shadow-sm), var(--cz-bevel) !important;
+  padding: 13px 16px !important;
+  transition: transform 0.13s var(--cz-press) !important;
+}
+#helpTutorialBtn:active { transform: scale(0.97); }
+#helpTutorialBtn div {
+  font-family: var(--cz-font) !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.2px !important;
+  color: var(--cz-ink-dim) !important;
+  margin-top: 4px !important;
+}
+
+/* Section headers — every "IN-GAME CONTROLS" / "MUSIC" style caption. */
+#helpOverlay > div > div > div:first-child {
+  font-family: var(--cz-font) !important;
+  font-weight: 800 !important;
+  font-size: 10px !important;
+  letter-spacing: 1.6px !important;
+  color: var(--cz-ink-dim) !important;
+  margin-bottom: 9px !important;
+}
+/* Key/value tables and the prose blocks. */
+#helpOverlay table { font-size: 11.5px !important; letter-spacing: 0.2px !important; }
+#helpOverlay td:first-child  { color: var(--cz-ink-soft) !important; padding: 5px 0 !important; font-weight: 700 !important; }
+#helpOverlay td + td         { color: var(--cz-ink-dim)  !important; padding: 5px 0 !important; }
+#helpOverlay > div > div > div:last-child { font-size: 11.5px !important; line-height: 1.9 !important; color: var(--cz-ink-dim) !important; }
+#helpOverlay a { color: var(--cz-cyan) !important; text-decoration: none !important; border-bottom: 1px solid rgba(143, 214, 232, 0.4); }
+
+/* Inline icons inside the guide tables and the wizard's feature list. These
+   are bare <i> elements — the ::before is the whole content. */
+.cz-ico-key::before {
+  width: 14px !important;
+  height: 14px !important;
+  margin-right: 7px !important;
+  vertical-align: -2.5px !important;
+}
+.cz-ico-book { --cz-ico-url: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239fe0d2' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 4.5h5.5A3.5 3.5 0 0 1 12 8v12a3 3 0 0 0-3-3H3z'/%3E%3Cpath d='M21 4.5h-5.5A3.5 3.5 0 0 0 12 8v12a3 3 0 0 1 3-3h6z'/%3E%3C/svg%3E"); }

@@ -1856,7 +1856,7 @@ body.gamepad-mode #gpHintBar { display: flex; }
 <!-- ═══ COZY UI — soft/friendly skin. MUST load after both inline <style>
      blocks above, since it overrides their rules (and the inline style=""
      attributes that applyUIStyle() repaints) by !important. ═══ -->
-<link rel="stylesheet" href="css/cozy-ui.css?v=20260819a">
+<link rel="stylesheet" href="css/cozy-ui.css?v=20260819b">
 
 <canvas id="auroraGameBg"></canvas>
 
@@ -1973,7 +1973,7 @@ body.gamepad-mode #gpHintBar { display: flex; }
   <!-- Bot helper options -->
   <div style="width:220px;border-top:1px solid #1c1c1c;margin:8px 0 8px;"></div>
   <div style="display:flex;align-items:center;justify-content:space-between;width:220px;font-size:12px;color:#555;margin-bottom:6px;">
-    <span>💡 Hint button</span>
+    <span><i class="cz-ico cz-ico-bulb cz-ico-key"></i>Hint button</span>
     <button id="botOptHint" style="background:#0a0a0a;border:1px solid #1a1a1a;color:#333;padding:3px 10px;font-family:monospace;font-size:10px;cursor:pointer;letter-spacing:1px;">OFF</button>
   </div>
   <div style="display:flex;align-items:center;justify-content:space-between;width:220px;font-size:12px;color:#555;margin-bottom:6px;">
@@ -2306,7 +2306,7 @@ body.gamepad-mode #gpHintBar { display: flex; }
     </div>
     <div style="margin-bottom:14px;">
       <button id="helpTutorialBtn" style="width:100%;background:#040c16;border:1px solid #0077aa;color:#cce8ff;padding:12px 14px;font-family:monospace;font-size:11px;cursor:pointer;letter-spacing:2px;text-align:left;box-sizing:border-box;">
-        📖 TUTORIAL<div style="font-size:9px;color:#3a7a9b;letter-spacing:1px;margin-top:3px;">Learn the rules of 3D chess step by step</div>
+        <i class="cz-ico cz-ico-book cz-ico-key"></i>TUTORIAL<div style="font-size:9px;color:#3a7a9b;letter-spacing:1px;margin-top:3px;">Learn the rules of 3D chess step by step</div>
       </button>
     </div>
     <div style="margin-bottom:14px;">
@@ -2324,9 +2324,9 @@ body.gamepad-mode #gpHintBar { display: flex; }
     <div style="margin-bottom:14px;">
       <div style="font-size:9px;color:#3a7a9b;letter-spacing:2px;margin-bottom:7px;">HUD BUTTON GUIDE</div>
       <table style="width:100%;border-collapse:collapse;font-size:9px;letter-spacing:1px;">
-        <tr><td style="color:#3a7a9b;padding:3px 0;width:44%;">⟳ 180°</td><td style="color:#6ab4d8;">Rotate board 180°</td></tr>
-        <tr><td style="color:#3a7a9b;padding:3px 0;">💡 Hint</td><td style="color:#6ab4d8;">Highlight best move</td></tr>
-        <tr><td style="color:#3a7a9b;padding:3px 0;">↩ Undo</td><td style="color:#6ab4d8;">Take back last move</td></tr>
+        <tr><td style="color:#3a7a9b;padding:3px 0;width:44%;"><i class="cz-ico cz-ico-rotate cz-ico-key"></i>180°</td><td style="color:#6ab4d8;">Rotate board 180°</td></tr>
+        <tr><td style="color:#3a7a9b;padding:3px 0;"><i class="cz-ico cz-ico-bulb cz-ico-key"></i>Hint</td><td style="color:#6ab4d8;">Highlight best move</td></tr>
+        <tr><td style="color:#3a7a9b;padding:3px 0;"><i class="cz-ico cz-ico-undo cz-ico-key"></i>Undo</td><td style="color:#6ab4d8;">Take back last move</td></tr>
         <tr><td style="color:#3a7a9b;padding:3px 0;">VIEW</td><td style="color:#6ab4d8;">Cycle camera view modes</td></tr>
       </table>
     </div>
@@ -6479,7 +6479,7 @@ function _b64ToArrayBuffer(b64) {
 <script src="js/07_bot.js?v=20260509e"></script>
 <script src="js/08_animation.js?v=20260809a"></script>
 <script src="js/09_execution.js?v=20260509e"></script>
-<script src="js/10_ui_wiring.js?v=20260509e"></script>
+<script src="js/10_ui_wiring.js?v=20260819b"></script>
 <script src="js/11_camera.js?v=20260809d"></script>
 <script src="js/12_puzzles.js?v=20260509e"></script>
 <script src="js/13_arcade_orbs.js?v=20260509e"></script>
@@ -6494,9 +6494,9 @@ function _b64ToArrayBuffer(b64) {
 <!-- Cozy redesign: presentation only. Loads last so it can wrap the globals
      the modules above declare (square, buildPieceMaterial, _updateCgSlabActivity). -->
 <script src="js/25_cozy_scene.js?v=20260819a"></script>
-<script src="js/24_cozy_ui.js?v=20260819a"></script>
+<script src="js/24_cozy_ui.js?v=20260819b"></script>
 <script src="js/26_cozy_icons.js?v=20260819a"></script>
-<script src="js/27_music.js?v=20260819a"></script>
+<script src="js/27_music.js?v=20260819b"></script>
 <script>
 /* ── Aurora Waves — optimized: half-res canvas, no blur filters, 30fps cap, star cache ── */
 (function() {

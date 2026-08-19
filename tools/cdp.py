@@ -84,6 +84,14 @@ class Page:
           return 'pumping';
         })()""", await_promise=False)
 
+    def click(self, x, y):
+        """A REAL user gesture. A synthesised element.click() from JS does not
+        count as user activation, so it never lifts the autoplay block —
+        Input.dispatchMouseEvent does."""
+        for t in ('mousePressed', 'mouseReleased'):
+            self.send('Input.dispatchMouseEvent', type=t, x=x, y=y,
+                      button='left', clickCount=1, buttons=1 if t == 'mousePressed' else 0)
+
     def shot(self, path):
         r = self.send('Page.captureScreenshot', format='png', fromSurface=True,
                       captureBeyondViewport=False)
@@ -117,6 +125,13 @@ def main():
         p.pump()
         time.sleep(0.4)
         out = p.eval('(async()=>{' + open(script).read() + '})()')
+        if '--click' in args:
+            cx, cy = args[args.index('--click') + 1].split(',')
+            p.click(int(cx), int(cy))
+        if '--then' in args:
+            time.sleep(float(args[args.index('--then-wait') + 1]) if '--then-wait' in args else 2.5)
+            out = {'first': out,
+                   'after_click': p.eval('(async()=>{' + open(args[args.index('--then') + 1]).read() + '})()')}
         print(json.dumps(out, indent=1, ensure_ascii=False))
         if shot:
             p.shot(shot)

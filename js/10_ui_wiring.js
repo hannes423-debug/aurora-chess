@@ -331,25 +331,33 @@ document.getElementById('mainProfileBtn').onclick = () => {
   window._profileOrigin = 'mainMenu';
   openProfileOverlay();
 };
-document.getElementById('mainHelpBtn').onclick = () => {
-  SND.ui();
-  document.getElementById('mainMenu').style.display = 'none';
+/* Help is reachable from two places — the main menu, and the dock's ? during
+   a match. Both close buttons used to force the main menu open unconditionally,
+   so opening help mid-game and closing it THREW THE PLAYER OUT OF THE MATCH:
+   the board stayed loaded underneath, but the menu was on top of it and the
+   game was effectively abandoned.
+
+   Closing help now returns to wherever it was opened from, which has to be
+   captured at OPEN time — once the overlay is up there is nothing left on
+   screen to infer it from. Every opener goes through openHelpOverlay(). */
+window.openHelpOverlay = () => {
+  const _mm = document.getElementById('mainMenu');
+  window._helpCameFromMenu = !!(_mm && getComputedStyle(_mm).display !== 'none');
+  if (_mm) _mm.style.display = 'none';
   const _ho = document.getElementById('helpOverlay');
   _ho.style.display = 'flex';
   if (typeof initMenuFocus === 'function') initMenuFocus(_ho);
 };
-document.getElementById('helpClose').onclick = () => {
-  SND.ui();
+window.closeHelpOverlay = () => {
   document.getElementById('helpOverlay').style.display = 'none';
-  const _mm2 = document.getElementById('mainMenu'); _mm2.style.display = 'flex';
-  if (typeof initMenuFocus === 'function') initMenuFocus(_mm2);
+  if (!window._helpCameFromMenu) return;   // came from a match — leave it be
+  const _mm = document.getElementById('mainMenu');
+  _mm.style.display = 'flex';
+  if (typeof initMenuFocus === 'function') initMenuFocus(_mm);
 };
-document.getElementById('helpBackBtn').onclick = () => {
-  SND.ui();
-  document.getElementById('helpOverlay').style.display = 'none';
-  const _mm3 = document.getElementById('mainMenu'); _mm3.style.display = 'flex';
-  if (typeof initMenuFocus === 'function') initMenuFocus(_mm3);
-};
+document.getElementById('mainHelpBtn').onclick = () => { SND.ui(); window.openHelpOverlay(); };
+document.getElementById('helpClose').onclick   = () => { SND.ui(); window.closeHelpOverlay(); };
+document.getElementById('helpBackBtn').onclick = () => { SND.ui(); window.closeHelpOverlay(); };
 document.getElementById('helpTutorialBtn').onclick = () => {
   SND.ui();
   document.getElementById('helpOverlay').style.display = 'none';

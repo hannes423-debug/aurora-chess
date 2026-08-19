@@ -50,11 +50,35 @@
     a.id = 'acMusic';
     a.loop = true;
     a.preload = 'none';        // nothing is fetched until music is actually on
-    a.volume = 0;              // faded up by play(), so it never starts abruptly
+    a.volume = 0;              // faded up on 'playing', so it never starts abruptly
     a.src = SRC;
+    /* AUDIBILITY MUST NOT DEPEND ON THE play() PROMISE.
+       The fade that raises volume from 0 used to live in play().then(), and
+       Chrome does not reliably settle that promise — observed after a real
+       user click: element unpaused, readyState 4 (HAVE_ENOUGH_DATA), promise
+       still pending seconds later. The track was therefore *playing at volume
+       zero*, forever, with no error anywhere. That presents as "the music does
+       not work at all", which is exactly how it was reported.
+
+       The element's own events are the authority on whether audio is actually
+       running, so the fade-in hangs off those instead. The promise is now used
+       for one thing only: detecting the autoplay block. */
+    a.addEventListener('playing', onAudioRunning);
+    a.addEventListener('timeupdate', onAudioRunning);
     document.body.appendChild(a);
     MUSIC.el = a;
     return a;
+  }
+
+  /* Called from 'playing' and 'timeupdate' — whichever the browser gives us
+     first. Idempotent: a fade already in flight owns the volume and must not
+     be restarted on every timeupdate tick. */
+  function onAudioRunning() {
+    var a = MUSIC.el;
+    if (!a || !MUSIC.on) return;
+    MUSIC.started = true;
+    MUSIC.blocked = false;
+    if (!fadeTimer && a.volume < MUSIC.vol - 0.001) fadeTo(MUSIC.vol);
   }
 
   var fadeTimer = null;
@@ -80,7 +104,7 @@
   function armGesture() {
     if (armed) return;
     armed = true;
-    var events = ['pointerdown', 'mousedown', 'touchstart', 'keydown'];
+    var events = ['pointerdown', 'mousedown', 'touchstart', 'keydown', 'click'];
     var fire = function () {
       events.forEach(function (t) { window.removeEventListener(t, fire, true); });
       armed = false;
@@ -94,17 +118,26 @@
     var a = el();
     var p = a.play();
     if (p && p.catch) {
-      p.then(function () {
-        MUSIC.started = true; MUSIC.blocked = false;
-        fadeTo(MUSIC.vol);
-      }).catch(function () {
+      /* Resolution is a bonus, not the contract — onAudioRunning() has almost
+         always fired by now. Only the rejection matters. */
+      p.then(onAudioRunning).catch(function () {
         MUSIC.blocked = true;
         armGesture();
       });
     } else {
-      MUSIC.started = true;
-      fadeTo(MUSIC.vol);
+      onAudioRunning();
     }
+    /* Last-resort watchdog for the stuck case above: if the element is
+       unpaused and still silent a moment later, neither the promise nor the
+       events came through, so raise the volume directly rather than leave the
+       player listening to nothing. */
+    setTimeout(function () {
+      if (MUSIC.on && MUSIC.el && !MUSIC.el.paused &&
+          !fadeTimer && MUSIC.el.volume < MUSIC.vol - 0.001) {
+        MUSIC.started = true; MUSIC.blocked = false;
+        MUSIC.el.volume = MUSIC.vol;
+      }
+    }, 1200);
   }
 
   function stop() {

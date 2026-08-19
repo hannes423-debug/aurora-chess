@@ -283,6 +283,10 @@
     help.setAttribute('aria-label', 'How to play');
     help.addEventListener('click', function () {
       if (window.SND && typeof SND.ui === 'function') SND.ui();
+      /* Go through openHelpOverlay() rather than setting display directly:
+         it records whether the main menu was showing, which is what lets the
+         close button put the player back in the match instead of the menu. */
+      if (typeof window.openHelpOverlay === 'function') { window.openHelpOverlay(); return; }
       var overlay = $('helpOverlay');
       if (overlay) { overlay.style.display = 'flex'; return; }
       var tut = $('tutorialOverlay');

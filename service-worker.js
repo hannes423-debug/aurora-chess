@@ -2,7 +2,7 @@
  * Bump CACHE_VERSION on every release.
  */
 
-const CACHE_VERSION = 'v3';
+const CACHE_VERSION = 'v4';
 const CACHE_NAME = `aurora-chess-${CACHE_VERSION}`;
 
 const SHELL = [
