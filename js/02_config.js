@@ -1,11 +1,15 @@
 /* ======================================================
    ── MESSAGE CONFIG
 ====================================================== */
+// Rounded, friendly type for the in-world messages, to match the UI skin.
+// Canvas needs real family names — it cannot fall back through a CSS var.
+const MSG_FONT = "'Nunito', ui-rounded, -apple-system, system-ui, sans-serif";
+
 const MSGS = {
-  start:     { text:'START',     color:'#00ffff', size:90,  dur:3,  anim:'pulse', layer:'current', glow:true },
-  check:     { text:'CHECK',     color:'#ff4444', size:80,  dur:2,  anim:'zap',   layer:'current', glow:true },
-  checkmate: { text:'CHECKMATE', color:'#ff4444', size:70,  dur:4,  anim:'fade',  layer:'current', glow:true },
-  stalemate: { text:'STALEMATE', color:'#aaaaaa', size:70,  dur:4,  anim:'fade',  layer:'current', glow:true }
+  start:     { text:'START',     color:'#dff4ff', size:90,  dur:3,  anim:'pulse', layer:'current', glow:true },
+  check:     { text:'CHECK',     color:'#ffc8d8', size:80,  dur:2,  anim:'zap',   layer:'current', glow:true },
+  checkmate: { text:'CHECKMATE', color:'#ffb4c8', size:70,  dur:4,  anim:'fade',  layer:'current', glow:true },
+  stalemate: { text:'STALEMATE', color:'#d8d3f2', size:70,  dur:4,  anim:'fade',  layer:'current', glow:true }
 };
 let activeMsgKey = 'start';
 
@@ -27,9 +31,9 @@ function showBoardMsg(key) {
   canvas.width = 512; canvas.height = 128;
   const ctx = canvas.getContext('2d');
   ctx.fillStyle = cfg.color;
-  ctx.font = 'bold ' + cfg.size + 'px monospace';
+  ctx.font = '800 ' + cfg.size + 'px ' + (cfg.font || MSG_FONT);
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  if (cfg.glow) { ctx.shadowColor = cfg.color; ctx.shadowBlur = 30; }
+  if (cfg.glow) { ctx.shadowColor = cfg.color; ctx.shadowBlur = 22; }
   ctx.fillText(cfg.text, 256, 64);
   const mesh = new THREE.Mesh(
     new THREE.PlaneGeometry(8, 2),

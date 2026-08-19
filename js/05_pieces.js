@@ -82,7 +82,14 @@ function buildPieceMaterial(cfg, isOutline) {
         emissiveIntensity: emInt > 0 ? emInt : 0.08,
       });
       if (!IS_MOBILE) { try { mat.transmission = 0.65; mat.ior = 1.7; } catch(e){} }
-      if (!IS_MOBILE) { try { mat.sheen = 0.5; mat.sheenColor = new THREE.Color(0x88aaff); mat.sheenRoughness = 0.1; } catch(e){} }
+      // three.js changed the sheen API in r132: before it `sheen` IS the tint
+      // Color, after it `sheen` is a float and the tint is `sheenColor`.
+      // This page ships r128, where the float form hands a Number to
+      // uniform3fv and throws on the first render — blanking the board.
+      if (!IS_MOBILE) { try {
+        if ('sheenColor' in mat) { mat.sheen = 0.5; mat.sheenColor = new THREE.Color(0x88aaff); mat.sheenRoughness = 0.1; }
+        else                     { mat.sheen = new THREE.Color(0x88aaff); }
+      } catch(e){} }
       break;
     case 'cosmic':
       mat = new THREE.MeshPhysicalMaterial({

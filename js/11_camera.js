@@ -351,8 +351,14 @@ function anim(){
         if (!obj.userData.isGlow) return;
         if (!_glowOn) { obj.material.opacity = 0; return; }
         const onLayer = p.userData.z === activeZ;
-        const base = onLayer ? 0.20 : 0.06;
-        const pulse = onLayer ? Math.sin(gt * 1.4 + p.userData.x * 0.9) * 0.07 : 0;
+        // These run every frame, so a presentation layer cannot simply set the
+        // sprite opacity once — it gets overwritten before the next draw. The
+        // cozy theme (js/25_cozy_scene.js) dials the halo down through this
+        // hook; with no override the neon defaults apply exactly as before.
+        const _g = (typeof CZ_GLOW !== 'undefined' && CZ_GLOW)
+                 ? CZ_GLOW : { on: 0.20, off: 0.06, pulse: 0.07 };
+        const base = onLayer ? _g.on : _g.off;
+        const pulse = onLayer ? Math.sin(gt * 1.4 + p.userData.x * 0.9) * _g.pulse : 0;
         obj.material.opacity = base + pulse;
       });
     });

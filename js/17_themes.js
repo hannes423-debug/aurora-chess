@@ -1222,7 +1222,13 @@ loadLayerVis();
     var lsSlider = document.getElementById('layerSpacingSlider');
     var lsLabel  = document.getElementById('layerSpacingLabel');
     var stored = parseFloat(localStorage.getItem('cc_layer_spacing'));
-    if (!isNaN(stored) && stored >= 1.2 && stored <= 4.0) LAYER_SPACING = stored;
+    if (!isNaN(stored) && stored >= 1.2 && stored <= 4.0) {
+      LAYER_SPACING = stored;
+      // The board was already built at the default spacing — re-place the layers
+      // to the saved gap, otherwise the board stays at default while everything
+      // computed from LAYER_SPACING drifts a layer off.
+      if (typeof rebuildLayerPositions === 'function') rebuildLayerPositions();
+    }
     if (lsSlider) {
       lsSlider.value = Math.round(LAYER_SPACING * 10);
       if (lsLabel) lsLabel.textContent = LAYER_SPACING.toFixed(1);

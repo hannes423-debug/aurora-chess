@@ -331,10 +331,6 @@ document.getElementById('mainProfileBtn').onclick = () => {
   window._profileOrigin = 'mainMenu';
   openProfileOverlay();
 };
-document.getElementById('mainLoginBtn').onclick = () => {
-  SND.ui();
-  if (typeof showAccountOverlay === 'function') showAccountOverlay();
-};
 document.getElementById('mainHelpBtn').onclick = () => {
   SND.ui();
   document.getElementById('mainMenu').style.display = 'none';
@@ -382,7 +378,7 @@ function _goToPlayStep2() {
   if (onlineSub) {
     var isOnl = typeof ONLINE !== 'undefined' && ONLINE.connected;
     onlineSub.textContent = isOnl ? 'Quick match · Friends · Private game' : 'Server offline — try again later';
-    onlineSub.style.color = isOnl ? '#3a7a9b' : '#553322';
+    onlineSub.style.color = isOnl ? '#5e2750' : '#553322';
   }
   const _ps2 = document.getElementById('playStep2');
   _ps2.style.display = 'flex';
@@ -704,26 +700,6 @@ document.querySelectorAll('[data-promote]').forEach(function(btn) {
     resolvePromotion(btn.dataset.promote);
   });
 });
-
-// UI Scale slider
-(function() {
-  var slider = document.getElementById('uiScaleSlider');
-  var label  = document.getElementById('uiScaleLabel');
-  if (!slider) return;
-  var stored = parseFloat(localStorage.getItem('cc_ui_scale')) || 1.0;
-  stored = Math.max(0.7, Math.min(1.5, stored));
-  slider.value = Math.round(stored * 100);
-  if (label) label.textContent = stored.toFixed(1);
-  document.documentElement.style.setProperty('--ui-scale', stored);
-  slider.oninput = function() {
-    var v = parseInt(this.value) / 100;
-    if (label) label.textContent = v.toFixed(1);
-    document.documentElement.style.setProperty('--ui-scale', v);
-    localStorage.setItem('cc_ui_scale', v);
-  };
-  // Restore on load
-  document.documentElement.style.setProperty('--ui-scale', stored);
-})();
 
 /* ======================================================
    RENDER LOOP

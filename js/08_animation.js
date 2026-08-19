@@ -6,7 +6,7 @@ function animateSlide(piece,from,to,speed=0.05){const start=worldPos(from.x,from
 function animateJump(piece,from,to){const start=worldPos(from.x,from.y,from.z),end=worldPos(to.x,to.y,to.z);pivot.add(piece);animations.push({t:0,speed:0.08,update(t){piece.position.lerpVectors(start,end,t);piece.position.y+=Math.sin(t*Math.PI)*1.2;},end(){if(!pieces.includes(piece)){if(piece.parent)piece.parent.remove(piece);return;}piece.position.set(end.x,0,end.z);layers[to.z].add(piece);}});}
 function animateFloat(piece,from,to){const start=worldPos(from.x,from.y,from.z),end=worldPos(to.x,to.y,to.z);pivot.add(piece);animations.push({t:0,speed:0.03,update(t){piece.position.lerpVectors(start,end,t);piece.position.y+=Math.sin(t*Math.PI)*0.6;},end(){if(!pieces.includes(piece)){if(piece.parent)piece.parent.remove(piece);return;}piece.position.set(end.x,0,end.z);layers[to.z].add(piece);}});}
 function animateFade(piece,from,to){const end=worldPos(to.x,to.y,to.z);pivot.add(piece);animations.push({t:0,speed:0.12,update(t){setPieceMat(piece,{transparent:true,opacity:Math.abs(Math.sin(t*20))});},end(){if(!pieces.includes(piece)){if(piece.parent)piece.parent.remove(piece);return;}piece.position.set(end.x,0,end.z);setPieceMat(piece,{opacity:1,transparent:false});layers[to.z].add(piece);}});}
-function animateMove(piece,from,to){const type=piece.userData.type;if(type==="pawn"||type==="rook"||type==="king")animateSlide(piece,from,to,0.05);else if(type==="knight")animateJump(piece,from,to);else if(type==="queen")animateFloat(piece,from,to);else if(type==="bishop")animateFade(piece,from,to);}
+function animateMove(piece,from,to){const type=piece.userData.type;if(type==="pawn"||type==="rook"||type==="king")animateSlide(piece,from,to,0.05);else if(type==="knight")animateJump(piece,from,to);else if(type==="queen")animateFloat(piece,from,to);else if(type==="bishop")animateSlide(piece,from,to,0.05);}
 function runAnimations(){for(let i=animations.length-1;i>=0;i--){const a=animations[i];a.t+=a.speed;a.update(a.t);if(a.t>=1){a.end();animations.splice(i,1);}}}
 
 /* ======================================================
@@ -232,7 +232,7 @@ function coords(){
    UI SYSTEM
 ====================================================== */
 function squareName(x,y,z){return `${String.fromCharCode(97+x)}${y+1}-${z+1}`;}
-function logMove(piece,from,to,capture=false){const typeMap={knight:"N",king:"K",queen:"Q",rook:"R",bishop:"B"};const entry={number:moveNumber,turn,piece:typeMap[piece.userData.type]||"P",from,to,capture};moveLog.push(entry);const panel=document.getElementById("movePanel");const div=document.createElement("div");const prefix=turn==="white"?moveNumber+". ":"   ";const cap=capture?"x":"-";div.textContent=prefix+entry.piece+squareName(from.x,from.y,from.z)+cap+squareName(to.x,to.y,to.z);div.style.cursor="pointer";entry.el=div;const index=moveLog.length-1;div.onclick=()=>{setReviewing(true);reviewIndex=index;loadHistory(index);updateReviewUI();};panel.appendChild(div);panel.scrollTop=panel.scrollHeight;if(turn==="black")moveNumber++;}
+function logMove(piece,from,to,capture=false){const typeMap={knight:"N",king:"K",queen:"Q",rook:"R",bishop:"B"};const entry={number:moveNumber,turn,piece:typeMap[piece.userData.type]||"P",from,to,capture,moveColor:turn};moveLog.push(entry);const panel=document.getElementById("movePanel");const div=document.createElement("div");const prefix=turn==="white"?moveNumber+". ":"   ";const cap=capture?"x":"-";div.textContent=prefix+entry.piece+squareName(from.x,from.y,from.z)+cap+squareName(to.x,to.y,to.z);div.style.cursor="pointer";entry.el=div;const index=moveLog.length-1;div.onclick=()=>{setReviewing(true);reviewIndex=index;loadHistory(index);updateReviewUI();};panel.appendChild(div);panel.scrollTop=panel.scrollHeight;if(turn==="black")moveNumber++;}
 function addMoveAnnotation(ann){const e=moveLog[moveLog.length-1];if(e&&e.el)e.el.textContent+=ann;}
 function endGame(message){
   document.getElementById("pauseMenu").style.display="none";
@@ -257,8 +257,8 @@ function boardText(msg, color) {
   const canvas=document.createElement("canvas"); canvas.width=512; canvas.height=128;
   const ctx=canvas.getContext("2d");
   ctx.fillStyle="#"+((color||0xffffff).toString(16).padStart(6,"0"));
-  ctx.font="bold 80px monospace"; ctx.textAlign="center"; ctx.textBaseline="middle";
-  ctx.shadowColor=ctx.fillStyle; ctx.shadowBlur=30; ctx.fillText(msg,256,64);
+  ctx.font="800 80px "+(typeof MSG_FONT!=='undefined'?MSG_FONT:'sans-serif'); ctx.textAlign="center"; ctx.textBaseline="middle";
+  ctx.shadowColor=ctx.fillStyle; ctx.shadowBlur=22; ctx.fillText(msg,256,64);
   const mesh=new THREE.Mesh(new THREE.PlaneGeometry(8,2),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(canvas),transparent:true}));
   mesh.position.set(0,layers[activeZ].position.y+1.5,0); orientToPlayer(mesh); pivot.add(mesh);
   setTimeout(()=>pivot.remove(mesh),3500);
@@ -290,7 +290,21 @@ function drawMoveArrow(from,to){
   arrow.renderOrder = 99;
   pivot.add(arrow); reviewArrows.push(arrow);
 }
-function rebuildCopyButton(){const btn=document.getElementById("copyMoves");if(btn)btn.onclick=copyMovesToClipboard;}
+function rebuildCopyButton(){
+  const btn=document.getElementById("copyMoves");
+  if(btn)btn.onclick=copyMovesToClipboard;
+  // Add a "save portable replay" button to the moves-panel header (once per rebuild).
+  if(btn && !document.getElementById('movePanelDownload')){
+    const dl=document.createElement('button');
+    dl.id='movePanelDownload';
+    dl.title='Save this game as a portable replay (.html)';
+    dl.textContent='⬇';
+    dl.style.cssText='background:none;border:1px solid #0a1e30;border-radius:4px;color:#6ab4d8;'+
+      'cursor:pointer;font-family:monospace;font-size:12px;padding:2px 8px;margin-right:6px;line-height:1;touch-action:manipulation;';
+    btn.parentNode.insertBefore(dl,btn);
+    dl.onclick=function(){if(window.CTFExport&&window.CTFExport.download)window.CTFExport.download();};
+  }
+}
 function copyMovesToClipboard() {
   // 3D Chess Notation format:
   // [Event "Aurora Chess"]

@@ -242,7 +242,10 @@ renderer.domElement.addEventListener("touchmove",function(e){
       const adx=Math.abs(tx-_1fStartX), ady=Math.abs(ty-_1fStartY);
       if(Math.max(adx,ady)>8) _1fAxis=(adx>ady)?'h':'v';
     }
-    if(_1fAxis==='v' && INPUT_CFG.swipeMode==='swapped'){
+    if(_1fAxis==='v' && window._panModeActive && typeof window._doBoardPanTouch==='function'){
+      // Pan mode: 1-finger vertical drag → raise / lower the board
+      if(py!==null) window._doBoardPanTouch(0, ty-py);
+    } else if(_1fAxis==='v' && INPUT_CFG.swipeMode==='swapped'){
       // Swapped: 1-finger vertical → rotate board
       if(UI_PREFS.boardRotate && py!==null){
         pivot.rotation.x+=(ty-py)*0.01;
@@ -260,8 +263,6 @@ renderer.domElement.addEventListener("touchmove",function(e){
           camOnLayerChange();
         }
       }
-    } else if(_1fAxis==='h' && window._panModeActive && typeof window._doBoardPanTouch==='function'){
-      if(px!==null) window._doBoardPanTouch(tx-px, 0);
     }
     px=tx; py=ty;
   }

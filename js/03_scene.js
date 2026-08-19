@@ -53,6 +53,12 @@ scene.add(pivot);
 pivot.rotation.x = 0.1;
 pivot.rotation.y = 3;
 pivot.position.y = 2.2;
+// The board's home offset, captured rather than hardcoded a second time.
+// Pan (18_ctf_input.js) moves the pivot and its reset has to come back HERE,
+// not to the origin — resetting to (0,0,0) dropped the board a full 2.2 units
+// below where it starts.
+const PIVOT_HOME = pivot.position.clone();
+window.PIVOT_HOME = PIVOT_HOME;
 
 // Scene lighting — ignored by MeshBasicMaterial board geometry,
 // required for MeshPhysicalMaterial piece presets

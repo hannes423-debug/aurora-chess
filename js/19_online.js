@@ -2842,17 +2842,18 @@ drawSettingsPreview = function(page) {
 // The touchmove handler patches itself here to support pan.
 (function patchTouchPan() {
   // _doBoardPanGlobal: replicates initPCInput's _doBoardPan using globals
+  var _panUpTouch = new THREE.Vector3();
   window._doBoardPanTouch = function(dx, dy) {
     if (typeof camera === 'undefined' || typeof pivot === 'undefined') return;
+    // Screen-vertical pan — must stay identical to _doBoardPan in
+    // 18_ctf_input.js, which explains why the axis is the camera's up vector
+    // and not world Y. Touch and mouse pan the same board; if only one of them
+    // is converted the gesture means two different things per input device.
     var la = (typeof _camLookAt !== 'undefined') ? _camLookAt : new THREE.Vector3();
     var dist = camera.position.distanceTo(la);
     var scale = dist * 0.0012;
-    var right = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0);
-    right.y = 0; if (right.lengthSq() > 0.0001) right.normalize();
-    var fwd = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 2);
-    fwd.y = 0; if (fwd.lengthSq() > 0.0001) fwd.normalize();
-    pivot.position.addScaledVector(right, -dx * scale);
-    pivot.position.addScaledVector(fwd, -dy * scale);
+    _panUpTouch.set(0, 1, 0).applyQuaternion(camera.quaternion);
+    pivot.position.addScaledVector(_panUpTouch, -dy * scale);
   };
 })();
 

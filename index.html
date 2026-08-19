@@ -1149,6 +1149,14 @@ body.gamepad-mode #gpHintBar { display: flex; }
               <label>Volume</label>
               <div class="controls"><input class="settingSlider" type="range" id="bMasterVolume" min="0" max="100" value="60" style="width:88px;"></div>
             </div>
+            <div class="settingRow">
+              <label>Music</label>
+              <div class="controls"><label class="toggle"><input type="checkbox" id="bMusicOn" checked><div class="track"></div><div class="thumb"></div></label></div>
+            </div>
+            <div class="settingRow">
+              <label>Music Volume</label>
+              <div class="controls"><input class="settingSlider" type="range" id="bMusicVol" min="0" max="100" value="35" style="width:88px;"></div>
+            </div>
           </div>
 
           <div class="settingSection">
@@ -1845,6 +1853,11 @@ body.gamepad-mode #gpHintBar { display: flex; }
 .psoToggle input:checked + .psoToggleSlider:before{transform:translateX(18px);background:#00ccff;}
 </style>
 
+<!-- ═══ COZY UI — soft/friendly skin. MUST load after both inline <style>
+     blocks above, since it overrides their rules (and the inline style=""
+     attributes that applyUIStyle() repaints) by !important. ═══ -->
+<link rel="stylesheet" href="css/cozy-ui.css?v=20260819a">
+
 <canvas id="auroraGameBg"></canvas>
 
 <div id="menuBg">
@@ -1867,6 +1880,7 @@ body.gamepad-mode #gpHintBar { display: flex; }
   <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:0;">
     <button class="modeBtn" id="mainPlayBtn"    style="margin-bottom:4px;">▶ Play</button>
     <button class="modeBtn" id="mainPuzzlesBtn" style="margin-bottom:4px;">🧩 Puzzles</button>
+    <button class="modeBtn" id="mainReviewBtn"  style="margin-bottom:4px;">📽 Review a Game</button>
 
     <div style="width:120px;border-top:1px solid #061520;margin:10px 0;"></div>
 
@@ -2332,6 +2346,14 @@ body.gamepad-mode #gpHintBar { display: flex; }
       </div>
     </div>
     <div style="margin-bottom:14px;">
+      <div style="font-size:9px;color:#3a7a9b;letter-spacing:2px;margin-bottom:7px;">MUSIC</div>
+      <div style="font-size:9px;color:#4a8fb0;line-height:2;">
+        Music by <a href="https://pixabay.com/users/juliush-3921568/?utm_source=link-attribution&amp;utm_medium=referral&amp;utm_campaign=music&amp;utm_content=9796" target="_blank" rel="noopener" style="color:#0099bb;">Julius H.</a>
+        from <a href="https://pixabay.com/music//?utm_source=link-attribution&amp;utm_medium=referral&amp;utm_campaign=music&amp;utm_content=9796" target="_blank" rel="noopener" style="color:#0099bb;">Pixabay</a><br>
+        Toggle it in Settings under Sound.
+      </div>
+    </div>
+    <div style="margin-bottom:14px;">
       <div style="font-size:9px;color:#3a7a9b;letter-spacing:2px;margin-bottom:7px;">LEGAL</div>
       <div style="font-size:9px;color:#4a8fb0;line-height:2;">
         <a href="privacy.html" target="_blank" style="color:#0099bb;">Privacy Policy</a>
@@ -2475,8 +2497,38 @@ body.gamepad-mode #gpHintBar { display: flex; }
   <h2 id="endText"></h2>
   <button class="modeBtn" id="rematchBtn">Rematch</button>
   <button class="modeBtn" id="reviewBtn">Review Game</button>
+  <button class="modeBtn" id="cinematicReplayBtn">▶ Cinematic Replay</button>
+  <button class="modeBtn" id="downloadReplayBtn" style="font-size:11px;">⬇ Download Replay (.html)</button>
   <button class="modeBtn" id="copyPGNBtn" style="font-size:11px;">Copy PGN</button>
   <button class="modeBtn" id="endBackMenu">Back to Menu</button>
+</div>
+
+<!-- ======================================================
+     UI: REVIEW MENU — paste/drop a saved replay or move list and watch it
+====================================================== -->
+<div id="reviewMenu" style="
+  position:fixed;inset:0;background:rgba(0,0,0,0.92);
+  display:none;flex-direction:column;
+  justify-content:center;align-items:center;
+  z-index:58;color:#fff;font-family:monospace;padding:20px;
+">
+  <h2 style="margin:0 0 4px;font-size:18px;letter-spacing:4px;color:#6ab4d8;">REVIEW A GAME</h2>
+  <div style="color:#5a7a8a;font-size:10px;letter-spacing:2px;margin-bottom:16px;text-align:center;max-width:360px;">
+    Paste replay data, a copied <b>move list</b>, or drag a saved
+    <b>aurora-chess-replay.html</b> file into the box, then press Load.
+  </div>
+  <textarea id="reviewPasteBox" placeholder="Paste replay data, a move list, or drop a .html file here…"
+    style="width:min(420px,86vw);height:120px;background:#040c16;border:1px solid #0a1e30;color:#9cc8dc;
+    font-family:monospace;font-size:11px;padding:10px;border-radius:6px;resize:vertical;outline:none;"></textarea>
+  <div id="reviewLoadStatus" style="min-height:16px;margin:8px 0;font-size:11px;color:#e08a4a;text-align:center;"></div>
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;">
+    <button class="modeBtn" id="reviewLoadBtn">▶ Load &amp; Play</button>
+    <label class="modeBtn" style="cursor:pointer;font-size:11px;display:inline-flex;align-items:center;">
+      📁 Open file…
+      <input type="file" id="reviewFileInput" accept=".html,.json,text/html" style="display:none;">
+    </label>
+    <button class="modeBtn" id="reviewBackBtn" style="font-size:11px;">← Back</button>
+  </div>
 </div>
 
 
@@ -6419,24 +6471,32 @@ function _b64ToArrayBuffer(b64) {
 })();
 </script>
 <script src="js/01_audio.js?v=20260509e"></script>
-<script src="js/02_config.js?v=20260509e"></script>
-<script src="js/03_scene.js?v=20260509e"></script>
+<script src="js/02_config.js?v=20260809a"></script>
+<script src="js/03_scene.js?v=20260819a"></script>
 <script src="js/04_board.js?v=20260509e"></script>
-<script src="js/05_pieces.js?v=20260509e"></script>
+<script src="js/05_pieces.js?v=20260809a"></script>
 <script src="js/06_moves.js?v=20260509e"></script>
 <script src="js/07_bot.js?v=20260509e"></script>
-<script src="js/08_animation.js?v=20260509e"></script>
+<script src="js/08_animation.js?v=20260809a"></script>
 <script src="js/09_execution.js?v=20260509e"></script>
 <script src="js/10_ui_wiring.js?v=20260509e"></script>
-<script src="js/11_camera.js?v=20260509e"></script>
+<script src="js/11_camera.js?v=20260809d"></script>
 <script src="js/12_puzzles.js?v=20260509e"></script>
 <script src="js/13_arcade_orbs.js?v=20260509e"></script>
 <script src="js/14_arcade_effects.js?v=20260509e"></script>
 <script src="js/15_arcade_core.js?v=20260509e"></script>
 <script src="js/16_account.js?v=20260509e"></script>
 <script src="js/17_themes.js?v=20260509e"></script>
-<script src="js/18_ctf_input.js?v=20260509e"></script>
-<script src="js/19_online.js?v=20260509e"></script>
+<script src="js/18_ctf_input.js?v=20260819a"></script>
+<script src="js/19_online.js?v=20260819a"></script>
+<script src="js/21_replay.js?v=20260619a"></script>
+<script src="js/23_replay_export.js?v=20260619a"></script>
+<!-- Cozy redesign: presentation only. Loads last so it can wrap the globals
+     the modules above declare (square, buildPieceMaterial, _updateCgSlabActivity). -->
+<script src="js/25_cozy_scene.js?v=20260819a"></script>
+<script src="js/24_cozy_ui.js?v=20260819a"></script>
+<script src="js/26_cozy_icons.js?v=20260819a"></script>
+<script src="js/27_music.js?v=20260819a"></script>
 <script>
 /* ── Aurora Waves — optimized: half-res canvas, no blur filters, 30fps cap, star cache ── */
 (function() {
@@ -6470,8 +6530,14 @@ function _b64ToArrayBuffer(b64) {
   // Mode state — shared across both canvas instances
   var currentYOffset = 0;
   var modeStartOffset = 0, modeTargetOffset = 0, modeChangeAt = 0;
-  var MODE_DURATION   = 1500; // ms for the center→bottom (or back) transition
-  var GAMEPLAY_SHIFT  = 0.34; // yPct offset that moves ribbons into bottom 25–30%
+  var MODE_DURATION   = 1500; // ms for the center→top (or back) transition
+  // The ribbonDefs above are authored around mid-screen (yPct 0.40–0.62), which
+  // put the aurora straight through the board. SKY_BIAS lifts the whole set into
+  // the top of the frame — the aurora belongs in the sky BEHIND the board, as in
+  // the reference art — without disturbing how the ribbons are spaced relative
+  // to each other. Tune this one number to move the whole display up or down.
+  var SKY_BIAS        = -0.30;
+  var GAMEPLAY_SHIFT  = -0.06; // during play the ribbons rise a touch further
   var GAMEPLAY_AMP    = 1.2;  // amplitude scale at full gameplay shift
 
   window.waveBackground = {
@@ -6543,7 +6609,8 @@ function _b64ToArrayBuffer(b64) {
       for (var i = 0; i < orbDefs.length; i++) {
         var o = orbDefs[i];
         var cx = o.x * W + Math.sin(t * o.s) * o.d;
-        var cy = (o.by + yOff) * H + Math.cos(t * o.s * 0.8 + 1) * o.d * 0.6;
+        // Orbs are the aurora's glow pools — they travel with it (SKY_BIAS).
+        var cy = (o.by + SKY_BIAS + yOff) * H + Math.cos(t * o.s * 0.8 + 1) * o.d * 0.6;
         var pulse = 0.8 + 0.2 * Math.sin(t * o.s * 2);
         var g = ctx.createRadialGradient(cx, cy, 0, cx, cy, o.r * pulse);
         g.addColorStop(0,   'rgba(' + o.c.join(',') + ',0.08)');
@@ -6556,7 +6623,7 @@ function _b64ToArrayBuffer(b64) {
     function drawRibbon(rd, t, yOff, ampScale) {
       var p  = PALETTES[rd.pal % PALETTES.length];
       var ti = t * rd.speed + rd.phase;
-      var ey = rd.yPct + yOff;
+      var ey = rd.yPct + SKY_BIAS + yOff;
       var pts = [], seg = 100;
       for (var i = 0; i <= seg; i++) {
         var ratio = i / seg, x = ratio * (W + 40) - 20;
@@ -6624,17 +6691,28 @@ function _b64ToArrayBuffer(b64) {
       currentYOffset = modeStartOffset + (modeTargetOffset - modeStartOffset) * tAnim;
       var ampScale   = 1 + (GAMEPLAY_SHIFT > 0 ? (currentYOffset / GAMEPLAY_SHIFT) * (GAMEPLAY_AMP - 1) : 0);
 
-      var bg = ctx.createRadialGradient(W*0.5, H*0.45, 0, W*0.5, H*0.5, Math.max(W,H)*0.8);
-      bg.addColorStop(0,'#0a0e1a'); bg.addColorStop(0.5,'#060a14'); bg.addColorStop(1,'#020308');
-      ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+      // When cozy background artwork is active the canvas becomes a pure GLOW
+      // layer composited over it (mix-blend-mode:screen, see css/cozy-ui.css):
+      // clear to transparent instead of painting an opaque sky, and skip the
+      // black vignette, which screen-blending would drop anyway.
+      var czOver = !!window.CZ_BG_ACTIVE;
+      if (czOver) {
+        ctx.clearRect(0, 0, W, H);
+      } else {
+        var bg = ctx.createRadialGradient(W*0.5, H*0.45, 0, W*0.5, H*0.5, Math.max(W,H)*0.8);
+        bg.addColorStop(0,'#0a0e1a'); bg.addColorStop(0.5,'#060a14'); bg.addColorStop(1,'#020308');
+        ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+      }
 
       drawStars(t);
       drawOrbs(t, currentYOffset);
       for (var i = 0; i < ribbonDefs.length; i++) drawRibbon(ribbonDefs[i], t, currentYOffset, ampScale);
 
-      var vig = ctx.createRadialGradient(W/2, H/2, H*0.3, W/2, H/2, Math.max(W,H)*0.75);
-      vig.addColorStop(0,'rgba(0,0,0,0)'); vig.addColorStop(1,'rgba(0,0,0,0.55)');
-      ctx.fillStyle = vig; ctx.fillRect(0, 0, W, H);
+      if (!czOver) {
+        var vig = ctx.createRadialGradient(W/2, H/2, H*0.3, W/2, H/2, Math.max(W,H)*0.75);
+        vig.addColorStop(0,'rgba(0,0,0,0)'); vig.addColorStop(1,'rgba(0,0,0,0.55)');
+        ctx.fillStyle = vig; ctx.fillRect(0, 0, W, H);
+      }
     }
 
     window.addEventListener('resize', resize);
@@ -6857,10 +6935,16 @@ if (typeof UI_PREFS !== 'undefined' && UI_PREFS.autoLayerSwitch === undefined) {
     tvAlways: false, tvOwnSide: false
   };
 
+  // These presets predate the cozy redesign, and `balanced` — the default, and
+  // the one the SKIP button applies — used to revert cosmic glass and reset the
+  // pieces to plastic, i.e. every new player who skipped onboarding landed on
+  // the OLD look. The presets now differ in layer spacing / visibility / trails,
+  // not in the board skin: the pastel glass stack is the app's identity, and the
+  // theme dock is where it gets turned off.
   var PRESETS = {
-    simple:    { boardTheme:'midnight', layerSpacing:3.0, layerVisMode:'limited', layerVisCount:2, piecePreset:'plastic', trails:false, ghosts:false },
-    balanced:  { boardTheme:'classic',  layerSpacing:1.8, layerVisMode:'all',     layerVisCount:4, piecePreset:'plastic', trails:false, ghosts:false },
-    cinematic: { boardTheme:'cosmic-glass', layerSpacing:1.2, layerVisMode:'all', layerVisCount:4, piecePreset:'ghost', trails:true, ghosts:true }
+    simple:    { boardTheme:'cosmic-glass', layerSpacing:3.0, layerVisMode:'limited', layerVisCount:2, piecePreset:'cozy', trails:false, ghosts:false },
+    balanced:  { boardTheme:'cosmic-glass', layerSpacing:1.8, layerVisMode:'all',     layerVisCount:4, piecePreset:'cozy', trails:false, ghosts:false },
+    cinematic: { boardTheme:'cosmic-glass', layerSpacing:1.2, layerVisMode:'all',     layerVisCount:4, piecePreset:'ghost', trails:true, ghosts:true }
   };
 
   function goTo(n) {
@@ -7083,6 +7167,30 @@ if (typeof UI_PREFS !== 'undefined' && UI_PREFS.autoLayerSwitch === undefined) {
     );
   }
 
+  /* Every TTS plate goes through here so the cozy skin can round it off.
+     js/25_cozy_scene.js publishes window.CZ_TV — a rounded tile texture plus
+     pastel stand-ins for the neon constants. Without that module CZ_TV is
+     undefined and this builds the original hard-edged neon plate unchanged,
+     which is why the neon colour stays the argument and the pastel is the
+     lookup. */
+  function _tvColor(neon) {
+    var cz = window.CZ_TV;
+    return (cz && cz.colors && cz.colors[neon] !== undefined) ? cz.colors[neon] : neon;
+  }
+  function _tvPlate(size, neon, opacity) {
+    var cz = window.CZ_TV;
+    var op = opacity * ((cz && cz.opacityBoost) || 1);
+    var mat = new THREE.MeshBasicMaterial({
+      color: _tvColor(neon), transparent: true,
+      opacity: Math.min(1, op), side: THREE.DoubleSide
+    });
+    if (cz && typeof cz.tileTexture === 'function') {
+      mat.map = cz.tileTexture();
+      mat.needsUpdate = true;
+    }
+    return new THREE.Mesh(new THREE.PlaneGeometry(size, size), mat);
+  }
+
   function clearTV() {
     tvMeshes.forEach(function(m) { if (m.parent) m.parent.remove(m); });
     tvMeshes = [];
@@ -7122,22 +7230,20 @@ if (typeof UI_PREFS !== 'undefined' && UI_PREFS.autoLayerSwitch === undefined) {
     });
 
     // Target tile highlight (bright orange pulse)
-    var targetMat = new THREE.MeshBasicMaterial({ color: 0xff8800, transparent:true, opacity:0.55, side:THREE.DoubleSide });
-    var targetMesh = new THREE.Mesh(new THREE.PlaneGeometry(SPACING*0.9, SPACING*0.9), targetMat);
+    var targetMesh = _tvPlate(SPACING*0.9, 0xff8800, 0.55);
     targetMesh.rotation.x = -Math.PI/2;
     targetMesh.position.copy(boardPos(tx, ty, tz));
-    targetMesh.userData = { tvTarget: true, baseOpacity: 0.55, tvTick: 0 };
+    targetMesh.userData = { tvTarget: true, baseOpacity: targetMesh.material.opacity, tvTick: 0 };
     pivot.add(targetMesh); tvMeshes.push(targetMesh);
 
     // Threatening piece highlights + lines
     var lineColor = targHasPiece ? 0xff2200 : 0xff8800;
     var plateColor = targHasPiece ? 0xff2200 : 0xff8800;
     threats.forEach(function(p) {
-      var plateMat = new THREE.MeshBasicMaterial({ color: plateColor, transparent:true, opacity:0.4, side:THREE.DoubleSide });
-      var plateMesh = new THREE.Mesh(new THREE.PlaneGeometry(SPACING*0.85, SPACING*0.85), plateMat);
+      var plateMesh = _tvPlate(SPACING*0.85, plateColor, 0.4);
       plateMesh.rotation.x = -Math.PI/2;
       plateMesh.position.copy(boardPos(p.userData.x, p.userData.y, p.userData.z));
-      plateMesh.userData = { tvPiece: true, baseOpacity: 0.4 };
+      plateMesh.userData = { tvPiece: true, baseOpacity: plateMesh.material.opacity };
       pivot.add(plateMesh); tvMeshes.push(plateMesh);
 
       // Thick 3D arrow from piece to target
@@ -7148,7 +7254,7 @@ if (typeof UI_PREFS !== 'undefined' && UI_PREFS.autoLayerSwitch === undefined) {
       if (aDist > 0.05) {
         aDir.normalize();
         var aQuat = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0), aDir);
-        var aMat  = new THREE.MeshBasicMaterial({ color: lineColor, transparent:true, opacity:0.82 });
+        var aMat  = new THREE.MeshBasicMaterial({ color: _tvColor(lineColor), transparent:true, opacity:0.82 });
         var coneH = Math.min(0.30, aDist * 0.22);
         var shaftL = aDist - coneH;
         // Shaft
@@ -7210,11 +7316,10 @@ if (typeof UI_PREFS !== 'undefined' && UI_PREFS.autoLayerSwitch === undefined) {
     Object.keys(threatened).forEach(function(key) {
       var parts = key.split(',');
       var tx = +parts[0], ty = +parts[1], tz = +parts[2];
-      var mat = new THREE.MeshBasicMaterial({ color: hexColor, transparent:true, opacity:0.28, side:THREE.DoubleSide });
-      var mesh = new THREE.Mesh(new THREE.PlaneGeometry(SPACING*0.82, SPACING*0.82), mat);
+      var mesh = _tvPlate(SPACING*0.82, hexColor, 0.28);
       mesh.rotation.x = -Math.PI/2;
       mesh.position.copy(boardPos(tx, ty, tz));
-      mesh.userData = { tvTarget: true, baseOpacity: 0.28 };
+      mesh.userData = { tvTarget: true, baseOpacity: mesh.material.opacity };
       pivot.add(mesh); tvMeshes.push(mesh);
     });
   }

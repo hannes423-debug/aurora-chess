@@ -101,47 +101,38 @@ var CTF = {
   },
 
   removeSprites: function() {
-    if (CTF.white.sprite) { pivot.remove(CTF.white.sprite); CTF.white.sprite = null; }
-    if (CTF.black.sprite) { pivot.remove(CTF.black.sprite); CTF.black.sprite = null; }
+    ['white','black'].forEach(function(team) {
+      var sp = CTF[team].sprite;
+      if (sp) { if (sp.parent) sp.parent.remove(sp); CTF[team].sprite = null; }
+    });
   },
 
-  // Create or move the flag sprite above the current carrier / resting square
+  // Place the flag banner: parented to carrier piece (follows animation) or to pivot at rest
   updateSprite: function(team) {
     var fd = CTF[team];
-    var col = team === 'white' ? 0xffffff : 0x888888;
-    var flagCol = team === 'white' ? 0x00aaff : 0xff6600;
+    // Detach old banner from wherever it lives
+    if (fd.sprite) {
+      if (fd.sprite.parent) fd.sprite.parent.remove(fd.sprite);
+      fd.sprite = null;
+    }
 
-    if (fd.sprite) pivot.remove(fd.sprite);
+    var banner = _buildCTFBanner(team);
 
-    // Build a canvas flag icon
-    var c = document.createElement('canvas'); c.width=32; c.height=32;
-    var ctx = c.getContext('2d');
-    // Pole
-    ctx.strokeStyle = team==='white' ? '#aaaaff' : '#ffaa44';
-    ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(8,4); ctx.lineTo(8,28); ctx.stroke();
-    // Banner triangle
-    ctx.fillStyle = team==='white' ? '#00aaff' : '#ff6600';
-    ctx.beginPath(); ctx.moveTo(10,5); ctx.lineTo(26,12); ctx.lineTo(10,19); ctx.closePath(); ctx.fill();
+    if (fd.carrier) {
+      // Parent directly to carrier — sits at ground level, follows every animation automatically
+      banner.position.set(0, 0, 0);
+      fd.carrier.add(banner);
+    } else {
+      // Resting: add to the layer like a regular piece, sitting at ground level
+      var sq = fd.square;
+      banner.position.set(-half + (sq.x + 0.5) * SPACING, 0, -half + (sq.y + 0.5) * SPACING);
+      layers[sq.z].add(banner);
+    }
 
-    var tex = new THREE.CanvasTexture(c);
-    var mat = new THREE.SpriteMaterial({ map:tex, transparent:true, opacity:0.95, depthWrite:false });
-    var sprite = new THREE.Sprite(mat);
-    sprite.scale.set(0.55, 0.55, 1);
-    sprite.userData.isCTFSprite = true;
-
-    // Position above carrier or resting square
-    var sq = fd.carrier ? fd.carrier.userData : fd.square;
-    var wx = -half + (sq.x + 0.5) * SPACING;
-    var wz = -half + (sq.y + 0.5) * SPACING;
-    var wy = layers[sq.z].position.y + 0.85;
-    sprite.position.set(wx, wy, wz);
-
-    pivot.add(sprite);
-    fd.sprite = sprite;
+    fd.sprite = banner;
   },
 
-  // Update both flag sprites to current positions
+  // Update both flag banners
   refreshSprites: function() {
     if (!ctfMode) return;
     CTF.updateSprite('white');
@@ -220,24 +211,71 @@ var CTF = {
   }
 };
 
-/* ── CTF flag banner flutter in anim loop ── */
-(function ctfAnimLoop() {
-  requestAnimationFrame(ctfAnimLoop);
-  if (!ctfMode) return;
-  var t = performance.now() * 0.001;
-  ['white','black'].forEach(function(team) {
-    var sp = CTF[team].sprite;
-    if (!sp) return;
-    // Gentle bob
-    var fd = CTF[team];
-    var sq = fd.carrier ? fd.carrier.userData : fd.square;
-    if (!sq) return;
-    var layerZ = (sq.z !== undefined && layers[sq.z]) ? layers[sq.z].position.y : 0;
-    sp.position.y = layerZ + 0.85 + Math.sin(t*1.6)*0.06;
-    sp.position.x = -half + (sq.x+0.5)*SPACING;
-    sp.position.z = -half + (sq.y+0.5)*SPACING;
-  });
+/* ── CTF GLB banner builder ── */
+var _ctfBannerTemplate = null; // cloned from loaded GLB
+
+(function _loadCTFBannerGLB() {
+  if (typeof THREE === 'undefined' || !THREE.GLTFLoader) return;
+  var loader = new THREE.GLTFLoader();
+  fetch('chess-banner.glb')
+    .then(function(r) { return r.arrayBuffer(); })
+    .then(function(buf) {
+      loader.parse(buf, '', function(gltf) {
+        var scene = gltf.scene;
+        // Match piece height (same as bishop: 0.82), bottom at local y=0
+        var box = new THREE.Box3().setFromObject(scene);
+        var h = box.max.y - box.min.y;
+        if (h > 0.001) {
+          var s = 0.82 / h;
+          scene.scale.setScalar(s);
+          scene.position.y = -box.min.y * s;
+        }
+        // Face the board (same orientation as other pieces)
+        scene.rotation.y = Math.PI / 2;
+        _ctfBannerTemplate = scene;
+        if (ctfMode) CTF.refreshSprites();
+      }, function(err) {
+        console.warn('[CTF] Banner GLB parse failed:', err);
+      });
+    })
+    .catch(function(err) { console.warn('[CTF] Banner GLB fetch failed:', err); });
 })();
+
+function _buildCTFBanner(team) {
+  var teamColor = team === 'white' ? 0x00aaff : 0xff6600;
+
+  if (_ctfBannerTemplate) {
+    var banner = _ctfBannerTemplate.clone(true);
+    banner.traverse(function(obj) {
+      if (!obj.isMesh) return;
+      obj.material = obj.material.clone();
+      obj.material.color.setHex(teamColor);
+      obj.material.emissive = new THREE.Color(teamColor);
+      obj.material.emissiveIntensity = 0.2;
+    });
+    banner.userData.isCTFBanner = true;
+    return banner;
+  }
+
+  // Fallback: canvas sprite
+  var c = document.createElement('canvas'); c.width=32; c.height=32;
+  var ctx = c.getContext('2d');
+  ctx.strokeStyle = team==='white' ? '#aaaaff' : '#ffaa44';
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(8,4); ctx.lineTo(8,28); ctx.stroke();
+  ctx.fillStyle = team==='white' ? '#00aaff' : '#ff6600';
+  ctx.beginPath(); ctx.moveTo(10,5); ctx.lineTo(26,12); ctx.lineTo(10,19); ctx.closePath(); ctx.fill();
+  var tex = new THREE.CanvasTexture(c);
+  var mat = new THREE.SpriteMaterial({ map:tex, transparent:true, opacity:0.95, depthWrite:false });
+  var sprite = new THREE.Sprite(mat);
+  sprite.scale.set(0.55, 0.55, 1);
+  var g = new THREE.Group(); g.add(sprite);
+  g.userData.isCTFBanner = true;
+  return g;
+}
+
+/* ── CTF banner: no animation needed — resting banners sit still on the layer,
+   carried banners are children of the carrier piece and follow it automatically ── */
 
 /* ── Patch executeMove for CTF logic ── */
 var _ctfBaseExecMove = executeMove;
@@ -855,15 +893,24 @@ resetBoard = function(c) {
   var _panDragging = false, _panLastX = 0, _panLastY = 0;
   var _panModeActive = false;
 
+  var _panUpAxis = new THREE.Vector3();
+
   function _doBoardPan(dx, dy) {
+    // Pan = move the board up / down ON SCREEN. Drag up → board up.
+    // Horizontal drag is ignored; zoom already handles depth.
+    //
+    // The axis is the CAMERA's own up vector, not world Y. World Y is only the
+    // screen-vertical axis when the camera looks along the horizon; the steeper
+    // it tilts, the more of a world-Y nudge lands along the view direction and
+    // reads as zoom instead of pan. In FLAT (straight overhead) world Y IS the
+    // view axis, so panning on it was 100% zoom and 0% pan. The camera's up
+    // axis is perpendicular to the view direction by construction, so the
+    // board's distance to the camera is unchanged and a drag can never read as
+    // moving closer or further.
     var dist = camera.position.distanceTo(_camLookAt);
     var scale = dist * 0.0012;
-    var right = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0);
-    right.y = 0; if (right.lengthSq() > 0.0001) right.normalize();
-    var fwd = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 2);
-    fwd.y = 0; if (fwd.lengthSq() > 0.0001) fwd.normalize();
-    pivot.position.addScaledVector(right, -dx * scale);
-    pivot.position.addScaledVector(fwd, -dy * scale);
+    _panUpAxis.set(0, 1, 0).applyQuaternion(camera.quaternion);
+    pivot.position.addScaledVector(_panUpAxis, -dy * scale);
   }
 
   renderer.domElement.addEventListener('mousedown', function(e) {
@@ -893,12 +940,12 @@ resetBoard = function(c) {
       btn.style.color = _panModeActive ? '#00ccff' : '#aaa';
       btn.style.borderColor = _panModeActive ? '#00ccff' : '#333';
       btn.title = _panModeActive
-        ? 'Pan mode ON — drag to pan. Double-click to reset position. Click to exit.'
-        : 'Pan board — Alt+drag, or click to toggle pan mode. Double-click to reset.';
+        ? 'Pan mode ON — drag up/down to raise/lower the board. Double-click to reset. Click to exit.'
+        : 'Pan board up/down — Alt+drag, or click to toggle pan mode. Double-click to reset.';
       renderer.domElement.style.cursor = _panModeActive ? 'grab' : '';
     });
     btn.addEventListener('dblclick', function(e) {
-      pivot.position.set(0, 0, 0);
+      pivot.position.copy(window.PIVOT_HOME || new THREE.Vector3(0, 0, 0));
       _panModeActive = false;
       window._panModeActive = false;
       btn.style.color = '#aaa'; btn.style.borderColor = '#333';
