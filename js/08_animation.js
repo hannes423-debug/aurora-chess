@@ -34,11 +34,12 @@ function square(x, y, z, strong=false, colorHex=null, opacityVal=null) {
   m.rotation.x = -Math.PI/2;
   m.position.set(-half+(x+0.5)*SPACING, layers[z].position.y+0.01, -half+(y+0.5)*SPACING);
   m.userData.baseOpacity = baseOpacity;
-  m.userData.z = z;
+  m.userData.x = x; m.userData.y = y; m.userData.z = z;
   // Immediately respect current layer visibility
   if (!isLayerShowing(z)) m.visible = false;
   pivot.add(m);
   if(!strong) pulsePlates.push(m);
+  scheduleTileReveal();
   return m;
 }
 function showLastMove(from,to){lastMoveSquares.forEach(p=>pivot.remove(p));lastMoveSquares=[];if(!CFG.hl.lastMove.on)return;const col=CFG.hl.lastMove.color,op=CFG.hl.lastMove.opacity;const a=square(from.x,from.y,from.z,true,col,op*0.5),b=square(to.x,to.y,to.z,true,col,op);lastMoveSquares.push(a,b);}
@@ -77,6 +78,111 @@ function showThreatLines(color){clearThreatLines();if(!CFG.hl.threats.on)return;
 }
 function clearThreatLines(){threatPlates.forEach(p=>pivot.remove(p));threatPlates=[];}
 function fadeHighlight(x,y,z,piece){const cfg=piece.userData.color==="white"?CFG.pieces.white:CFG.pieces.black;const plate=square(x,y,z,true,cfg.outlineSelColor,CFG.hl.selection.opacity);let t=0;function fade(){t+=0.03;plate.material.opacity=CFG.hl.selection.opacity*(1-t);setPieceMat(piece,{transparent:true,opacity:1-0.7*t});if(t<1){requestAnimationFrame(fade);}else{pivot.remove(plate);setPieceMat(piece,{opacity:1,transparent:false});update();}}fade();}
+
+/* The board's checkered tiles are drawn ONLY on the active layer (see the
+   `i === activeZ` test below). A move highlight on any other layer therefore
+   has nothing under it and composites straight against the slab and the sky,
+   so the same plate colour renders far darker than it does on the active
+   layer. Measured with a knight selected, cosmic glass on:
+
+     white knight, moves on the active layer   → luminance 196–208
+     black knight, moves a layer or three away → luminance 143–167
+
+   Black's army starts on layer 4 while the player sits on layer 1, so EVERY
+   black move square is in the dark case — which is exactly how it reads in
+   play: "black's moves make the squares dark", and moves that go up or down a
+   layer not matching the ones that go forward.
+
+   Rather than special-case the colour, put the missing surface back: reveal
+   the board tile beneath each off-layer highlight so it sits on exactly the
+   same thing a same-layer highlight does. update() re-hides every non-active
+   tile on each pass before this runs, so the reveal is self-correcting — a
+   tile stays visible only while a highlight is actually on it. */
+const _hlBackings = [];   // pooled opaque quads drawn under off-layer highlights
+
+/* Give every off-layer highlight the same surface a same-layer one gets.
+
+   Revealing the board tile alone is not enough, because the tile is not what
+   dominates: under cosmic glass the LOWEST slab is an opaque periwinkle base
+   while the three above it are thin frosted sheets, so a plate on layer 1
+   composites over a bright solid and a plate on layer 4 composites over most
+   of the night sky. Measured, knight selected:
+
+     white knight, moves on the active layer  → luminance 196-208
+     black knight, moves on layers 2-4        → luminance 143-167
+
+   So paint the missing backdrop instead: an opaque quad just under the plate,
+   coloured by copying the ACTIVE layer's tile at the same (x, y). Copying
+   rather than hardcoding is what makes this exact — the same file/rank has the
+   same light/dark parity, so an upward move ends up over literally the colour
+   a forward move sits on, in every board theme, with no constant to re-tune
+   when the palette changes. */
+function revealTilesUnderHighlights() {
+  if (typeof layers === 'undefined' || typeof pivot === 'undefined') return;
+  _hlBackings.forEach(b => { b.visible = false; });
+
+  const marks = [];
+  const add = arr => { if (arr) arr.forEach(m => { if (m && m.userData && m.visible !== false) marks.push(m.userData); }); };
+  add(typeof movePlates !== 'undefined' ? movePlates : null);
+  add(typeof lastMoveSquares !== 'undefined' ? lastMoveSquares : null);
+  if (typeof selPlate !== 'undefined' && selPlate && selPlate.userData) marks.push(selPlate.userData);
+  if (!marks.length) return;
+
+  const activeLayer = layers[activeZ];
+  if (!activeLayer) return;
+  let used = 0;
+
+  for (const mk of marks) {
+    const z = mk.z;
+    if (z === undefined || z === activeZ) continue;    // already on the lit surface
+    const layer = layers[z];
+    if (!layer || !layer.visible) continue;            // layer hidden outright
+
+    // The active layer's tile at this file/rank — same parity, so same colour.
+    let tint = null;
+    for (const obj of activeLayer.children) {
+      if (obj.isMesh && obj.userData && obj.userData.x === mk.x &&
+          obj.userData.y === mk.y && !obj.userData.isHole && obj.material) {
+        tint = obj.material.color; break;
+      }
+    }
+    if (!tint) continue;
+
+    let b = _hlBackings[used];
+    if (!b) {
+      b = new THREE.Mesh(
+        new THREE.PlaneGeometry(1, 1),
+        /* Not fully opaque: on the active layer the tile is itself part of a
+           stack (tile over the lit base slab), so painting the raw tile colour
+           solid overshoots — measured 226 against the same-layer 207. Letting a
+           little of the real backdrop through lands the two on each other. */
+        new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, transparent: true,
+                                      opacity: 0.72, depthWrite: false })
+      );
+      b.rotation.x = -Math.PI / 2;
+      pivot.add(b);
+      _hlBackings.push(b);
+    }
+    b.material.color.copy(tint);
+    // 0.004 under the plate's own 0.01 lift: above the slab, below the highlight.
+    b.position.set(-half + (mk.x + 0.5) * SPACING,
+                   layers[z].position.y + 0.004,
+                   -half + (mk.y + 0.5) * SPACING);
+    b.visible = true;
+    b.renderOrder = -1;
+    used++;
+  }
+}
+
+/* Highlights are created in bursts — one square() call per legal move — and
+   the selection path never calls update(). Coalesce to one pass per burst on
+   a microtask so a 30-move queen costs a single sweep, not thirty. */
+let _revealQueued = false;
+function scheduleTileReveal() {
+  if (_revealQueued) return;
+  _revealQueued = true;
+  Promise.resolve().then(() => { _revealQueued = false; revealTilesUnderHighlights(); });
+}
 
 function update() {
   layers.forEach((layer,i) => {
@@ -132,6 +238,10 @@ function update() {
   // Sync all highlight plate visibility with current layer state
   refreshLegalMoveHighlights();
   refreshLastMove();
+  // …then put a board tile back under whichever of them ended up off-layer,
+  // so an upward move reads exactly like a forward one. Must run LAST: the
+  // two refreshes above decide which plates are visible at all.
+  revealTilesUnderHighlights();
 }
 function normalizeMaterial(p){
   const _ncfg = p && p.userData ? (p.userData.color==='white'?CFG.pieces.white:CFG.pieces.black) : null;
