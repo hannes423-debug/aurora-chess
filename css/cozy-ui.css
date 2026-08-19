@@ -1684,3 +1684,61 @@ body:not(.cz-ingame) #onlineStatusBar { display: none !important; }
   box-shadow: var(--cz-shadow-sm), var(--cz-bevel) !important;
   border: 1px solid var(--cz-hairline) !important;
 }
+
+/* ==========================================================================
+   10. TOP BAR — FITTING ROW 1 ON NARROW PHONES
+   --------------------------------------------------------------------------
+   Row 1 is menu · 180° · hint · undo · [spacer] · MOVES · VIEW, right-anchored
+   by #czSpacer. Its content plus gaps measures 359px, so the row only fits
+   while the viewport is wider than ~375px + margins. Below that the spacer
+   collapses to its 4px minimum and the overflow leaves the last pill — the
+   camera-mode toggle — hanging off the right edge: 6.9px clipped at 360px,
+   46.9px at 320px. Because it is the LAST item it is always the one that goes,
+   and it is the one control whose LABEL IS ITS STATE (FREE / TILT / FLAT /
+   SLICE), so losing it costs both the button and the readout.
+
+   The width is not even constant: those four labels measure 46.3–56px, so the
+   row silently grows by ~10px when the player cycles the camera, and a device
+   sitting inside the margin flips from fine to clipped on a button press.
+   Anything relying on ~8px of slack (the default 390/430 case) is not a fit.
+   ========================================================================== */
+
+/* Nothing may ever leave the viewport. If a width, a longer label or the
+   viewer's larger-text setting still overruns the row after the tightening
+   below, the surplus wraps onto a new line — clipped is unreachable, wrapped
+   is merely taller, and the bar sits over empty sky. */
+.cz-toprow { flex-wrap: wrap; row-gap: 6px; }
+
+/* Under ~400px the "180°" label is what stops the row fitting; the ⟳ icon
+   already says the same thing and the title attribute still spells it out. */
+@media (max-width: 400px) {
+  #czTopBar { gap: 6px; }
+  .cz-toprow { gap: 5px; }
+  #rotateBoardBtn {
+    font-size: 0 !important;                 /* the ::before icon is unaffected */
+    padding-left: 11px !important;
+    padding-right: 11px !important;
+  }
+  #rotateBoardBtn.cz-ico::before { margin-right: 0 !important; }
+  #moveToggle, #viewToggle { padding: 9px 9px !important; }
+}
+
+/* Small phones (SE-class, 320–360). Row 1 keeps every control; the labels that
+   remain are the ones carrying state. */
+@media (max-width: 360px) {
+  #czTopBar { left: 6px; right: 6px; }
+  .cz-toprow { gap: 4px; }
+  #menuBtn { padding: 9px 9px !important; }
+  #hintBtn, #undoBtn, #puzzleInfoToggle { padding: 9px 8px !important; }
+  #moveToggle, #viewToggle { padding: 9px 7px !important; font-size: 11.5px !important; }
+  #layerVisToggle, #threatVisionToggle, #panBoardBtn {
+    padding: 7px 8px !important; font-size: 10.5px !important;
+  }
+}
+
+/* The camera toggle is the row's last item and therefore the first casualty of
+   any overflow. Reserving its widest label's width stops the row reflowing —
+   and stops it slipping off the edge — when the player cycles FREE → SLICE. */
+#viewToggle { min-width: 58px !important; text-align: center !important; }
+@media (max-width: 400px) { #viewToggle { min-width: 54px !important; } }
+@media (max-width: 360px) { #viewToggle { min-width: 50px !important; } }
