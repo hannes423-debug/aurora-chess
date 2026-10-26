@@ -1682,13 +1682,41 @@ body:not(.cz-ingame) #onlineStatusBar { display: none !important; }
   #offlineBanner {
     bottom: calc(var(--cz-bottom-3) + 54px + env(safe-area-inset-bottom)) !important;
   }
+  /* The clock row is pinned `bottom:104px` by 17_themes.js, straight across
+     the thumbnails (measured 38x24 on a 390x844 phone, user-reported in an
+     online match). It only shows in a match, when #onlineStatusBar is hidden,
+     so it takes that slot above the minimap. */
+  #chessClock {
+    bottom: calc(var(--cz-bottom-3) + 6px + env(safe-area-inset-bottom)) !important;
+  }
+  /* ...which is also the "BOT THINKING" slot, so lift that over the clock. */
+  body:has(#chessClock[style*="display: flex"]) #botThinkingEl {
+    bottom: calc(var(--cz-bottom-3) + 50px + env(safe-area-inset-bottom)) !important;
+  }
 }
+/* "opponent thinking..." is pinned `top:12px`, inside the top bar's first row
+   (measured 160x14 over the buttons). Hang it under the match bar instead,
+   which the rule near the top of this file drops to topbar + 8px. */
+#onlineThinking { top: calc(var(--cz-topbar-h, 96px) + 44px) !important; }
 /* Landscape: the column hugs `right:8px`, which on a notched phone held
    sideways is under the rounded corner / camera housing. */
 @media (min-aspect-ratio: 13/10) {
   #minimap {
     right: calc(8px + env(safe-area-inset-right)) !important;
-    gap: 5px !important;
+    gap: 3px !important;
+    /* Centred at top:50% the 175px column ran 28px up under the top bar's
+       right-hand pill on an 844x390 phone; the gap between the top bar and
+       the dock is only ~160px there. Hang it under the bar, thumbnails 34px. */
+    top: calc(var(--cz-topbar-h, 96px) + 6px) !important;
+    transform: none !important;
+  }
+  #minimap canvas { width: 34px !important; height: 34px !important; }
+  /* index.html's landscape block pins the clock at top:36px, which cleared the
+     old one-row toolbar but sits inside the two-row cozy top bar (292x26).
+     Sit it on the dock instead; the minimap column is on the right edge. */
+  #chessClock {
+    top: auto !important;
+    bottom: calc(var(--cz-bottom-2) + 8px + env(safe-area-inset-bottom)) !important;
   }
 }
 
